@@ -1,0 +1,28 @@
+services:
+  server:
+    container_name: comm-clinic-server
+    build:
+      context: ./server-app
+      target: dev
+    volumes:
+      - ./server-app:/app/
+      - /app/node_modules
+    env_file:
+      - ./server-app/.env
+    ports:
+      - 8000:8000
+    command: npm run start:dev
+
+  client:
+    container_name: client-app
+    depends_on:
+      - server
+    build:
+      context: ./client-app
+      target: dev
+    volumes:
+      - ./client-app:/app
+      - /app/node_modules
+    ports: 
+      - 5173:5173
+    command: npm run dev
