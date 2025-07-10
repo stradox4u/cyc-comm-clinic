@@ -6,11 +6,8 @@ RUN apt-get update
 RUN apt-get -y install \
   cmake
 
+RUN npm install
 COPY . .
-RUN npm ci
-
-COPY . ./
-CMD ["npm", "run", "start:dev"]
 
 FROM node:22.17 AS build
 WORKDIR /app
