@@ -1,10 +1,10 @@
 FROM node:22.17 AS dev
 WORKDIR /app
-ENV PATH=./node_modules/.bin/:$PATH
+ENV PATH ./node_modules/.bin:$PATH
 
 COPY package*.json ./
-COPY . .
 RUN npm ci
+COPY . .
 
 EXPOSE 5173
 

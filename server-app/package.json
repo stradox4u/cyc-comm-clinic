@@ -2,10 +2,13 @@
   "name": "cyc-comm-clinic-server",
   "version": "0.0.1",
   "description": "Server for the Community Clinic App, part of the 2025 Cohort 2 of Commit Your Code",
-  "main": "index.js",
+  "main": "src/index.ts",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start:dev": "node --watch --env-file=.env src/index.js"
+    "start:dev": "node --watch --env-file=.env --loader ts-node/esm src/index.ts",
+    "build": "tsc",
+    "start": "NODE_ENV=production node dist/index.js"
   },
   "keywords": [
     "community-clinic",
@@ -16,5 +19,11 @@
   "license": "MIT",
   "dependencies": {
     "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.0.12",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
   }
 }
