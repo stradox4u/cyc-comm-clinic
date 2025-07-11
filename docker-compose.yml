@@ -1,6 +1,23 @@
 services:
+  database:
+    container_name: comm-clinic-db
+    image: postgres:16.9
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    tty: true
+    ports:
+      - 5432:5432
+
   server:
     container_name: comm-clinic-server
+    depends_on:
+      - database
     build:
       context: ./server-app
       target: dev
@@ -8,7 +25,7 @@ services:
       - ./server-app:/app/
       - /app/node_modules
     env_file:
-      - ./server-app/.env
+      - .env
     ports:
       - 8000:8000
     command: npm run start:dev
@@ -26,3 +43,6 @@ services:
     ports: 
       - 5173:5173
     command: npm run dev
+
+volumes:
+  db_data:
