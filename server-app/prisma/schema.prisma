@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Patient {
+  id                  String    @id @default(uuid())
+  email               String    @unique
+  password            String?
+  first_name          String
+  last_name           String
+  phone               String    @unique
+  dob                 DateTime
+  weight              String
+  height              String
+  gender              PatientGender
+  emergency_contact   String
+  blood_group         String
+  allergies           String[]
+  insurance           Json      // provider_id, coverage
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
+
+  @@map("patients")
+}
+
+enum PatientGender {
+  Male
+  Female
+}
+
+model Provider {
+  id                  String    @id @default(uuid())
+  first_name          String
+  last_name           String
+  email               String
+  phone               String
+  role_title          ProviderRoleTitle
+
+  role                ProviderRole      @relation(fields: [role_title], references: [title])
+
+  @@map("providers")
+}
+
+model ProviderRole {
+  id                  String              @id @default(uuid())
+  title               ProviderRoleTitle   @unique
+  description         String
+
+  providers           Provider[]
+
+  @@map("provider_roles")
+}
+
+enum ProviderRoleTitle {
+  ADMIN               @map("ADMIN")
+  GENERAL_PRACTIONER  @map("GENERAL PRACTIONER")
+  NURSE               @map("NURSE")
+  PHARMACIST          @map("PHARMACIST")
+  LAB_TECHNICIAN      @map("LAB TECHNICIAN")
+  PAEDIATRICIAN       @map("PAEDIATRICIAN")
+  GYNAECOLOGIST       @map("GYNAECOLOGIST")
+  RECEPTIONIST        @map("RECEPTIONIST")
+}
