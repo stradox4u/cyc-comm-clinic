@@ -1,8 +1,22 @@
 import app from './app.js'
 import config from './config/config.js'
+import prisma from './config/prisma.js'
+import logger from './middlewares/logger.js'
 
 const PORT = config.PORT || 8000
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`)
-})
+const startServer = async () => {
+  try {
+    await prisma.$connect()
+    logger.info('Database connected')
+
+    app.listen(PORT, () => {
+      logger.info(`Server is running on port ${PORT}`)
+    })
+  } catch (err) {
+    logger.error('Unable to connect to the database', err)
+    process.exit(1)
+  }
+}
+
+startServer()
