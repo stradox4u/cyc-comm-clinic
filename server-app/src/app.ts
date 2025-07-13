@@ -34,16 +34,12 @@ app.use(helmet())
 app.use(express.json())
 app.use(cookieParser())
 
-//======= Routes ========//
 app.get('/', (req, res) => {
   res.json({ message: 'Server running' })
 })
 app.use('/api/auth', authRoute)
 
-//=======Error Handlers=======//
 app.use(notFoundHandler)
 app.use(errorHandler)
-
-//=======........========//
 
 export default app

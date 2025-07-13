@@ -15,22 +15,24 @@ datasource db {
 }
 
 model Patient {
-  id                  String    @id @default(uuid())
-  email               String    @unique
-  password            String?
-  first_name          String
-  last_name           String
-  phone               String    @unique
-  dob                 DateTime
-  weight              String
-  height              String
-  gender              PatientGender
-  emergency_contact   String
-  blood_group         String
-  allergies           String[]
-  insurance           Json      // provider_id, coverage
-  created_at          DateTime  @default(now())
-  updated_at          DateTime  @updatedAt
+  id                    String    @id @default(uuid())
+  email                 String    @unique
+  password              String
+  first_name            String
+  last_name             String
+  phone                 String    @unique
+  dob                   DateTime
+  weight                String
+  height                String
+  address               String
+  gender                PatientGender
+  emergency_contact     String
+  blood_group           String
+  allergies             String[]
+  insurance_provider_id String?   
+  insurance_coverage    String?
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
 
   @@map("patients")
 }
@@ -41,35 +43,40 @@ enum PatientGender {
 }
 
 model Provider {
-  id                  String    @id @default(uuid())
-  first_name          String
-  last_name           String
-  email               String
-  phone               String
-  role_title          ProviderRoleTitle
+  id                    String    @id @default(uuid())
+  first_name            String
+  last_name             String
+  password              String
+  email                 String
+  phone                 String
+  role_title            ProviderRoleTitle
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
 
-  role                ProviderRole      @relation(fields: [role_title], references: [title])
+  role                  ProviderRole      @relation(fields: [role_title], references: [title])
 
   @@map("providers")
 }
 
 model ProviderRole {
-  id                  String              @id @default(uuid())
-  title               ProviderRoleTitle   @unique
-  description         String
+  id                    String              @id @default(uuid())
+  title                 ProviderRoleTitle   @unique
+  description           String
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
 
-  providers           Provider[]
+  providers             Provider[]
 
   @@map("provider_roles")
 }
 
 enum ProviderRoleTitle {
-  ADMIN               @map("ADMIN")
-  GENERAL_PRACTIONER  @map("GENERAL PRACTIONER")
-  NURSE               @map("NURSE")
-  PHARMACIST          @map("PHARMACIST")
-  LAB_TECHNICIAN      @map("LAB TECHNICIAN")
-  PAEDIATRICIAN       @map("PAEDIATRICIAN")
-  GYNAECOLOGIST       @map("GYNAECOLOGIST")
-  RECEPTIONIST        @map("RECEPTIONIST")
+  ADMIN                 @map("ADMIN")
+  GENERAL_PRACTIONER    @map("GENERAL PRACTIONER")
+  NURSE                 @map("NURSE")
+  PHARMACIST            @map("PHARMACIST")
+  LAB_TECHNICIAN        @map("LAB TECHNICIAN")
+  PAEDIATRICIAN         @map("PAEDIATRICIAN")
+  GYNAECOLOGIST         @map("GYNAECOLOGIST")
+  RECEPTIONIST          @map("RECEPTIONIST")
 }
