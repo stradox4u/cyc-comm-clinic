@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Patient {
+  id            Int       @id @default(autoincrement())
+  email         String    @unique
+  name          String
+  user          UserRole  @default(PATIENT)
+  phone_number  String?
+  date_of_birth DateTime?
+  gender        String?
+  weight        String?
+  height        String?
+  address       String?
+  allergies     String?
+  blood_group   String?
+  vitals        Vitals[]
+}
+
+model Vitals {
+  id             Int @id @default(autoincrement())
+  blood_pressure String?
+  temperature    String?
+  heart_rate     String?
+  soapNote       Json?
+  patient Patient? @relation(fields: [patientId], references: [id])
+  patientId Int
+}
+
+model Role {
+  id                    Int @id @default(autoincrement())
+  title                 Title
+  description           String
+  healthcare_providers  Healthcare_Provider[]
+}
+
+model Healthcare_Provider {
+  id     Int      @id @default(autoincrement())
+  email  String   @unique
+  name   String
+  user   UserRole @default(HEALTHCARE_PROVIDER)
+  roleId Int
+  role   Role     @relation(fields: [roleId], references:[id])
+}
+
+enum UserRole {
+  ADMIN
+  PATIENT
+  HEALTHCARE_PROVIDER
+}
+
+enum Title {
+  GENERAL_PRACTITIONER
+  NURSE
+  PHARMACIST
+  GYNAECOLOGIST
+  RECEPTIONIST
+}
