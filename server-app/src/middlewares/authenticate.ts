@@ -3,9 +3,9 @@ import jwt from 'jsonwebtoken'
 import config from '../config/config.js'
 import { UnauthenticatedError, UnauthorizedError } from './errorHandler.js'
 import authService from '../modules/auth/auth.service.js'
-import { UserRole, type AuthTokenPayload } from '../types/index.js'
+import { UserType, type AuthTokenPayload } from '../types/index.js'
 
-const authenticate = (roles: UserRole[]) => {
+const authenticate = (userType: UserType) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const token = req.cookies?.accessToken
@@ -16,21 +16,22 @@ const authenticate = (roles: UserRole[]) => {
         config.jwt.JWT_SECRET
       ) as AuthTokenPayload
 
-      if (!roles.includes(payload.role)) {
+      if (userType !== payload.userType) {
         throw new UnauthorizedError('Access denied')
       }
 
       let user
-      if (payload.role === UserRole.PATIENT) {
-        user = await authService.findPatient({ id: payload.id })
-      } else if (payload.role === UserRole.PROVIDER) {
-        user = await authService.findProvider({ id: payload.id })
+      if (payload.userType === UserType.PATIENT) {
+        user = await authService.findPatient({ id: payload.sub })
+      } else if (payload.userType === UserType.PROVIDER) {
+        user = await authService.findProvider({ id: payload.sub })
       }
 
       if (!user) {
         throw new UnauthorizedError('Access denied')
       }
 
+      req.user = user
       next()
     } catch (err) {
       throw new UnauthenticatedError('Invalid or expired token')

@@ -4,6 +4,7 @@ import type { Prisma, Patient, Provider } from '@prisma/client'
 export type PatientWhereUniqueInput = Prisma.PatientWhereUniqueInput
 export type PatientCreateInput = Prisma.PatientCreateInput
 export type ProviderWhereUniqueInput = Prisma.ProviderWhereUniqueInput
+export type ProviderCreateInput = Prisma.ProviderCreateInput
 
 const findPatient = async (
   payload: PatientWhereUniqueInput
@@ -27,8 +28,17 @@ const findProvider = async (
   })
 }
 
+const createProvider = async (
+  payload: ProviderCreateInput
+): Promise<Provider> => {
+  return await prisma.provider.create({
+    data: payload,
+  })
+}
+
 export default {
   findPatient,
   createPatient,
   findProvider,
+  createProvider,
 }

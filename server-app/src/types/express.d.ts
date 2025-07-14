@@ -1,10 +1,9 @@
-import type { Provider } from '@prisma/client'
-import type { AuthTokenPayload } from './index.js'
+import type { Patient, Provider } from '@prisma/client'
 
 declare global {
   namespace Express {
     interface Request {
-      user?: AuthTokenPayload
+      user?: Patient | Provider
     }
   }
 }
