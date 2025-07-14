@@ -1,4 +1,5 @@
 import type { RequestHandler, Request, Response, NextFunction } from 'express'
+import type { APIResponse } from '../types/index.js'
 
 export interface CustomParamsDictionary {
   [key: string]: any
@@ -11,16 +12,16 @@ export interface PaginationQuery {
 }
 
 const catchAsync =
-  (
+  <T = any>(
     callback: RequestHandler<
       CustomParamsDictionary,
-      any,
+      APIResponse<T>,
       any,
       PaginationQuery,
       Record<string, any>
     >
   ) =>
-  (req: Request, res: Response, next: NextFunction) => {
+  (req: Request, res: Response<APIResponse<T>>, next: NextFunction) => {
     Promise.resolve(callback(req, res, next)).catch((err) => next(err))
   }
 
