@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "start:dev": "tsx --watch src/index.ts",
+    "start:dev": "tsx --env-file=../.env --watch src/index.ts",
     "build": "tsc",
     "start": "NODE_ENV=production node dist/index.js",
     "db:migrate": "prisma migrate dev",
@@ -26,7 +26,6 @@
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.0",
     "express": "^5.1.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",

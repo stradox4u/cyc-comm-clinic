@@ -20,7 +20,7 @@ router.post(
 )
 
 router.get(
-  'patient/profile',
+  '/patient/profile',
   authenticate(UserType.PATIENT),
   authController.patientProfile
 )
@@ -32,7 +32,7 @@ router.post(
 )
 
 router.get(
-  'provider/profile',
+  '/provider/profile',
   authenticate(UserType.PROVIDER),
   authController.providerProfile
 )
