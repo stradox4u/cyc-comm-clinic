@@ -2,28 +2,11 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import AuthLayout from "../../layout/AuthLayout";
-
-// 🔐 Zod Schema for login form
-const loginSchema = z.object({
-  identifier: z
-    .string()
-    .min(1, "Email or Phone number is required")
-    .refine(
-      (val) =>
-        /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(val) || /^\d{10,15}$/.test(val),
-      {
-        message: "Enter a valid email or phone number",
-      }
-    ),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
-
-type LoginData = z.infer<typeof loginSchema>;
+import { loginSchema, type LoginData } from "../../lib/schema";
 
 const SignIn = () => {
   const [login, setLogin] = useState(true);

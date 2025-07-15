@@ -27,7 +27,7 @@ export default function AuthLayout({
             />
           </svg>
         </div>
-        <div className="container mx-auto w-full flex flex-col items-center pt-24 text-white px-4 sm:px-8 md:px-16 xl:px-24 2xl:px-32 min-h-screen py-8 ">
+        <div className="container mx-auto w-full flex flex-col items-center pt-24 text-white px-4 sm:px-8 md:px-8 xl:px-24 2xl:px-32 min-h-screen py-8 ">
           <div className="">
             <div className="text-2xl font-semibold flex gap-2 items-center justify-center">
               <Hospital size={24} />

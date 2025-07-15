@@ -2,12 +2,12 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import AuthLayout from "../../layout/AuthLayout";
 import { Eye, EyeClosed } from "lucide-react";
+import { fullSchema, type FormData } from "../../lib/schema";
 
 const getProgressPercentage = (step: number) => {
   switch (step) {
@@ -22,40 +22,11 @@ const getProgressPercentage = (step: number) => {
   }
 };
 
-// Zod schemas
-const personalSchema = z.object({
-  firstName: z.string().min(1, "First Name is required"),
-  lastName: z.string().min(1, "Last Name is required"),
-  email: z.string().email("Invalid email"),
-  phone: z.string().min(11, "Phone is required"),
-  dob: z.string().min(1, "Date of birth is required"),
-  gender: z.string().min(1, "Gender is required"),
-  address: z.string().min(1, "Address is required"),
-  occupation: z.string().min(1, "Occupation is required"),
-  emergencyName: z.string().min(1, "Emergency contact name is required"),
-  emergencyNumber: z.string().min(1, "Emergency number is required"),
-  bloodGroup: z.string().min(1, "Blood group is required"),
-  allergies: z.string().optional(),
-  insurance: z.string().min(1, "Insurance is required"),
-});
-
-const passwordSchema = z
-  .object({
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
-
-const fullSchema = personalSchema.merge(passwordSchema);
-type FormData = z.infer<typeof fullSchema>;
-
 const SignUp = () => {
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const methods = useForm<FormData>({
     resolver: zodResolver(fullSchema),
     mode: "onTouched",
@@ -72,11 +43,11 @@ const SignUp = () => {
     let valid = true;
     if (step === 2) {
       valid = await trigger([
-        "firstName",
-        "lastName",
+        "first_name",
+        "last_name",
         "email",
         "phone",
-        "dob",
+        "date_of_birth",
         "gender",
         "address",
         "occupation",
@@ -106,7 +77,7 @@ const SignUp = () => {
       <FormProvider {...methods}>
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="text-white space-y-6 z-20"
+          className="text-white space-y-6 relative z-20"
         >
           {/* Step Indicator */}
           {/* Progress Bar & Step Text - Hidden on Welcome Page */}
@@ -159,13 +130,15 @@ const SignUp = () => {
           {/* Step 2: Personal Details */}
           {step === 2 && (
             <>
-              <h2 className="font-semibold tracking-tight">Personal Details</h2>
+              <h2 className="font-semibold tracking-tight text-lg">
+                Personal Details
+              </h2>
               {[
-                ["First Name", "firstName", "text", "e.g. John"],
-                ["Last Name", "lastName", "text", "e.g. Doe"],
+                ["First Name", "first_name", "text", "e.g. John"],
+                ["Last Name", "last_name", "text", "e.g. Doe"],
                 ["Email", "email", "email", "e.g. johndoe@gmail.com"],
                 ["Phone", "phone", "text", "0903-322-827"],
-                ["Date of Birth", "dob", "date"],
+                ["Date of Birth", "date_of_birth", "date"],
               ].map(([label, name, type = "text", placeholder]) => (
                 <div key={name} className="space-y-2">
                   <Label className="font-semibold">{label}</Label>
