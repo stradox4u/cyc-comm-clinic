@@ -13,7 +13,7 @@ const authenticate = (userType: UserType) => {
 
       const payload = jwt.verify(
         token,
-        config.jwt.JWT_SECRET
+        config.jwt.ACCESS_TOKEN_SECRET
       ) as AuthTokenPayload
 
       if (userType !== payload.userType) {
@@ -34,7 +34,7 @@ const authenticate = (userType: UserType) => {
       req.user = user
       next()
     } catch (err) {
-      throw new UnauthenticatedError('Invalid or expired token')
+      next(err)
     }
   }
 }

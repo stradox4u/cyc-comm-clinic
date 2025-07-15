@@ -1,7 +1,4 @@
 import express from 'express'
-import dotenv from 'dotenv'
-import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
 import cors from 'cors'
 import helmet from 'helmet'
 import cookieParser from 'cookie-parser'
@@ -9,10 +6,6 @@ import config from './config/config.js'
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js'
 import { appLogger } from './middlewares/logger.js'
 import { authRoute } from './modules/auth/index.js'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-dotenv.config({ path: join(__dirname, '../', '../', '.env') })
 
 const app = express()
 
