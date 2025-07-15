@@ -1,10 +1,8 @@
 import Card from "../components/Card";
-
 import { useState } from "react";
-
 import clsx from "clsx";
-
 import { Menu } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Home = () => {
   const [showNav, setShowNav] = useState(false);
@@ -14,28 +12,38 @@ const Home = () => {
   };
 
   return (
-    <div className="bg-[#0B0E35] text-white min-h-screen">
+    <div className="bg-blue-950 text-white min-h-screen">
       <div className="container mx-auto px-10 py-5">
         {/* header */}
         <header>
           <nav className="flex items-center justify-between">
             <div>
-              <span className="text-2xl font-bold">CHC</span>
+              <span className="text-2xl font-bold">
+                C<span className="text-pink-400">H</span>C
+              </span>
             </div>
             <span onClick={handleShowNav} className="md:hidden">
               <Menu size={32} />
             </span>
             <div
               className={clsx(
-                "absolute bg-[#0B0E35] p-10 right-5 rounded-md duration-300 md:static",
+                "absolute bg-blue-950 p-10 right-5 rounded-md duration-300 md:static",
                 showNav ? "top-20" : "top-[-100%]"
               )}
             >
               <ul className="grid gap-5 md:flex md:gap-7">
-                <li>Home</li>
-                <li>Contact</li>
-                <li>Sign up</li>
-                <li>Login</li>
+                <li>
+                  <Link to={"/"}> Home</Link>
+                </li>
+                <li>
+                  <Link to={"/"}>Contact</Link>
+                </li>
+                <li>
+                  <Link to={"/signup"}>Sign up</Link>
+                </li>
+                <li>
+                  <Link to={"/signin"}>Login</Link>
+                </li>
               </ul>
             </div>
           </nav>
