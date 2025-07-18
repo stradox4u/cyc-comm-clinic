@@ -68,3 +68,10 @@
     @apply bg-background text-foreground font-outfit;
   }
 }
+
+.swiper-button-prev,
+.swiper-button-next {
+  width: 4px !important;
+  height: 4px !important;
+  color: white !important;
+}
