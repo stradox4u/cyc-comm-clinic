@@ -1,0 +1,106 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Patient {
+  id                        String    @id @default(uuid())
+  email                     String    @unique
+  password                  String
+  is_verified               Boolean   @default(false)
+  first_name                String
+  last_name                 String
+  phone                     String    @unique
+  date_of_birth             DateTime
+  address                   String
+  gender                    PatientGender
+  emergency_contact_name    String
+  emergency_contact_phone   String
+  blood_group               String
+  allergies                 String[]
+  insurance_provider_id     String?   
+  insurance_coverage        String?
+  created_at                DateTime  @default(now())
+  updated_at                DateTime  @updatedAt
+
+  @@map("patients")
+}
+
+enum PatientGender {
+  Male
+  Female
+}
+
+model Provider {
+  id                    String            @id @default(uuid())
+  email                 String            @unique
+  password              String
+  first_name            String
+  last_name             String
+  phone                 String
+  role_title            ProviderRoleTitle
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+
+  role                  ProviderRole      @relation(fields: [role_title], references: [title])
+
+  @@map("providers")
+}
+
+model ProviderRole {
+  id                    String              @id @default(uuid())
+  title                 ProviderRoleTitle   @unique
+  description           String
+  created_at            DateTime            @default(now())
+  updated_at            DateTime            @updatedAt
+
+  providers             Provider[]
+
+  @@map("provider_roles")
+}
+
+enum ProviderRoleTitle {
+  ADMIN                 @map("ADMIN")
+  GENERAL_PRACTIONER    @map("GENERAL PRACTIONER")
+  NURSE                 @map("NURSE")
+  PHARMACIST            @map("PHARMACIST")
+  LAB_TECHNICIAN        @map("LAB TECHNICIAN")
+  PAEDIATRICIAN         @map("PAEDIATRICIAN")
+  GYNAECOLOGIST         @map("GYNAECOLOGIST")
+  RECEPTIONIST          @map("RECEPTIONIST")
+}
+
+model Session {
+  sid                   String        @id
+  sess                  Json
+  expire                DateTime      @db.Timestamp(6)
+
+  @@map("session")
+  @@index([expire])    
+}
+
+model Token {
+  id                    String         @id   @default(uuid())
+  email                 String         @unique
+  otp                   String
+  type                  TokenType      
+  expires_at            DateTime
+
+  @@map("tokens")
+}
+
+enum TokenType {
+  VERIFY_EMAIL
+  CHANGE_PASSWORD
+}
