@@ -3,13 +3,15 @@ import * as z from "zod";
 export const personalSchema = z.object({
   first_name: z.string().min(1, "First Name is required"),
   last_name: z.string().min(1, "Last Name is required"),
-  email: z.email("Invalid email"),
+  email: z.string().email("Invalid email"),
   phone: z.string().min(11, "Phone is required"),
   date_of_birth: z.string().min(1, "Date of birth is required"),
-  gender: z.string().min(1, "Gender is required"),
+  gender: z.enum(["male", "female", "other"], "Gender is required"),
   address: z.string().min(1, "Address is required"),
   occupation: z.string().min(1, "Occupation is required"),
-  emergency_contact: z.string().min(1, "Emergency contact name is required"),
+  emergency_contact_name: z
+    .string()
+    .min(1, "Emergency contact name is required"),
   emergency_contact_number: z.string().min(1, "Emergency contact is required"),
   blood_group: z.string().min(1, "Blood group is required"),
   allergies: z.string().optional(),

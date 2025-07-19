@@ -60,12 +60,12 @@ const Home = () => {
     },
   ];
 
-  const stats = [
-    { number: "15,000+", label: "Patients Served" },
-    { number: "25+", label: "Healthcare Providers" },
-    { number: "10", label: "Years of Service" },
-    { number: "98%", label: "Patient Satisfaction" },
-  ];
+  // const stats = [
+  //   { number: "15,000+", label: "Patients Served" },
+  //   { number: "25+", label: "Healthcare Providers" },
+  //   { number: "10", label: "Years of Service" },
+  //   { number: "98%", label: "Patient Satisfaction" },
+  // ];
 
   const testimonials = [
     {
@@ -100,7 +100,7 @@ const Home = () => {
         {/* main body */}
         <main className="">
           <section className="py-20 bg-background">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-8 md:px-16 lg:px-24 xl:px-32">
               <div className="text-center space-y-4 mb-16">
                 <Badge variant="outline" className="w-fit mx-auto">
                   Our Services
@@ -145,7 +145,7 @@ const Home = () => {
 
           {/* Features Section */}
           <section className="py-20 bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-8 md:px-16 lg:px-24 xl:px-32">
               <div className="grid lg:grid-cols-2 gap-16 items-center">
                 <div className="space-y-8">
                   <div className="space-y-4">
@@ -242,7 +242,7 @@ const Home = () => {
 
           {/* Testimonials Section */}
           <section className="py-20 bg-background">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-8 md:px-16 lg:px-24 xl:px-32">
               <div className="text-center space-y-4 mb-16">
                 <Badge variant="outline" className="w-fit mx-auto">
                   Patient Reviews
@@ -291,7 +291,7 @@ const Home = () => {
           {/* CTA Section */}
 
           <section className="py-20 bg-[#0D132E]/80 text-white">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div className="max-w-7xl mx-auto px-4 sm:px-8 md:px-16 lg:px-24 xl:px-32 text-center">
               <div className="space-y-8">
                 <h2 className="text-3xl md:text-4xl font-bold">
                   Ready to Take Control of Your Health?

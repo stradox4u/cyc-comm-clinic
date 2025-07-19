@@ -10,7 +10,7 @@ const Header = () => {
   const [showMobileNav, setShowMobileNav] = useState(false);
   return (
     <nav className="shadow-md bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-[#6A5CA3] sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 md:px-16 lg:px-24 xl:px-32">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-2">
             <Hospital className="h-8 w-8 text-pink-400" />

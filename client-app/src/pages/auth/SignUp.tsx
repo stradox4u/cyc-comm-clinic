@@ -50,7 +50,7 @@ const SignUp = () => {
         "gender",
         "address",
         "occupation",
-        "emergency_contact",
+        "emergency_contact_name",
         "emergency_contact_number",
         "blood_group",
         "allergies",
@@ -107,7 +107,7 @@ const SignUp = () => {
               </p>
               <img
                 src="/chc-banner.png"
-                className="w-full h-fit md:object-cover rounded-lg object-contain"
+                className="w-full h-fit md:object-cover rounded-lg object-contain aspect-[16/9] md:aspect-[3/2]"
                 alt=""
               />
               <Button
