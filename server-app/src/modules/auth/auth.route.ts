@@ -2,8 +2,9 @@ import express from 'express'
 import validate from '../../middlewares/validate.js'
 import authController from './auth.controller.js'
 import authValidation from './auth.validation.js'
-import authenticate from '../../middlewares/authenticate.js'
+import { authenticate } from '../../middlewares/auth.js'
 import { UserType } from '../../types/index.js'
+import passport from 'passport'
 
 const router = express.Router()
 
@@ -15,8 +16,39 @@ router.post(
 
 router.post(
   '/patient/login',
-  validate(authValidation.patientLoginSchema),
-  authController.patientLogin
+  validate(authValidation.loginSchema),
+  passport.authenticate('patient-local', authController.patientLogin)
+)
+
+router.post(
+  '/patient/verify-email',
+  validate(authValidation.verifyEmailSchema),
+  authController.patientVerifyEmail
+)
+
+router.post(
+  '/patient/request-otp',
+  validate(authValidation.requestOTPSchema),
+  authController.patientRequestOTP
+)
+
+router.post(
+  '/patient/forgot-password',
+  validate(authValidation.forgotPasswordSchema),
+  authController.patientForgotPassword
+)
+
+router.post(
+  '/patient/reset-password',
+  validate(authValidation.resetPasswordSchema),
+  authController.patientResetPassword
+)
+
+router.post(
+  '/patient/change-password',
+  authenticate(UserType.PATIENT),
+  validate(authValidation.changePasswordSchema),
+  authController.patientChangePassword
 )
 
 router.get(
@@ -27,8 +59,27 @@ router.get(
 
 router.post(
   '/provider/login',
-  validate(authValidation.providerLoginSchema),
+  validate(authValidation.loginSchema),
   authController.providerLogin
+)
+
+router.post(
+  '/provider/forgot-password',
+  validate(authValidation.forgotPasswordSchema),
+  authController.providerForgotPassword
+)
+
+router.post(
+  '/provider/reset-password',
+  validate(authValidation.resetPasswordSchema),
+  authController.providerResetPassword
+)
+
+router.post(
+  '/provider/change-password',
+  authenticate(UserType.PROVIDER),
+  validate(authValidation.changePasswordSchema),
+  authController.providerChangePassword
 )
 
 router.get(

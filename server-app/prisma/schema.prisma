@@ -15,22 +15,24 @@ datasource db {
 }
 
 model Patient {
-  id                    String    @id @default(uuid())
-  email                 String    @unique
-  password              String
-  first_name            String
-  last_name             String
-  phone                 String    @unique
-  date_of_birth         DateTime
-  address               String
-  gender                PatientGender
-  emergency_contact     String
-  blood_group           String
-  allergies             String[]
-  insurance_provider_id String?   
-  insurance_coverage    String?
-  created_at            DateTime  @default(now())
-  updated_at            DateTime  @updatedAt
+  id                        String    @id @default(uuid())
+  email                     String    @unique
+  password                  String
+  is_verified               Boolean   @default(false)
+  first_name                String
+  last_name                 String
+  phone                     String    @unique
+  date_of_birth             DateTime
+  address                   String
+  gender                    PatientGender
+  emergency_contact_name    String
+  emergency_contact_phone   String
+  blood_group               String
+  allergies                 String[]
+  insurance_provider_id     String?   
+  insurance_coverage        String?
+  created_at                DateTime  @default(now())
+  updated_at                DateTime  @updatedAt
 
   @@map("patients")
 }
@@ -41,15 +43,15 @@ enum PatientGender {
 }
 
 model Provider {
-  id                    String    @id @default(uuid())
-  email                 String    @unique
+  id                    String            @id @default(uuid())
+  email                 String            @unique
   password              String
   first_name            String
   last_name             String
   phone                 String
   role_title            ProviderRoleTitle
-  created_at            DateTime  @default(now())
-  updated_at            DateTime  @updatedAt
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
 
   role                  ProviderRole      @relation(fields: [role_title], references: [title])
 
@@ -60,8 +62,8 @@ model ProviderRole {
   id                    String              @id @default(uuid())
   title                 ProviderRoleTitle   @unique
   description           String
-  created_at            DateTime  @default(now())
-  updated_at            DateTime  @updatedAt
+  created_at            DateTime            @default(now())
+  updated_at            DateTime            @updatedAt
 
   providers             Provider[]
 
@@ -77,4 +79,28 @@ enum ProviderRoleTitle {
   PAEDIATRICIAN         @map("PAEDIATRICIAN")
   GYNAECOLOGIST         @map("GYNAECOLOGIST")
   RECEPTIONIST          @map("RECEPTIONIST")
+}
+
+model Session {
+  id                    String      @id   @default(uuid())
+  sid                   String      @unique
+  data                  String
+  expiresAt             DateTime
+
+  @@map("sessions")    
+}
+
+model Token {
+  id                    String         @id   @default(uuid())
+  email                 String         @unique
+  otp                   String
+  type                  TokenType      
+  expires_at            DateTime
+
+  @@map("tokens")
+}
+
+enum TokenType {
+  VERIFY_EMAIL
+  CHANGE_PASSWORD
 }
