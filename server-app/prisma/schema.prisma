@@ -15,22 +15,23 @@ datasource db {
 }
 
 model Patient {
-  id                    String    @id @default(uuid())
-  email                 String    @unique
+  id                    String        @id @default(uuid())
+  email                 String        @unique
   password              String
   first_name            String
   last_name             String
-  phone                 String    @unique
+  phone                 String        @unique
   date_of_birth         DateTime
   address               String
   gender                PatientGender
   emergency_contact     String
   blood_group           String
   allergies             String[]
-  insurance_provider_id String?   
+  insurance_provider_id String?
   insurance_coverage    String?
-  created_at            DateTime  @default(now())
-  updated_at            DateTime  @updatedAt
+  created_at            DateTime      @default(now())
+  updated_at            DateTime      @updatedAt
+  appointment           Appointment[]
 
   @@map("patients")
 }
@@ -41,40 +42,183 @@ enum PatientGender {
 }
 
 model Provider {
-  id                    String    @id @default(uuid())
-  email                 String    @unique
-  password              String
-  first_name            String
-  last_name             String
-  phone                 String
-  role_title            ProviderRoleTitle
-  created_at            DateTime  @default(now())
-  updated_at            DateTime  @updatedAt
+  id                 String            @id @default(uuid())
+  email              String            @unique
+  password           String
+  first_name         String
+  last_name          String
+  phone              String
+  role_title         ProviderRoleTitle
+  appointment        Appointment[]
+  created_at         DateTime          @default(now())
+  updated_at         DateTime          @updatedAt
+  updated_soap_notes SoapNote[]        @relation("SoapNoteUpdatedBy")
+  updated_vitals     Vitals[]          @relation("VitalsUpdatedBy")
+  created_events     Event[]           @relation("EventCreatedBy")
 
-  role                  ProviderRole      @relation(fields: [role_title], references: [title])
+  role ProviderRole @relation(fields: [role_title], references: [title])
 
   @@map("providers")
 }
 
 model ProviderRole {
-  id                    String              @id @default(uuid())
-  title                 ProviderRoleTitle   @unique
-  description           String
-  created_at            DateTime  @default(now())
-  updated_at            DateTime  @updatedAt
+  id          String            @id @default(uuid())
+  title       ProviderRoleTitle @unique
+  description String
+  created_at  DateTime          @default(now())
+  updated_at  DateTime          @updatedAt
 
-  providers             Provider[]
+  providers Provider[]
 
   @@map("provider_roles")
 }
 
 enum ProviderRoleTitle {
-  ADMIN                 @map("ADMIN")
-  GENERAL_PRACTIONER    @map("GENERAL PRACTIONER")
-  NURSE                 @map("NURSE")
-  PHARMACIST            @map("PHARMACIST")
-  LAB_TECHNICIAN        @map("LAB TECHNICIAN")
-  PAEDIATRICIAN         @map("PAEDIATRICIAN")
-  GYNAECOLOGIST         @map("GYNAECOLOGIST")
-  RECEPTIONIST          @map("RECEPTIONIST")
+  ADMIN              @map("ADMIN")
+  GENERAL_PRACTIONER @map("GENERAL PRACTIONER")
+  NURSE              @map("NURSE")
+  PHARMACIST         @map("PHARMACIST")
+  LAB_TECHNICIAN     @map("LAB TECHNICIAN")
+  PAEDIATRICIAN      @map("PAEDIATRICIAN")
+  GYNAECOLOGIST      @map("GYNAECOLOGIST")
+  RECEPTIONIST       @map("RECEPTIONIST")
+}
+
+model Appointment {
+  id                       String                       @id @default(uuid())
+  patient                  Patient                      @relation(fields: [patient_id], references: [id])
+  patient_id               String
+  provider                 Provider                     @relation(fields: [provider_id], references: [id])
+  provider_id              String
+  purpose                  AppointmentPrelistedPurposes
+  other_purpose            String?
+  status                   AppointmentType
+  insurance_eligibility    Boolean
+  follow_up_required       Boolean
+  follow_up_appointment_id String?
+  follow_up_appointment    Appointment?                 @relation("FollowUp", fields: [follow_up_appointment_id], references: [id])
+  follow_up_appointments   Appointment[]                @relation("FollowUp")
+  soap_note                SoapNote[]
+  vitals                   Vitals[]
+  AppointmentSchedule      AppointmentSchedule?
+  AppointmentTimeline      AppointmentTimeline?
+
+  @@map("appointments")
+}
+
+enum AppointmentPrelistedPurposes {
+  Routine_Health_Checkup                  @map("Routine Health Checkup")
+  Maternal_Child_Health                   @map("Maternal & Child Health")
+  Immunizations_And_Vaccinations          @map("Immunizations And Vaccinations")
+  Family_Planning                         @map("Family Planning")
+  HIV_AIDS_Counseling_And_Testing         @map("HIV AIDS Counseling And Testing")
+  Tuberculosis_Screening_And_Treatment    @map("Tuberculosis Screening And Treatment")
+  Medical_Consultation_And_Treatment      @map("Medical Consultation And Treatment")
+  Nutrition_Counseling_And_Support        @map("Nutrition Counseling And Support")
+  Chronic_Disease_Management              @map("Chronic Disease Management")
+  Mental_Health_Support_or_Counseling     @map("Mental Health Support or Counseling")
+  Health_Education_And_Awareness          @map("Health Education And Awareness")
+  Antenatal_or_Postnatal_Care             @map("Antenatal or Postnatal Care")
+  Sexual_And_Reproductive_Health_Services @map("Sexual And Reproductive Health Services")
+  Malaria_Diagnosis_And_Treatment         @map("Malaria Diagnosis And Treatment")
+  Health_Screening_Campaigns              @map("Health Screening Campaigns")
+  Drug_or_Substance_Abuse_Counseling      @map("Drug or Substance Abuse Counseling")
+  Followup_Appointment                    @map("Followup Appointment")
+  Dental_Care                             @map("Dental Care")
+  Referral
+  Others
+}
+
+enum AppointmentType {
+  Submitted
+  Scheduled
+  Checked_in @map("Checked in")
+  Cancelled
+  Reschedule
+  No_show    @map("No show")
+  Completed
+  Confirmed
+}
+
+model AppointmentSchedule {
+  id             String      @id @default(uuid())
+  appointment    Appointment @relation(fields: [appointment_id], references: [id])
+  appointment_id String      @unique
+  time           DateTime
+  count          Int
+
+  @@map("appointment_schedule")
+}
+
+model SoapNote {
+  id             String      @id @default(uuid())
+  appointment    Appointment @relation(fields: [appointment_id], references: [id])
+  appointment_id String
+  subjective     Json?
+  objective      Json?
+  assessment     Json?
+  plan           Json?
+  updated_by_id  String?
+  updated_by     Provider?   @relation("SoapNoteUpdatedBy", fields: [updated_by_id], references: [id])
+  updated_at     DateTime?   @updatedAt
+  events         Event[]
+
+  @@map("soapnotes")
+}
+
+model Vitals {
+  id             String      @id @default(uuid())
+  appointment    Appointment @relation(fields: [appointment_id], references: [id])
+  appointment_id String
+  blood_pressure String?
+  heart_rate     String?
+  temperature    String?
+  height         String?
+  weight         String?
+  updated_by_id  String?
+  updated_by     Provider?   @relation("VitalsUpdatedBy", fields: [updated_by_id], references: [id])
+  updated_at     DateTime?   @updatedAt
+  events         Event[]
+
+  @@map("vitals")
+}
+
+model AppointmentTimeline {
+  id             String                    @id @default(uuid())
+  appointment    Appointment               @relation(fields: [appointment_id], references: [id])
+  appointment_id String                    @unique
+  status         AppointmentTimelineStatus
+  created_at     DateTime                  @default(now())
+  event          Event[]
+
+  @@map("appointment timeline")
+}
+
+enum AppointmentTimelineStatus {
+  Attending
+  Attended
+}
+
+model Event {
+  id            String              @id @default(uuid())
+  timestamp     DateTime
+  type          EventType
+  timeline      AppointmentTimeline @relation(fields: [timeline_id], references: [id])
+  timeline_id   String
+  created_by_id String?
+  created_by    Provider?           @relation("EventCreatedBy", fields: [created_by_id], references: [id])
+  vitals_id     String?
+  vitals        Vitals?             @relation(fields: [vitals_id], references: [id])
+  soap_note_id  String?
+  soap_note     SoapNote?           @relation(fields: [soap_note_id], references: [id])
+
+  @@map("events")
+}
+
+enum EventType {
+  Vitals_recorded            @map("Vitals recorded")
+  Vitals_updated             @map("Vitals updated")
+  Soap_note_created          @map("Soap noted created")
+  Appointment_status         @map("Appointment status")
+  Appointment_status_updated @map("Appointment status updated")
 }
