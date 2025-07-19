@@ -1,7 +1,14 @@
-import type { UserPayload } from './index.ts'
+import 'express-session'
+import type { SessionPayload } from './index.ts'
 
 declare module 'express-serve-static-core' {
   interface Request {
-    user?: UserPayload
+    user?: SessionPayload
+  }
+}
+
+declare module 'express-session' {
+  interface SessionData {
+    user?: SessionPayload
   }
 }

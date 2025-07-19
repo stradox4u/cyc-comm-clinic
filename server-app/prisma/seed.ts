@@ -7,6 +7,7 @@ import providerService from '../src/modules/provider/provider.service.js'
 import type { PatientRegisterSchema } from '../src/modules/auth/auth.validation.js'
 import type { PatientCreateInput } from '../src/modules/patient/patient.service.js'
 import type { ProviderCreateInput } from '../src/modules/provider/provider.service.js'
+import bcrypt from 'bcryptjs'
 
 const createRandomPatient = (): PatientRegisterSchema => ({
   email: faker.internet.email(),
@@ -45,7 +46,8 @@ const fakePatients = faker.helpers.multiple(createRandomPatient, {
 
 const customPatient: PatientCreateInput = {
   email: 'testpatient@gmail.com',
-  password: 'test1234',
+  password: await bcrypt.hash('test1234', 10),
+  is_verified: true,
   first_name: 'John',
   last_name: 'Doe',
   phone: '081' + faker.string.numeric(8),
@@ -62,7 +64,7 @@ const customPatient: PatientCreateInput = {
 
 const customProvider: ProviderCreateInput = {
   email: 'testprovider@gmail.com',
-  password: 'test1234',
+  password: await bcrypt.hash('test1234', 10),
   first_name: 'Super',
   last_name: 'Admin',
   phone: '081' + faker.string.numeric(8),

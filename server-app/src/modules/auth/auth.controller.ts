@@ -19,6 +19,7 @@ import type {
 import { TokenType } from '@prisma/client'
 import providerService from '../provider/provider.service.js'
 import patientService from '../patient/patient.service.js'
+import { UserType } from '../../types/index.js'
 
 const patientRegister = catchAsync(async (req, res) => {
   let newPatient: PatientRegisterSchema = req.body
@@ -76,6 +77,11 @@ const patientLogin = catchAsync(async (req, res) => {
   }
 
   delete (patient as any).password
+
+  req.session.user = {
+    id: patient.id,
+    type: UserType.PATIENT,
+  }
 
   res.status(200).json({
     success: true,
@@ -239,6 +245,12 @@ const providerLogin = catchAsync(async (req, res) => {
 
   delete (provider as any).password
 
+  req.session.user = {
+    id: provider.id,
+    type: UserType.PROVIDER,
+    roleTitle: provider.role_title,
+  }
+
   res.status(200).json({
     success: true,
     data: provider,
@@ -340,17 +352,13 @@ const providerChangePassword = catchAsync(async (req, res) => {
 })
 
 const logout = catchAsync((req, res, next) => {
-  req.logout((err) => {
-    if (err) return next()
+  req.session.destroy((err) => {
+    if (err) next(err)
+    res.clearCookie('connect.sid')
 
-    req.session.destroy((err) => {
-      if (err) next(err)
-      res.clearCookie('connect.sid')
-
-      res.status(200).json({
-        success: true,
-        message: 'Logged out successfully',
-      })
+    res.status(200).json({
+      success: true,
+      message: 'Logged out successfully',
     })
   })
 })

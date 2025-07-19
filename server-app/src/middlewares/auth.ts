@@ -5,13 +5,10 @@ import type { ProviderRoleTitle } from '@prisma/client'
 
 const authenticate = (userType: UserType) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.isAuthenticated()) {
-      throw new UnauthenticatedError('You need to login first')
-    }
+    const user = req.session.user
+    if (!user) throw new UnauthenticatedError('You need to login first')
 
-    if (userType !== req.user?.type) {
-      throw new UnauthorizedError('Access denied')
-    }
+    req.user = user
     next()
   }
 }

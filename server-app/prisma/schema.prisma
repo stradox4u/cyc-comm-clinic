@@ -82,12 +82,12 @@ enum ProviderRoleTitle {
 }
 
 model Session {
-  id                    String      @id   @default(uuid())
-  sid                   String      @unique
-  data                  String
-  expiresAt             DateTime
+  sid                   String        @id
+  sess                  Json
+  expire                DateTime      @db.Timestamp(6)
 
-  @@map("sessions")    
+  @@map("session")
+  @@index([expire])    
 }
 
 model Token {

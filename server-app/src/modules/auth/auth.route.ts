@@ -4,7 +4,6 @@ import authController from './auth.controller.js'
 import authValidation from './auth.validation.js'
 import { authenticate } from '../../middlewares/auth.js'
 import { UserType } from '../../types/index.js'
-import passport from 'passport'
 
 const router = express.Router()
 
@@ -17,7 +16,7 @@ router.post(
 router.post(
   '/patient/login',
   validate(authValidation.loginSchema),
-  passport.authenticate('patient-local', authController.patientLogin)
+  authController.patientLogin
 )
 
 router.post(

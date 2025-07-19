@@ -6,7 +6,6 @@ import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js'
 import { appLogger } from './middlewares/logger.js'
 import { authRoute } from './modules/auth/index.js'
 import session from 'express-session'
-import passport from './config/passport.js'
 import connectPgSimple from 'connect-pg-simple'
 
 const app = express()
@@ -35,18 +34,16 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: true,
+      secure: config.NODE_ENV === 'production',
       httpOnly: true,
       maxAge: config.SESSION_EXPIRATION_HOURS * 60 * 60 * 1000,
     },
     store: new PgSession({
       conString: config.DATABASE_URL,
+      createTableIfMissing: true,
     }),
   })
 )
-
-app.use(passport.initialize())
-app.use(passport.session())
 
 app.use('/api/auth', authRoute)
 

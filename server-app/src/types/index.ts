@@ -1,6 +1,6 @@
 import type { ProviderRoleTitle } from '@prisma/client'
 
-export type UserPayload = {
+export type SessionPayload = {
   id: string
   type: UserType
   roleTitle?: ProviderRoleTitle
