@@ -42,19 +42,19 @@ enum PatientGender {
 }
 
 model Provider {
-  id                 String            @id @default(uuid())
-  email              String            @unique
-  password           String
-  first_name         String
-  last_name          String
-  phone              String
-  role_title         ProviderRoleTitle
-  appointment        Appointment[]
-  created_at         DateTime          @default(now())
-  updated_at         DateTime          @updatedAt
-  updated_soap_notes SoapNote[]        @relation("SoapNoteUpdatedBy")
-  updated_vitals     Vitals[]          @relation("VitalsUpdatedBy")
-  created_events     Event[]           @relation("EventCreatedBy")
+  id                      String            @id @default(uuid())
+  email                   String            @unique
+  password                String
+  first_name              String
+  last_name               String
+  phone                   String
+  role_title              ProviderRoleTitle
+  appointment_providers   AppointmentProviders[]
+  created_at              DateTime          @default(now())
+  updated_at              DateTime          @updatedAt
+  updated_soap_notes      SoapNote[]        @relation("SoapNoteUpdatedBy")
+  updated_vitals          Vitals[]          @relation("VitalsUpdatedBy")
+  created_events          Events[]           @relation("EventCreatedBy")
 
   role ProviderRole @relation(fields: [role_title], references: [title])
 
@@ -88,66 +88,68 @@ model Appointment {
   id                       String                       @id @default(uuid())
   patient                  Patient                      @relation(fields: [patient_id], references: [id])
   patient_id               String
-  provider                 Provider                     @relation(fields: [provider_id], references: [id])
-  provider_id              String
-  purpose                  AppointmentPrelistedPurposes
-  other_purpose            String?
-  status                   AppointmentType
-  insurance_eligibility    Boolean
-  follow_up_required       Boolean
-  follow_up_appointment_id String?
-  follow_up_appointment    Appointment?                 @relation("FollowUp", fields: [follow_up_appointment_id], references: [id])
+  purposes                 AppointmentPurpose[]
+  other_purpose            String
+  status                   AppointmentStatus
+  has_insurance            Boolean
+  is_follow_up_required    Boolean
+  follow_up_id             String?
+  follow_up_appointment    Appointment?                 @relation("FollowUp", fields: [follow_up_id], references: [id])
   follow_up_appointments   Appointment[]                @relation("FollowUp")
+  schedule                 Json
   soap_note                SoapNote[]
   vitals                   Vitals[]
-  AppointmentSchedule      AppointmentSchedule?
-  AppointmentTimeline      AppointmentTimeline?
+  appointment_providers    AppointmentProviders[]
+  created_at               DateTime                     @default(now())
+  updated_at               DateTime                     @updatedAt
 
   @@map("appointments")
 }
 
-enum AppointmentPrelistedPurposes {
-  Routine_Health_Checkup                  @map("Routine Health Checkup")
-  Maternal_Child_Health                   @map("Maternal & Child Health")
-  Immunizations_And_Vaccinations          @map("Immunizations And Vaccinations")
-  Family_Planning                         @map("Family Planning")
-  HIV_AIDS_Counseling_And_Testing         @map("HIV AIDS Counseling And Testing")
-  Tuberculosis_Screening_And_Treatment    @map("Tuberculosis Screening And Treatment")
-  Medical_Consultation_And_Treatment      @map("Medical Consultation And Treatment")
-  Nutrition_Counseling_And_Support        @map("Nutrition Counseling And Support")
-  Chronic_Disease_Management              @map("Chronic Disease Management")
-  Mental_Health_Support_or_Counseling     @map("Mental Health Support or Counseling")
-  Health_Education_And_Awareness          @map("Health Education And Awareness")
-  Antenatal_or_Postnatal_Care             @map("Antenatal or Postnatal Care")
-  Sexual_And_Reproductive_Health_Services @map("Sexual And Reproductive Health Services")
-  Malaria_Diagnosis_And_Treatment         @map("Malaria Diagnosis And Treatment")
-  Health_Screening_Campaigns              @map("Health Screening Campaigns")
-  Drug_or_Substance_Abuse_Counseling      @map("Drug or Substance Abuse Counseling")
-  Followup_Appointment                    @map("Followup Appointment")
-  Dental_Care                             @map("Dental Care")
-  Referral
-  Others
+enum AppointmentPurpose {
+  ROUTINE_HEALTH_CHECKUP                  @map("ROUTINE HEALTH CHECKUP")
+  MATERNAL_CHILD_HEALTH                   @map("MATERNAL & CHILD HEALTH")
+  IMMUNIZATIONS_AND_VACCINATIONS          @map("IMMUNIZATIONS AND VACCINATIONS")
+  FAMILY_PLANNING                         @map("FAMILY PLANNING")
+  HIV_AIDS_COUNSELING_AND_TESTING         @map("HIV AIDS COUNSELING AND TESTING")
+  TUBERCULOSIS_SCREENING_AND_TREATMENT    @map("TUBERCULOSIS SCREENING AND TREATMENT")
+  MEDICAL_CONSULTATION_AND_TREATMENT      @map("MEDICAL CONSULTATION AND TREATMENT")
+  NUTRITION_COUNSELING_AND_SUPPORT        @map("NUTRITION COUNSELING AND SUPPORT")
+  CHRONIC_DISEASE_MANAGEMENT              @map("CHRONIC DISEASE MANAGEMENT")
+  MENTAL_HEALTH_SUPPORT_OR_COUNSELING     @map("MENTAL HEALTH SUPPORT OR COUNSELING")
+  HEALTH_EDUCATION_AND_AWARENESS          @map("HEALTH EDUCATION AND AWARENESS")
+  ANTENATAL_OR_POSTNATAL_CARE             @map("ANTENATAL OR POSTNATAL CARE")
+  SEXUAL_AND_REPRODUCTIVE_HEALTH_SERVICES @map("SEXUAL AND REPRODUCTIVE HEALTH SERVICES")
+  MALARIA_DIAGNOSIS_AND_TREATMENT         @map("MALARIA DIAGNOSIS AND TREATMENT")
+  HEALTH_SCREENING_CAMPAIGNS              @map("HEALTH SCREENING CAMPAIGNS")
+  DRUG_OR_SUBSTANCE_ABUSE_COUNSELING      @map("DRUG OR SUBSTANCE ABUSE COUNSELING")
+  FOLLOWUP_APPOINTMENT                    @map("FOLLOWUP APPOINTMENT")
+  DENTAL_CARE                             @map("DENTAL CARE")
+  REFERRAL
+  OTHERS
 }
 
-enum AppointmentType {
-  Submitted
-  Scheduled
-  Checked_in @map("Checked in")
-  Cancelled
-  Reschedule
-  No_show    @map("No show")
-  Completed
-  Confirmed
+enum AppointmentStatus {
+  SUBMITTED
+  SCHEDULED
+  CHECKED_IN @map("CHECKED IN")
+  CANCELLED
+  RESCHEDULED
+  NO_SHOW    @map("NO SHOW")
+  COMPLETED
+  CONFIRMED
 }
 
-model AppointmentSchedule {
-  id             String      @id @default(uuid())
-  appointment    Appointment @relation(fields: [appointment_id], references: [id])
-  appointment_id String      @unique
-  time           DateTime
-  count          Int
+model AppointmentProviders {
+  id              String      @id @default(uuid())
+  appointment_id  String
+  appointment     Appointment @relation(fields: [appointment_id], references: [id])
+  provider_id     String
+  provider        Provider    @relation(fields: [provider_id], references: [id])
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
 
-  @@map("appointment_schedule")
+  @@map("appointmentproviders")
 }
 
 model SoapNote {
@@ -158,10 +160,11 @@ model SoapNote {
   objective      Json?
   assessment     Json?
   plan           Json?
-  updated_by_id  String?
-  updated_by     Provider?   @relation("SoapNoteUpdatedBy", fields: [updated_by_id], references: [id])
+  created_by_id  String?
+  created_by     Provider?   @relation("SoapNoteUpdatedBy", fields: [created_by_id], references: [id])
+  created_at     DateTime    @default(now())
   updated_at     DateTime?   @updatedAt
-  events         Event[]
+  events         Events[]
 
   @@map("soapnotes")
 }
@@ -169,56 +172,39 @@ model SoapNote {
 model Vitals {
   id             String      @id @default(uuid())
   appointment    Appointment @relation(fields: [appointment_id], references: [id])
-  appointment_id String
+  appointment_id String      @unique
   blood_pressure String?
   heart_rate     String?
   temperature    String?
   height         String?
   weight         String?
-  updated_by_id  String?
-  updated_by     Provider?   @relation("VitalsUpdatedBy", fields: [updated_by_id], references: [id])
+  created_by_id  String?
+  created_by     Provider?   @relation("VitalsUpdatedBy", fields: [created_by_id], references: [id])
+  created_at     DateTime    @default(now())
   updated_at     DateTime?   @updatedAt
-  events         Event[]
+  events         Events[]
 
   @@map("vitals")
 }
 
-model AppointmentTimeline {
-  id             String                    @id @default(uuid())
-  appointment    Appointment               @relation(fields: [appointment_id], references: [id])
-  appointment_id String                    @unique
-  status         AppointmentTimelineStatus
-  created_at     DateTime                  @default(now())
-  event          Event[]
-
-  @@map("appointment timeline")
-}
-
-enum AppointmentTimelineStatus {
-  Attending
-  Attended
-}
-
-model Event {
+model Events {
   id            String              @id @default(uuid())
-  timestamp     DateTime
   type          EventType
-  timeline      AppointmentTimeline @relation(fields: [timeline_id], references: [id])
-  timeline_id   String
   created_by_id String?
   created_by    Provider?           @relation("EventCreatedBy", fields: [created_by_id], references: [id])
   vitals_id     String?
   vitals        Vitals?             @relation(fields: [vitals_id], references: [id])
   soap_note_id  String?
   soap_note     SoapNote?           @relation(fields: [soap_note_id], references: [id])
+  created_at     DateTime    @default(now())
+  updated_at     DateTime?   @updatedAt
 
   @@map("events")
 }
 
 enum EventType {
-  Vitals_recorded            @map("Vitals recorded")
-  Vitals_updated             @map("Vitals updated")
-  Soap_note_created          @map("Soap noted created")
-  Appointment_status         @map("Appointment status")
-  Appointment_status_updated @map("Appointment status updated")
+  VITALS_RECORDED               @map("VITALS RECORDED")
+  SOAP_NOTE_RECORDED            @map("SOAP NOTE RECORDED")
+  SOAP_NOTE_UPDATED             @map("SOAP NOTE UPDATED")
+  APPOINTMENT_STATUS_CHANGED    @map("APPOINTMENT STATUS CHANGED")
 }
