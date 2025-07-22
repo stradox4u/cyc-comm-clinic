@@ -33,18 +33,16 @@ const Header = () => {
                 <Link to="/" className=" hover:text-blue-600 transition-colors">
                   Home
                 </Link>
-                <Link
-                  to="/services"
+                <a href="/#services"
                   className=" hover:text-blue-600 transition-colors"
                 >
                   Services
-                </Link>
-                <Link
-                  to="/contact"
+                </a>
+                <a href="/#contact"
                   className=" hover:text-blue-600 transition-colors"
                 >
                   Contact
-                </Link>
+                </a>
                 <div className="flex items-center space-x-2">
                   <Button asChild variant="secondary">
                     <Link to="/signin">Login</Link>
