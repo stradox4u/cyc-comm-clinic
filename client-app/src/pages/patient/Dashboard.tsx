@@ -8,13 +8,13 @@ function PatientDashboard () {
 
     return (
         <div>
-            <section className="flex flex-row w-full mb-6 mt-16">
+            <section className="flex flex-row w-full mb-6 mt-16 p-16">
                 Bio
             </section>
-            <section className="w-full mb-6">
+            <section className="w-full mb-6 p-16">
                 Recent Vitals
             </section>
-            <section className="w-full">
+            <section className="w-full p-16">
                 Management Plan
             </section>
         </div>
