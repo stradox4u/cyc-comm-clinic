@@ -12,6 +12,10 @@ const config = {
   SESSION_EXPIRATION_HOURS: env('SESSION_EXPIRATION_HOURS'),
   RESEND_API_KEY: env('RESEND_API_KEY'),
   OTP_EXPIRATION_MINUTES: env('OTP_EXPIRATION_MINUTES'),
+  email: {
+    USER: env('EMAIL_USER'),
+    PASS: env('EMAIL_PASS'),
+  },
 }
 
 export default config

@@ -1,5 +1,5 @@
 import type { Patient, Provider } from '@prisma/client'
-import { sendEmail } from '../config/resend.js'
+import { sendEmail } from '../config/email.js'
 import config from '../config/config.js'
 
 const sendWelcomeMail = async (email: string, firstName: string) => {
@@ -57,7 +57,9 @@ const sendEmailVerificationRequestMail = async (
           ${otp}
         </span>
         <br/><br/>
-        This OTP expires after ${config.OTP_EXPIRATION_MINUTES} minutes. Only enter this code on our official website.
+        This OTP expires after ${
+          config.OTP_EXPIRATION_MINUTES
+        } minutes. Only enter this code on our official website.
         Don't share it with anyone. We'll never ask for it outside our official website.
       </div>
       <br/>

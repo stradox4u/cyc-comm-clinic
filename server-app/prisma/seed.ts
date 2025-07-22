@@ -19,7 +19,7 @@ const createRandomPatient = (): PatientRegisterSchema => ({
     .birthdate({ min: 1950, max: 2010, mode: 'year' })
     .toISOString(),
   address: faker.location.streetAddress(),
-  gender: faker.helpers.arrayElement(['Male', 'Female']),
+  gender: faker.helpers.arrayElement(['MALE', 'FEMALE']),
   emergency_contact_name: faker.person.fullName(),
   emergency_contact_phone: '081' + faker.string.numeric(8),
   blood_group: faker.helpers.arrayElement([
@@ -53,7 +53,7 @@ const customPatient: PatientCreateInput = {
   phone: '081' + faker.string.numeric(8),
   date_of_birth: '1990-07-13T14:45:00.000Z',
   address: 'No 99, West Rock street, Abeokuta, Ogun State, Nigeria',
-  gender: 'Male',
+  gender: 'MALE',
   emergency_contact_name: 'Mama Doe',
   emergency_contact_phone: '081' + faker.string.numeric(8),
   blood_group: 'A+',

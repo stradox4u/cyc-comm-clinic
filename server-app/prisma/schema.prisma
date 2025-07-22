@@ -21,7 +21,7 @@ model Patient {
   is_verified               Boolean   @default(false)
   first_name                String
   last_name                 String
-  phone                     String    @unique
+  phone                     String
   date_of_birth             DateTime
   address                   String
   gender                    PatientGender
@@ -38,8 +38,8 @@ model Patient {
 }
 
 enum PatientGender {
-  Male
-  Female
+  MALE
+  FEMALE
 }
 
 model Provider {

@@ -107,12 +107,28 @@ const patientProfile = catchAsync(async (req, res) => {
 const patientVerifyEmail = catchAsync(async (req, res) => {
   const { email, otp }: VerifyEmailSchema = req.body
 
+  const patient = await patientService.findPatient({ email })
+  if (!patient) throw new NotFoundError('User not found')
+
   const token = await authService.findToken({
     email,
     otp,
     type: TokenType.VERIFY_EMAIL,
   })
   if (!token || token.expires_at < new Date()) {
+    const { otp, expires_at } = generateOTP()
+
+    await authService.updateOrCreateToken(
+      { email: patient.email },
+      {
+        otp,
+        expires_at,
+        email: patient.email,
+        type: TokenType.VERIFY_EMAIL,
+      }
+    )
+    await emailService.sendEmailVerificationRequestMail(patient, otp)
+
     throw new ValidationError('Invalid or expired token. Try again')
   }
 
