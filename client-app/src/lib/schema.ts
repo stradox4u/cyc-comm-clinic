@@ -6,14 +6,17 @@ export const personalSchema = z.object({
   email: z.string().email("Invalid email"),
   phone: z.string().min(11, "Phone is required"),
   date_of_birth: z.string().min(1, "Date of birth is required"),
-  gender: z.string().min(1, "Gender is required"),
+  gender: z.enum(["male", "female", "other"], "Gender is required"),
   address: z.string().min(1, "Address is required"),
   occupation: z.string().min(1, "Occupation is required"),
-  emergencyName: z.string().min(1, "Emergency contact name is required"),
-  emergencyNumber: z.string().min(1, "Emergency number is required"),
-  bloodGroup: z.string().min(1, "Blood group is required"),
-  allergies: z.array(z.string()).optional(),
-  insurance: z.string().min(1, "Insurance is required"),
+  emergency_contact_name: z
+    .string()
+    .min(1, "Emergency contact name is required"),
+  emergency_contact_number: z.string().min(1, "Emergency contact is required"),
+  blood_group: z.string().min(1, "Blood group is required"),
+  allergies: z.string().optional(),
+  insurance_coverage: z.string().min(1, "Insurance coverage is required"),
+  insurance_provider_id: z.string().optional(),
 });
 
 export const passwordSchema = z
