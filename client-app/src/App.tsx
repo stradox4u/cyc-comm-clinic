@@ -7,6 +7,7 @@ import NotFound from "./pages/NotFound";
 import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
 import Home from "./pages/Home";
+import { PageLayout } from "./layout/pageLayout";
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -33,6 +34,8 @@ function App() {
         <Route index path="/" element={<Home />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
+        {/* Will return to protected route after API integration*/}
+        <Route path="/dashboard" element={<PageLayout><Dashboard /></PageLayout>} />
 
         {/* Protected Routes */}
         <Route
