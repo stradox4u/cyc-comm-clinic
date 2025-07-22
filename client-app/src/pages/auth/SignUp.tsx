@@ -26,7 +26,6 @@ const SignUp = () => {
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   const methods = useForm<FormData>({
     resolver: zodResolver(fullSchema),
     mode: "onTouched",
@@ -51,11 +50,12 @@ const SignUp = () => {
         "gender",
         "address",
         "occupation",
-        "emergencyName",
-        "emergencyNumber",
-        "bloodGroup",
+        "emergency_contact_name",
+        "emergency_contact_number",
+        "blood_group",
         "allergies",
-        "insurance",
+        "insurance_coverage",
+        "insurance_provider_id",
       ]);
     } else if (step === 3) {
       valid = await trigger(["password", "confirmPassword"]);
@@ -77,19 +77,19 @@ const SignUp = () => {
       <FormProvider {...methods}>
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="text-white space-y-6 relative z-20"
+          className="text-white space-y-6 z-20"
         >
           {/* Step Indicator */}
           {/* Progress Bar & Step Text - Hidden on Welcome Page */}
           {step !== 1 && (
             <div className="flex gap-4 items-center">
-              <div className="w-full bg-blue-900/50 rounded h-1.5 overflow-hidden">
+              <div className="w-full bg-[#6A5CA3]/30 rounded h-1.5 overflow-hidden">
                 <div
-                  className="bg-blue-500 h-full transition-all duration-300"
+                  className="bg-[#6A5CA3] h-full transition-all duration-300"
                   style={{ width: `${getProgressPercentage(step)}%` }}
                 />
               </div>
-              <p className="text-sm text-white font-semibold text-nowrap">
+              <p className="text-xs text-black font-semibold text-nowrap">
                 {getProgressPercentage(step)}% completed
               </p>
             </div>
@@ -97,30 +97,30 @@ const SignUp = () => {
 
           {/* Step 1: Welcome Page */}
           {step === 1 && (
-            <div className="text-center space-y-6 relative z-20">
-              <h2 className="text-2xl font-bold">
+            <div className="text-center space-y-6 relative z-20 text-black">
+              <h2 className="text-2xl font-semibold">
                 Welcome to CHC Patient Platform
               </h2>
-              <p className="text-sm text-gray-300">
+              <p className="text-sm text-gray-800">
                 Let’s get you set up. Click below to begin filling out your
                 details.
               </p>
               <img
                 src="/chc-banner.png"
-                className="w-full h-fit md:object-cover rounded-lg object-contain"
+                className="w-full h-fit md:object-cover rounded-lg object-contain aspect-[16/9] md:aspect-[3/2]"
                 alt=""
               />
               <Button
                 onClick={() => setStep(2)}
                 type="button"
                 size={"lg"}
-                className="bg-blue-600 font-semibold w-full md:w-1/2 md:text-lg"
+                className="bg-[#6A5CA3] font-semibold w-1/2 md:w-1/2 md:text-lg"
               >
                 Get Started
               </Button>
               <p className="mt-6 text-sm">
                 Already have an account?{" "}
-                <Link to="/signin" className="text-blue-400 hover:underline">
+                <Link to="/signin" className="text-purple-400 hover:underline">
                   Login
                 </Link>
               </p>
@@ -129,37 +129,39 @@ const SignUp = () => {
 
           {/* Step 2: Personal Details */}
           {step === 2 && (
-            <>
-              <h2 className="font-semibold tracking-tight text-lg">
+            <div className="text-black">
+              <h2 className="font-semibold tracking-tight mb-8 text-lg">
                 Personal Details
               </h2>
-              {[
-                ["First Name", "first_name", "text", "e.g. John"],
-                ["Last Name", "last_name", "text", "e.g. Doe"],
-                ["Email", "email", "email", "e.g. johndoe@gmail.com"],
-                ["Phone", "phone", "text", "0903-322-827"],
-                ["Date of Birth", "date_of_birth", "date"],
-              ].map(([label, name, type = "text", placeholder]) => (
-                <div key={name} className="space-y-2">
-                  <Label className="font-semibold">{label}</Label>
-                  <Input
-                    type={type}
-                    {...register(name as keyof FormData)}
-                    className="bg-transparent"
-                    placeholder={placeholder}
-                  />
-                  {errors[name as keyof FormData] && (
-                    <p className="text-red-500 text-sm">
-                      {errors[name as keyof FormData]?.message}
-                    </p>
-                  )}
-                </div>
-              ))}
+              <div className="">
+                {[
+                  ["First Name", "first_name", "text", "e.g. John"],
+                  ["Last Name", "last_name", "text", "e.g. Doe"],
+                  ["Email", "email", "email", "e.g. johndoe@gmail.com"],
+                  ["Phone", "phone", "text", "0903-322-827"],
+                  ["Date of Birth", "date_of_birth", "date"],
+                ].map(([label, name, type = "text", placeholder]) => (
+                  <div key={name} className="space-y-2 my-4">
+                    <Label className="font-semibold">{label}</Label>
+                    <Input
+                      type={type}
+                      {...register(name as keyof FormData)}
+                      className="py-6"
+                      placeholder={placeholder}
+                    />
+                    {errors[name as keyof FormData] && (
+                      <p className="text-red-500 text-sm">
+                        {errors[name as keyof FormData]?.message}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
               <div className="space-y-2">
                 <Label className="font-semibold">Gender</Label>
                 <select
                   {...register("gender")}
-                  className="bg-transparent border-b w-full p-2 rounded"
+                  className="bg-black text-white border-b w-full p-2 rounded"
                 >
                   <option value="male">Male</option>
                   <option value="female">Female</option>
@@ -174,21 +176,30 @@ const SignUp = () => {
               {[
                 ["Address", "address", "e.g. 123 Main St, Springfield"],
                 ["Occupation", "occupation", "e.g. Software Engineer"],
-                ["Emergency Contact Name", "emergencyName", "e.g. Jane Doe"],
+                [
+                  "Emergency Contact Name",
+                  "emergency_contact",
+                  "e.g. Jane Doe",
+                ],
                 [
                   "Emergency Contact Number",
-                  "emergencyNumber",
+                  "emergency_contact_number",
                   "e.g. 0803-456-7890",
                 ],
-                ["Blood Group", "bloodGroup", "e.g. O+ / A-"],
+                ["Blood Group", "blood_group", "e.g. O+ / A-"],
                 ["Allergies", "allergies", "e.g. Peanuts, Penicillin"],
-                ["Insurance Provider", "insurance", "e.g. HealthPlus or N/A"],
+                [
+                  "Insurance Coverage",
+                  "insurance_coverage",
+                  "e.g. HealthPlus or N/A",
+                ],
+                ["Insurance Provider", "insurance_provider_id", "e.g. 362HGSD"],
               ].map(([label, name, placeholder]) => (
-                <div key={name} className="space-y-2">
+                <div key={name} className="space-y-2 my-4">
                   <Label className="font-semibold">{label}</Label>
                   <Input
                     {...register(name as keyof FormData)}
-                    className="bg-transparent"
+                    className="py-6"
                     placeholder={placeholder}
                   />
                   {errors[name as keyof FormData] && (
@@ -198,7 +209,7 @@ const SignUp = () => {
                   )}
                 </div>
               ))}
-              <div className="flex justify-between md:gap-8">
+              <div className="flex justify-between md:gap-8 my-6">
                 <Button
                   type="button"
                   onClick={prevStep}
@@ -209,24 +220,24 @@ const SignUp = () => {
                 <Button
                   type="button"
                   onClick={nextStep}
-                  className="bg-blue-600 font-semibold z-20 md:w-1/2"
+                  className="bg-[#6A5CA3] hover:bg-[#6A5CA3]/30 font-semibold z-20 md:w-1/2"
                 >
                   Next
                 </Button>
               </div>
-            </>
+            </div>
           )}
 
           {/* Step 3: Password Setup */}
           {step === 3 && (
-            <>
-              <div className="space-y-2">
+            <div className="text-black">
+              <div className="space-y-2 my-4">
                 <Label className="font-semibold">Set Password</Label>
-                <div className="flex">
+                <div className="flex text-white items-center">
                   <Input
                     type={showPassword ? "text" : "password"}
                     {...register("password")}
-                    className="bg-transparent"
+                    className="py-6"
                   />
                   {showPassword ? (
                     <EyeClosed
@@ -246,13 +257,13 @@ const SignUp = () => {
                   </p>
                 )}
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 my-4">
                 <Label className="font-semibold">Confirm Password</Label>
-                <div className="flex">
+                <div className="flex text-white items-center">
                   <Input
                     type={showConfirmPassword ? "text" : "password"}
                     {...register("confirmPassword")}
-                    className="bg-transparent"
+                    className="py-6"
                   />
                   {showConfirmPassword ? (
                     <EyeClosed
@@ -266,7 +277,6 @@ const SignUp = () => {
                     />
                   )}
                 </div>
-
                 {errors.confirmPassword && (
                   <p className="text-red-500 text-sm">
                     {errors.confirmPassword.message}
@@ -281,11 +291,14 @@ const SignUp = () => {
                 >
                   Back
                 </Button>
-                <Button type="submit" className="bg-green-700  font-semibold">
+                <Button
+                  type="submit"
+                  className="bg-[#6A5CA3]  font-semibold hover:bg-[#6A5CA3]/60"
+                >
                   Create Account
                 </Button>
               </div>
-            </>
+            </div>
           )}
 
           {/* Step 4: Registration Complete */}
@@ -307,6 +320,24 @@ const SignUp = () => {
           )}
         </form>
       </FormProvider>
+      {/* Security Notice */}
+      {/* <Card className="bg-green-50 border-green-200 absolute max-w-[34rem] w-full bottom-12 left-52">
+        <CardContent className="p-4">
+          <div className="flex items-start space-x-3">
+            <Shield className="h-8 w-8 text-green-600" />
+            <div className="text-sm">
+              <h4 className="font-medium text-green-900">
+                Your Privacy is Protected
+              </h4>
+              <p className="text-green-700 mt-1">
+                We use industry-standard encryption to protect your personal and
+                health information. Your data is never shared without your
+                explicit consent.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card> */}
     </AuthLayout>
   );
 };
