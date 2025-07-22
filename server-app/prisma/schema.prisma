@@ -31,7 +31,7 @@ model Patient {
   insurance_coverage    String?
   created_at            DateTime      @default(now())
   updated_at            DateTime      @updatedAt
-  appointment           Appointment[]
+  appointments          Appointment[]
 
   @@map("patients")
 }
@@ -98,7 +98,7 @@ model Appointment {
   follow_up_appointments   Appointment[]                @relation("FollowUp")
   schedule                 Json
   soap_note                SoapNote[]
-  vitals                   Vitals[]
+  vitals                   Vitals
   appointment_providers    AppointmentProviders[]
   created_at               DateTime                     @default(now())
   updated_at               DateTime                     @updatedAt
@@ -196,8 +196,8 @@ model Events {
   vitals        Vitals?             @relation(fields: [vitals_id], references: [id])
   soap_note_id  String?
   soap_note     SoapNote?           @relation(fields: [soap_note_id], references: [id])
-  created_at     DateTime    @default(now())
-  updated_at     DateTime?   @updatedAt
+  created_at    DateTime    @default(now())
+  updated_at    DateTime?   @updatedAt
 
   @@map("events")
 }
