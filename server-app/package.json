@@ -5,14 +5,10 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "start:dev": "tsx --env-file=../.env --watch src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:dev": "tsx --watch src/index.ts",
     "build": "tsc",
-    "start": "NODE_ENV=production node dist/index.js",
-    "db:migrate": "prisma migrate dev",
-    "db:deploy": "prisma migrate deploy",
-    "db:generate": "prisma generate",
-    "db:seed": "tsx --env-file=.env prisma/seeder.ts",
-    "db:studio": "prisma studio"
+    "start": "NODE_ENV=production node dist/index.js"
   },
   "keywords": [
     "community-clinic",
@@ -22,27 +18,12 @@
   "author": "Team Umar",
   "license": "MIT",
   "dependencies": {
-    "@prisma/client": "^6.11.1",
-    "bcryptjs": "^3.0.2",
-    "cookie-parser": "^1.4.7",
-    "cors": "^2.8.5",
-    "express": "^5.1.0",
-    "helmet": "^8.1.0",
-    "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^7.0.5",
-    "winston": "^3.17.0",
-    "zod": "^4.0.5"
+    "dotenv": "^17.2.0",
+    "express": "^5.1.0"
   },
   "devDependencies": {
-    "@faker-js/faker": "^9.9.0",
-    "@types/bcryptjs": "^2.4.6",
-    "@types/cookie-parser": "^1.4.9",
-    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
-    "@types/helmet": "^0.0.48",
-    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.0.12",
-    "prisma": "^6.11.1",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"
   }

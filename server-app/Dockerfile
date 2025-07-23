@@ -6,8 +6,7 @@ RUN apt-get update
 RUN apt-get -y install \
   cmake
 
-RUN --mount=type=cache,target=/root/.npm \
-    npm install
+RUN npm install
 COPY . .
 
 FROM node:22.17 AS build

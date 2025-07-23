@@ -1,7 +1,7 @@
 services:
   database:
-    container_name: database
-    image: postgres:17.5
+    container_name: comm-clinic-db
+    image: postgres:16.9
     env_file:
       - .env
     environment:
@@ -15,7 +15,7 @@ services:
       - 5432:5432
 
   server:
-    container_name: server-app
+    container_name: comm-clinic-server
     depends_on:
       - database
     build:

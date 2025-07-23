@@ -1,22 +1,20 @@
-import app from './app.js'
-import config from './config/config.js'
-import prisma from './config/prisma.js'
-import logger from './middlewares/logger.js'
+import { Request, Response } from "express";
+import dotenv from 'dotenv';
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 
-const PORT = config.PORT || 8000
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-const startServer = async () => {
-  try {
-    await prisma.$connect()
-    logger.info('Database connected')
+dotenv.config({ path: join(__dirname, '../', '../', '.env') });
 
-    app.listen(PORT, () => {
-      logger.info(`Server is running on port ${PORT}`)
-    })
-  } catch (err) {
-    logger.error('Unable to connect to the database', err)
-    process.exit(1)
-  }
-}
+import express from 'express';
+const app = express();
 
-startServer()
+app.get('/', (req: Request, res: Response) => {
+  res.send('Hello, Community Clinic!');
+});
+
+app.listen(process.env.PORT || 8000, () => {
+  console.log(`Server is running on port ${process.env.PORT || 8000}`);
+});
