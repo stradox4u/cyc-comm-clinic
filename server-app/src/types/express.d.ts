@@ -1,9 +1,14 @@
-import type { Patient, Provider } from '@prisma/client'
+import 'express-session'
+import type { SessionPayload } from './index.ts'
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: Patient | Provider
-    }
+declare module 'express-serve-static-core' {
+  interface Request {
+    user?: SessionPayload
+  }
+}
+
+declare module 'express-session' {
+  interface SessionData {
+    user?: SessionPayload
   }
 }

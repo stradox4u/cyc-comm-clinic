@@ -15,73 +15,100 @@ datasource db {
 }
 
 model Patient {
-  id                    String        @id @default(uuid())
-  email                 String        @unique
-  password              String
-  first_name            String
-  last_name             String
-  phone                 String        @unique
-  date_of_birth         DateTime
-  address               String
-  gender                PatientGender
-  emergency_contact     String
-  blood_group           String
-  allergies             String[]
-  insurance_provider_id String?
-  insurance_coverage    String?
-  created_at            DateTime      @default(now())
-  updated_at            DateTime      @updatedAt
+  id                        String    @id @default(uuid())
+  email                     String    @unique
+  password                  String
+  is_verified               Boolean   @default(false)
+  first_name                String
+  last_name                 String
+  phone                     String
+  date_of_birth             DateTime
+  address                   String
+  gender                    PatientGender
+  emergency_contact_name    String
+  emergency_contact_phone   String
+  blood_group               String
+  allergies                 String[]
+  insurance_provider_id     String?   
+  insurance_coverage        String?
+  created_at                DateTime  @default(now())
+  updated_at                DateTime  @updatedAt
   appointments          Appointment[]
 
   @@map("patients")
 }
 
 enum PatientGender {
-  Male
-  Female
+  MALE
+  FEMALE
 }
 
 model Provider {
-  id                      String            @id @default(uuid())
-  email                   String            @unique
-  password                String
-  first_name              String
-  last_name               String
-  phone                   String
-  role_title              ProviderRoleTitle
+  id                    String            @id @default(uuid())
+  email                 String            @unique
+  password              String
+  first_name            String
+  last_name             String
+  phone                 String
+  role_title            ProviderRoleTitle
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+  
   appointment_providers   AppointmentProviders[]
-  created_at              DateTime          @default(now())
-  updated_at              DateTime          @updatedAt
   updated_soap_notes      SoapNote[]        @relation("SoapNoteUpdatedBy")
   updated_vitals          Vitals[]          @relation("VitalsUpdatedBy")
   created_events          Events[]           @relation("EventCreatedBy")
 
-  role ProviderRole @relation(fields: [role_title], references: [title])
+  role                  ProviderRole      @relation(fields: [role_title], references: [title])
 
   @@map("providers")
 }
 
 model ProviderRole {
-  id          String            @id @default(uuid())
-  title       ProviderRoleTitle @unique
-  description String
-  created_at  DateTime          @default(now())
-  updated_at  DateTime          @updatedAt
+  id                    String              @id @default(uuid())
+  title                 ProviderRoleTitle   @unique
+  description           String
+  created_at            DateTime            @default(now())
+  updated_at            DateTime            @updatedAt
 
-  providers Provider[]
+  providers             Provider[]
 
   @@map("provider_roles")
 }
 
 enum ProviderRoleTitle {
-  ADMIN              @map("ADMIN")
-  GENERAL_PRACTIONER @map("GENERAL PRACTIONER")
-  NURSE              @map("NURSE")
-  PHARMACIST         @map("PHARMACIST")
-  LAB_TECHNICIAN     @map("LAB TECHNICIAN")
-  PAEDIATRICIAN      @map("PAEDIATRICIAN")
-  GYNAECOLOGIST      @map("GYNAECOLOGIST")
-  RECEPTIONIST       @map("RECEPTIONIST")
+  ADMIN                 @map("ADMIN")
+  GENERAL_PRACTIONER    @map("GENERAL PRACTIONER")
+  NURSE                 @map("NURSE")
+  PHARMACIST            @map("PHARMACIST")
+  LAB_TECHNICIAN        @map("LAB TECHNICIAN")
+  PAEDIATRICIAN         @map("PAEDIATRICIAN")
+  GYNAECOLOGIST         @map("GYNAECOLOGIST")
+  RECEPTIONIST          @map("RECEPTIONIST")
+}
+
+model Session {
+  sid                   String        @id
+  sess                  Json
+  expire                DateTime      @db.Timestamp(6)
+
+  @@map("session")
+  @@index([expire])    
+}
+
+model Token {
+  id                    String         @id   @default(uuid())
+  email                 String         @unique
+  otp                   String
+  type                  TokenType      
+  expires_at            DateTime
+
+  @@map("tokens")
+}
+
+enum TokenType {
+  VERIFY_EMAIL
+  CHANGE_PASSWORD
 }
 
 model Appointment {

@@ -14,3 +14,6 @@ Community Health Clinic App for Team Umar (CYC 2025 Cohort 2)
 - The client app will be available at `http://localhost:5173`.
 - The server app will be available at `http://localhost:8000`.
 - If adding/removing dependencies, make sure to run `docker compose down`, followed by `docker compose build`, and then `docker compose up` again to ensure the changes are reflected.
+
+
+- To seed the database, run `npm run db:reset && npm run db:seed`. Go to the seed script in prisma directory to know the custom credentials to test with.

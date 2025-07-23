@@ -1,44 +1,38 @@
 import prisma from '../../config/prisma.js'
-import type { Prisma, Patient, Provider } from '@prisma/client'
+import type { Prisma, Token } from '@prisma/client'
 
-export type PatientWhereUniqueInput = Prisma.PatientWhereUniqueInput
-export type PatientCreateInput = Prisma.PatientCreateInput
-export type ProviderWhereUniqueInput = Prisma.ProviderWhereUniqueInput
-export type ProviderCreateInput = Prisma.ProviderCreateInput
+export type TokenWhereUniqueInput = Prisma.TokenWhereUniqueInput
+export type TokenUncheckedCreateInput = Prisma.TokenUncheckedCreateInput
 
-const findPatient = async (
-  payload: PatientWhereUniqueInput
-): Promise<Patient | null> => {
-  return await prisma.patient.findUnique({
-    where: payload,
+const findToken = async (
+  filter: TokenWhereUniqueInput
+): Promise<Token | null> => {
+  return await prisma.token.findUnique({
+    where: filter,
   })
 }
 
-const createPatient = async (payload: PatientCreateInput): Promise<Patient> => {
-  return await prisma.patient.create({
-    data: payload,
+const updateOrCreateToken = async (
+  filter: TokenWhereUniqueInput,
+  payload: TokenUncheckedCreateInput
+): Promise<Token> => {
+  return await prisma.token.upsert({
+    where: filter,
+    update: payload,
+    create: payload,
   })
 }
 
-const findProvider = async (
-  payload: ProviderWhereUniqueInput
-): Promise<Provider | null> => {
-  return await prisma.provider.findUnique({
-    where: payload,
-  })
-}
-
-const createProvider = async (
-  payload: ProviderCreateInput
-): Promise<Provider> => {
-  return await prisma.provider.create({
-    data: payload,
+const deleteToken = async (
+  filter: TokenWhereUniqueInput
+): Promise<Token | null> => {
+  return await prisma.token.delete({
+    where: filter,
   })
 }
 
 export default {
-  findPatient,
-  createPatient,
-  findProvider,
-  createProvider,
+  findToken,
+  updateOrCreateToken,
+  deleteToken,
 }
