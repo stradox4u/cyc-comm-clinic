@@ -55,7 +55,7 @@ const Footer = () => {
             </div>
           </div>
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Contact Info</h3>
+            <h3 id="contact" className="text-lg font-semibold">Contact Info</h3>
             <div className="space-y-2">
               <div className="flex items-center space-x-2 text-gray-400">
                 <Phone className="h-4 w-4" />

@@ -101,7 +101,7 @@ const Home = () => {
         <main className="">
           <section className="py-20 bg-background">
             <div className="max-w-7xl mx-auto px-4 sm:px-8 md:px-16 lg:px-24 xl:px-32">
-              <div className="text-center space-y-4 mb-16">
+              <div id="services" className="text-center space-y-4 mb-16">
                 <Badge variant="outline" className="w-fit mx-auto">
                   Our Services
                 </Badge>
@@ -316,7 +316,7 @@ const Home = () => {
                     asChild
                     className="text-lg px-8 py-6 border-white text-white hover:bg-white hover:text-blue-600 bg-transparent"
                   >
-                    <Link to="/landing/contact">Contact Us</Link>
+                    <a href="/#contact">Contact Us</a>
                   </Button>
                 </div>
               </div>

@@ -1,4 +1,10 @@
+import PatientDashboard from "./patient/Dashboard";
+
 const Dashboard = () => {
-  return <div>Dashboard</div>;
+  return (
+    <div>
+      <PatientDashboard />
+    </div>
+  )
 };
 export default Dashboard;

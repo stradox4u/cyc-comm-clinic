@@ -33,6 +33,7 @@ model Patient {
   insurance_coverage        String?
   created_at                DateTime  @default(now())
   updated_at                DateTime  @updatedAt
+  appointments          Appointment[]
 
   @@map("patients")
 }
@@ -52,6 +53,11 @@ model Provider {
   role_title            ProviderRoleTitle
   created_at            DateTime          @default(now())
   updated_at            DateTime          @updatedAt
+  
+  appointment_providers   AppointmentProviders[]
+  updated_soap_notes      SoapNote[]        @relation("SoapNoteUpdatedBy")
+  updated_vitals          Vitals[]          @relation("VitalsUpdatedBy")
+  created_events          Events[]           @relation("EventCreatedBy")
 
   role                  ProviderRole      @relation(fields: [role_title], references: [title])
 
@@ -103,4 +109,129 @@ model Token {
 enum TokenType {
   VERIFY_EMAIL
   CHANGE_PASSWORD
+}
+
+model Appointment {
+  id                       String                       @id @default(uuid())
+  patient                  Patient                      @relation(fields: [patient_id], references: [id])
+  patient_id               String
+  purposes                 AppointmentPurpose[]
+  other_purpose            String
+  status                   AppointmentStatus
+  has_insurance            Boolean
+  is_follow_up_required    Boolean
+  follow_up_id             String?
+  follow_up_appointment    Appointment?                 @relation("FollowUp", fields: [follow_up_id], references: [id])
+  follow_up_appointments   Appointment[]                @relation("FollowUp")
+  schedule                 Json
+  soap_note                SoapNote[]
+  vitals                   Vitals
+  appointment_providers    AppointmentProviders[]
+  created_at               DateTime                     @default(now())
+  updated_at               DateTime                     @updatedAt
+
+  @@map("appointments")
+}
+
+enum AppointmentPurpose {
+  ROUTINE_HEALTH_CHECKUP                  @map("ROUTINE HEALTH CHECKUP")
+  MATERNAL_CHILD_HEALTH                   @map("MATERNAL & CHILD HEALTH")
+  IMMUNIZATIONS_AND_VACCINATIONS          @map("IMMUNIZATIONS AND VACCINATIONS")
+  FAMILY_PLANNING                         @map("FAMILY PLANNING")
+  HIV_AIDS_COUNSELING_AND_TESTING         @map("HIV AIDS COUNSELING AND TESTING")
+  TUBERCULOSIS_SCREENING_AND_TREATMENT    @map("TUBERCULOSIS SCREENING AND TREATMENT")
+  MEDICAL_CONSULTATION_AND_TREATMENT      @map("MEDICAL CONSULTATION AND TREATMENT")
+  NUTRITION_COUNSELING_AND_SUPPORT        @map("NUTRITION COUNSELING AND SUPPORT")
+  CHRONIC_DISEASE_MANAGEMENT              @map("CHRONIC DISEASE MANAGEMENT")
+  MENTAL_HEALTH_SUPPORT_OR_COUNSELING     @map("MENTAL HEALTH SUPPORT OR COUNSELING")
+  HEALTH_EDUCATION_AND_AWARENESS          @map("HEALTH EDUCATION AND AWARENESS")
+  ANTENATAL_OR_POSTNATAL_CARE             @map("ANTENATAL OR POSTNATAL CARE")
+  SEXUAL_AND_REPRODUCTIVE_HEALTH_SERVICES @map("SEXUAL AND REPRODUCTIVE HEALTH SERVICES")
+  MALARIA_DIAGNOSIS_AND_TREATMENT         @map("MALARIA DIAGNOSIS AND TREATMENT")
+  HEALTH_SCREENING_CAMPAIGNS              @map("HEALTH SCREENING CAMPAIGNS")
+  DRUG_OR_SUBSTANCE_ABUSE_COUNSELING      @map("DRUG OR SUBSTANCE ABUSE COUNSELING")
+  FOLLOWUP_APPOINTMENT                    @map("FOLLOWUP APPOINTMENT")
+  DENTAL_CARE                             @map("DENTAL CARE")
+  REFERRAL
+  OTHERS
+}
+
+enum AppointmentStatus {
+  SUBMITTED
+  SCHEDULED
+  CHECKED_IN @map("CHECKED IN")
+  CANCELLED
+  RESCHEDULED
+  NO_SHOW    @map("NO SHOW")
+  COMPLETED
+  CONFIRMED
+}
+
+model AppointmentProviders {
+  id              String      @id @default(uuid())
+  appointment_id  String
+  appointment     Appointment @relation(fields: [appointment_id], references: [id])
+  provider_id     String
+  provider        Provider    @relation(fields: [provider_id], references: [id])
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
+
+  @@map("appointmentproviders")
+}
+
+model SoapNote {
+  id             String      @id @default(uuid())
+  appointment    Appointment @relation(fields: [appointment_id], references: [id])
+  appointment_id String
+  subjective     Json?
+  objective      Json?
+  assessment     Json?
+  plan           Json?
+  created_by_id  String?
+  created_by     Provider?   @relation("SoapNoteUpdatedBy", fields: [created_by_id], references: [id])
+  created_at     DateTime    @default(now())
+  updated_at     DateTime?   @updatedAt
+  events         Events[]
+
+  @@map("soapnotes")
+}
+
+model Vitals {
+  id             String      @id @default(uuid())
+  appointment    Appointment @relation(fields: [appointment_id], references: [id])
+  appointment_id String      @unique
+  blood_pressure String?
+  heart_rate     String?
+  temperature    String?
+  height         String?
+  weight         String?
+  created_by_id  String?
+  created_by     Provider?   @relation("VitalsUpdatedBy", fields: [created_by_id], references: [id])
+  created_at     DateTime    @default(now())
+  updated_at     DateTime?   @updatedAt
+  events         Events[]
+
+  @@map("vitals")
+}
+
+model Events {
+  id            String              @id @default(uuid())
+  type          EventType
+  created_by_id String?
+  created_by    Provider?           @relation("EventCreatedBy", fields: [created_by_id], references: [id])
+  vitals_id     String?
+  vitals        Vitals?             @relation(fields: [vitals_id], references: [id])
+  soap_note_id  String?
+  soap_note     SoapNote?           @relation(fields: [soap_note_id], references: [id])
+  created_at    DateTime    @default(now())
+  updated_at    DateTime?   @updatedAt
+
+  @@map("events")
+}
+
+enum EventType {
+  VITALS_RECORDED               @map("VITALS RECORDED")
+  SOAP_NOTE_RECORDED            @map("SOAP NOTE RECORDED")
+  SOAP_NOTE_UPDATED             @map("SOAP NOTE UPDATED")
+  APPOINTMENT_STATUS_CHANGED    @map("APPOINTMENT STATUS CHANGED")
 }
