@@ -24,8 +24,7 @@ services:
     volumes:
       - ./server-app:/app/
       - /app/node_modules
-    env_file:
-      - .env
+      - ./.env:/app/.env
     ports:
       - 8000:8000
     command: npm run start:dev
