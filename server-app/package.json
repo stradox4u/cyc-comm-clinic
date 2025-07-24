@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "start:dev": "tsx --env-file=../.env --watch src/index.ts",
+    "start:dev": "npx prisma generate && tsx --env-file=.env --watch src/index.ts",
     "build": "tsc",
     "start": "NODE_ENV=production node dist/index.js",
     "db:deploy": "prisma migrate deploy",
