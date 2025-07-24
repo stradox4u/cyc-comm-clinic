@@ -39,8 +39,6 @@ const planSchema = z.object({
 }).partial()
 
 export const SoapNoteRecordSchema = z.object({
-    id: z.uuid(),
-    appointment_id: z.uuid(),
     subjective: subjectiveSchema,
     objective: objectiveSchema,
     assessment: assessmentSchema,

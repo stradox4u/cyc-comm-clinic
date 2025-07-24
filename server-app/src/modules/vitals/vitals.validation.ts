@@ -2,8 +2,6 @@ import { z } from 'zod';
 import { EventFullSchema } from '../events/events.validation.js';
 
 export const VitalsRecordSchema = z.object({
-    id: z.uuid(),
-    appointment_id: z.uuid(),
     blood_pressure: z.string().optional(),
     heart_rate: z.string().optional(),
     temperature: z.string().optional(), 
