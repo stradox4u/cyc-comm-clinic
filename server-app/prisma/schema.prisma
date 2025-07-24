@@ -29,7 +29,7 @@ model Patient {
   emergency_contact_phone   String
   blood_group               String
   allergies                 String[]
-  insurance_provider_id     String?   
+  insurance_provider_id     String?
   insurance_coverage        String?
   created_at                DateTime  @default(now())
   updated_at                DateTime  @updatedAt
@@ -53,7 +53,7 @@ model Provider {
   role_title            ProviderRoleTitle
   created_at            DateTime          @default(now())
   updated_at            DateTime          @updatedAt
-  
+
   appointment_providers   AppointmentProviders[]
   updated_soap_notes      SoapNote[]        @relation("SoapNoteUpdatedBy")
   updated_vitals          Vitals[]          @relation("VitalsUpdatedBy")
@@ -93,14 +93,14 @@ model Session {
   expire                DateTime      @db.Timestamp(6)
 
   @@map("session")
-  @@index([expire])    
+  @@index([expire])
 }
 
 model Token {
   id                    String         @id   @default(uuid())
   email                 String         @unique
   otp                   String
-  type                  TokenType      
+  type                  TokenType
   expires_at            DateTime
 
   @@map("tokens")
