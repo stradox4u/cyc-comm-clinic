@@ -116,7 +116,7 @@ model Appointment {
   patient                  Patient                      @relation(fields: [patient_id], references: [id])
   patient_id               String
   purposes                 AppointmentPurpose[]
-  other_purpose            String
+  other_purpose            String?
   status                   AppointmentStatus
   has_insurance            Boolean
   is_follow_up_required    Boolean

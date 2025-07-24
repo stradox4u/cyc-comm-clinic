@@ -7,6 +7,7 @@ import { appLogger } from './middlewares/logger.js'
 import { authRoute } from './modules/auth/index.js'
 import session from 'express-session'
 import connectPgSimple from 'connect-pg-simple'
+import { appointmentRoute } from './modules/appointment/index.js'
 
 const app = express()
 
@@ -46,6 +47,8 @@ app.use(
 )
 
 app.use('/api/auth', authRoute)
+
+app.use('api/appointment', appointmentRoute)
 
 app.use(notFoundHandler)
 app.use(errorHandler)

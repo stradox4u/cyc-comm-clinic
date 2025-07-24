@@ -13,22 +13,42 @@ const scheduleInfoSchema = z.object({
     }),
 })
 
+const nestedAppointmentCreateSchema = z.object({
+  patient: z.object({
+    connect: z.object({ id: z.uuid() }),
+  }),
+  schedule: scheduleInfoSchema,
+  purposes: z.array(z.enum(AppointmentPurpose)),
+  status: z.enum(AppointmentStatus),
+  has_insurance: z.boolean(),
+  is_follow_up_required: z.boolean(),
+});
+
+const nestedFollowUpAppointmentsSchema = z.object({
+  create: z.array(nestedAppointmentCreateSchema).optional(),
+  connect: z.array(z.object({ id: z.uuid() })).optional(),
+}).optional();
+
+const nestedFollowUpAppointmentSchema = z.object({
+  create: nestedAppointmentCreateSchema.optional(),
+  connect: z.object({ id: z.uuid() }).optional(),
+}).optional();
+
 const appointmentRegisterSchema = z.object({
-    id: z.uuid(),
     patient_id: z.object({
         id: z.uuid(),
         name: z.string().min(1),
         insurance_provider_id: z.string().optional()
     }),
     schedule: scheduleInfoSchema,
-    purposes: z.enum(AppointmentPurpose),
+    purposes: z.array(z.enum(AppointmentPurpose)),
     other_purpose: z.string().optional(),
     status: z.enum(AppointmentStatus),
     has_insurance: z.boolean(),
     is_follow_up_required: z.boolean(),
     follow_up_id: z.uuid().optional(),
-    follow_up_appointment: z.lazy(() => z.object({})).optional(),
-    follow_up_appointments: z.array(z.object({})).optional(),
+    follow_up_appointment: nestedFollowUpAppointmentSchema,
+    follow_up_appointments: nestedFollowUpAppointmentsSchema,
     soap_note: SoapNoteRecordSchema.optional(),
     vitals: VitalsRecordSchema.optional(),
     appointment_providers: z.array(z.object({})).optional()
@@ -42,6 +62,12 @@ export type AppointmentRegisterSchema = z.infer<typeof appointmentRegisterSchema
 const appointmentProvidersSchema = z.object({
     appointment_id: z.uuid(),
     provider_id: z.uuid()
-})
+}).optional()
 
 export type AppointmentProviderSchema = z.infer<typeof appointmentProvidersSchema>
+
+export default {
+  appointmentRegisterSchema,
+  appointmentProvidersSchema,
+  scheduleInfoSchema,
+}
