@@ -48,7 +48,7 @@ app.use(
 
 app.use('/api/auth', authRoute)
 
-app.use('api/appointment', appointmentRoute)
+app.use('/api/appointment', appointmentRoute)
 
 app.use(notFoundHandler)
 app.use(errorHandler)
