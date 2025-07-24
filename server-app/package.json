@@ -46,6 +46,7 @@
     "@types/helmet": "^0.0.48",
     "@types/node": "^24.0.12",
     "prisma": "^6.11.1",
+    "ts-node": "^10.9.2",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"
   }
