@@ -16,6 +16,7 @@ const appointmentCreate = catchAsync(async (req, res) => {
         purposes: Array.isArray(newAppointment.purposes)
           ? newAppointment.purposes
           : [newAppointment.purposes],
+        other_purpose: typeof newAppointment.other_purpose === 'string' ? newAppointment.other_purpose : '',
         patient: {
             connect: {
                 id: newAppointment.patient_id.id

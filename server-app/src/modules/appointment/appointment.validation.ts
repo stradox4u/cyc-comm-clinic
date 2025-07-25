@@ -56,6 +56,25 @@ const appointmentRegisterSchema = z.object({
   message: 'Insurance provider is required when patient has insurance',
   path: ['patient_id', 'insurance_provider_id']
 })
+.superRefine((data, ctx) => {
+  const hasOthers = data.purposes.includes('OTHERS');
+
+  if (hasOthers && !data.other_purpose) {
+    ctx.addIssue({
+      path: ['other_purpose'],
+      code: 'custom',
+      message: "You must provide 'other_purpose' when 'OTHERS' is selected in purposes"
+    });
+  }
+
+  if (!hasOthers && data.other_purpose) {
+    ctx.addIssue({
+      path: ['other_purpose'],
+      code: 'custom',
+      message: "'other_purpose' should be empty unless 'OTHERS' is selected"
+    });
+  }
+});
 
 export type AppointmentRegisterSchema = z.infer<typeof appointmentRegisterSchema>
 

@@ -18,7 +18,7 @@ async function createAppointment(
     return prisma.appointment.create({
         data: payload
     })
-}
+  }
 
 // Get single Appointment
 async function findAppointment(
