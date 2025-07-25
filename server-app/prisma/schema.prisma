@@ -125,7 +125,7 @@ model Appointment {
   follow_up_appointments   Appointment[]                @relation("FollowUp")
   schedule                 Json
   soap_note                SoapNote[]
-  vitals                   Vitals?                
+  vitals                   Vitals?
   vitals_id                String?                      @unique
   appointment_providers    AppointmentProviders[]
   created_at               DateTime                     @default(now())

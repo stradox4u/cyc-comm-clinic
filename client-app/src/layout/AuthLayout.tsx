@@ -1,6 +1,5 @@
 import { Hospital } from "lucide-react";
 import { Card, CardContent } from "../components/ui/card";
-import Footer from "../pages/home/Footer";
 import Header from "../pages/home/Header";
 
 export default function AuthLayout({
@@ -43,7 +42,7 @@ export default function AuthLayout({
                 Community <span className="text-pink-400">Health</span> Clinic
               </p>
             </div>
-            <Card className="mt-24 px-1 py-4 md:p-8 bg-[#D4D6EB] border-gray-400/20 w-full max-w-4xl xl:max-w-xl shadow-md">
+            <Card className="mt-24 px-1 py-4 md:py-8 bg-[#D4D6EB] border-gray-400/20 w-full max-w-4xl xl:max-w-xl shadow-md">
               <CardContent>{children}</CardContent>
             </Card>
           </div>
