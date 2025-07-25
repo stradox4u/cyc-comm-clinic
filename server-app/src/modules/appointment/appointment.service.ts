@@ -1,4 +1,4 @@
-import type { Appointment, AppointmentProviders, Prisma } from "@prisma/client";
+import type { Appointment, AppointmentProviders, Patient, Prisma } from "@prisma/client";
 import prisma from "../../config/prisma.js";
 
 export type AppointmentWhereUniqueInput = Prisma.AppointmentWhereUniqueInput
@@ -23,14 +23,17 @@ async function createAppointment(
 // Get single Appointment
 async function findAppointment(
     filter: AppointmentWhereUniqueInput
-): Promise<Appointment | null> {
+): Promise<Appointment & { appointment_providers: AppointmentProviders[] } | null> {
     return await prisma.appointment.findUnique({
         where: filter,
+        include: {
+          appointment_providers: true ,
+        }
     })
 }
 
 // Get by status(search)
-async function searchAppointment(
+async function searchAppointments(
     filter: AppointmentWhereInput
 ): Promise<Appointment[]> {
     return await prisma.appointment.findMany({
@@ -38,23 +41,43 @@ async function searchAppointment(
     })
 }
 
-// Get Appointments
-async function findAppointments(
-    filter: AppointmentWhereInput
+// Find appointments by patient
+async function findAppointmentsByPatient(
+  patient_id: string,
+  filter?: Prisma.AppointmentWhereInput
 ): Promise<Appointment[]> {
-    return prisma.appointment.findMany({
-        where: filter,
-    })
+  return prisma.appointment.findMany({
+    where: {
+      patient_id,
+      ...(filter || {})
+    },
+    include: {
+      appointment_providers: true,
+    },
+  });
 }
 
-// Find by appointment provider
+
+// Find appointments by provider
 async function findAppointmentsByProvider(
-    filter: AppointmentProvidersWhereInput
+  provider_id: string,
+  filter?: Prisma.AppointmentProvidersWhereInput
 ): Promise<AppointmentProviders[]> {
-    return prisma.appointmentProviders.findMany({
-        where: filter,
-    })
+  return prisma.appointmentProviders.findMany({
+    where: {
+      provider_id,
+      ...(filter || {}),
+    },
+    include: {
+      appointment: {
+        include: {
+          appointment_providers: true,
+        },
+      },
+    },
+  });
 }
+
 
 //Update Appointment
 async function updateAppointment(
@@ -138,9 +161,9 @@ function buildProvidersCreate(
 export default {
     createAppointment,
     findAppointment,
-    findAppointments,
+    findAppointmentsByPatient,
     findAppointmentsByProvider,
-    searchAppointment,
+    searchAppointments,
     updateAppointment,
     deleteAppointment,
     assignProvider,
