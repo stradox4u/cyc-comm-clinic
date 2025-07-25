@@ -115,7 +115,12 @@ const patientVerifyEmail = catchAsync(async (req, res) => {
     otp,
     type: TokenType.VERIFY_EMAIL,
   })
-  if (!token || token.expires_at < new Date()) {
+  if (!token) {
+    throw new ValidationError('Invalid OTP')
+  }
+
+  if (token.expires_at < new Date()) {
+    // expired – now generate a new one
     const { otp, expires_at } = generateOTP()
 
     await authService.updateOrCreateToken(
@@ -129,9 +134,8 @@ const patientVerifyEmail = catchAsync(async (req, res) => {
     )
     await emailService.sendEmailVerificationRequestMail(patient, otp)
 
-    throw new ValidationError('Invalid or expired token. Try again')
+    throw new ValidationError('OTP expired. A new one has been sent.')
   }
-
   await authService.deleteToken({ id: token.id })
 
   const updatedPatient = await patientService.updatePatient(

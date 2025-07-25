@@ -5,9 +5,9 @@ export type TokenWhereUniqueInput = Prisma.TokenWhereUniqueInput
 export type TokenUncheckedCreateInput = Prisma.TokenUncheckedCreateInput
 
 const findToken = async (
-  filter: TokenWhereUniqueInput
+  filter: Prisma.TokenWhereInput
 ): Promise<Token | null> => {
-  return await prisma.token.findUnique({
+  return await prisma.token.findFirst({
     where: filter,
   })
 }
