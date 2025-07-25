@@ -7,7 +7,7 @@ import OTPVerification from "../components/auth/otp-verification";
 
 const SignUpPage = () => {
   const [currentStep, setCurrentStep] = useState<"signup" | "otp" | "complete">(
-    "otp"
+    "signup"
   );
   const [userEmail, setUserEmail] = useState("");
   const [signupData, setSignupData] = useState<FormData | null>(null);
