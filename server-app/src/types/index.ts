@@ -16,3 +16,14 @@ export interface APIResponse<T = any> {
   data?: T
   message?: string
 }
+
+export const PROVIDER_ROLES: ProviderRoleTitle[] = [
+    "ADMIN",
+    "GENERAL_PRACTIONER",
+    "NURSE",
+    "GYNAECOLOGIST",
+    "LAB_TECHNICIAN",
+    "RECEPTIONIST",
+    "PAEDIATRICIAN",
+    "PHARMACIST"
+]

@@ -1,23 +1,18 @@
 import express from 'express';
+import { authorize } from '../../../middlewares/auth.js';
+import appointmentController from '../appointment.controller.js';
 
 const router = express.Router()
 
+router.use(authorize())
+
 // Provider Specific Appointment Route 
-router.get(
-    '/:id/appointments'
-)
-
-router.get(
-    '/:id/appointments/:appointmentId'
-)
-
-router.get(
-    '/:id/appointments/search'
-)
-
-// Search by status ?
 
 
+// Search by status ?*/}
 router.delete(
-    '/:id/appointments'
+    '/delete/:appointmentId',
+    appointmentController.appointmentDelete
 )
+
+export default router
