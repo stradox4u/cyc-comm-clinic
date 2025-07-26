@@ -44,7 +44,7 @@ export const SoapNoteRecordSchema = z.object({
     assessment: assessmentSchema,
     plan: planSchema,
     created_by_id: z.uuid(),
-    // events: z.array(EventFullSchema).nonempty()
+    events: z.array(EventFullSchema).nonempty()
 })
 
 export type SoapNoteRecord = z.infer<typeof SoapNoteRecordSchema>

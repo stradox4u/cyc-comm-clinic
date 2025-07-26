@@ -4,29 +4,22 @@ import type {
 import appointmentService from './appointment.service.js'
 import catchAsync from '../../utils/catchAsync.js'
 import { UserType } from '../../types/index.js'
-
-async function authorizeUserForAppointment(appointment: any, user: any) {
-  if (!user) throw new Error('User not authenticated');
-
-  if (user.type === UserType.PATIENT) {
-    if (appointment.patient_id !== user.id) {
-      throw new Error('Access denied: Not your appointment');
-    }
-  } else if (user.type === UserType.PROVIDER) {
-    const isAssignedProvider = appointment.appointment_providers?.some(
-      (p: any) => p.provider_id === user.id
-    );
-    if (!isAssignedProvider) {
-      throw new Error('Access denied: Not assigned to this appointment');
-    }
-  } else {
-    throw new Error('Unauthorized user type');
-  }
-}
+import { 
+    authorizeUserForViewingAppointment,
+    getLoggedInUser,
+    authorizeSensitiveAppointmentFields
+ } from './appointment.utils.js'
 
 const appointmentCreate = catchAsync(async (req, res) => {
     const newAppointment: AppointmentRegisterSchema = req.body
+    const loggedInUser = getLoggedInUser(req);
 
+    try {
+        authorizeSensitiveAppointmentFields(req, newAppointment);
+    } catch (err: any) {
+        return res.status(err.statusCode || 400).json({ success: false, message: err.message });
+    }
+    
     const prismaCreateInput: any = {
         ...newAppointment,
         purposes: Array.isArray(newAppointment.purposes)
@@ -51,7 +44,7 @@ const appointmentCreate = catchAsync(async (req, res) => {
     if (newAppointment.vitals) {
         prismaCreateInput.vitals = {
             create: newAppointment.vitals
-        };
+       }
     }
 
     if (newAppointment.appointment_providers) {
@@ -76,17 +69,9 @@ const appointmentCreate = catchAsync(async (req, res) => {
     }
 })
 
-
 const getAppointment = catchAsync(async (req, res) => {
     const { appointmentId } = req.params;
-    const loggedInUser = req.user;
-
-    if (!loggedInUser) {
-        return res.status(401).json({
-            success: false,
-            message: 'User not authenticated',
-        });
-    }
+    const loggedInUser = getLoggedInUser(req);
 
     const appointment = await appointmentService.findAppointment(appointmentId);
 
@@ -98,7 +83,7 @@ const getAppointment = catchAsync(async (req, res) => {
     }
 
     try {
-        await authorizeUserForAppointment(appointment, loggedInUser);
+        authorizeUserForViewingAppointment(appointment, loggedInUser);
     } catch (err: any) {
         return res.status(403).json({ success: false, message: err.message });
     }
@@ -112,16 +97,10 @@ const getAppointment = catchAsync(async (req, res) => {
 })
 
 const getAppointments = catchAsync(async (req, res) => {
-    const loggedInUser = req.user;
-
-    if (!loggedInUser) {
-        return res.status(401).json({
-           success: false,
-           message: 'User not authenticated',
-        });
-    }
+    const loggedInUser = getLoggedInUser(req);
 
     let appointments = [];
+    
 
     if (loggedInUser?.type === UserType.PATIENT) {
         appointments = await appointmentService.findAppointmentsByPatient(loggedInUser.id)
@@ -141,42 +120,42 @@ const getAppointments = catchAsync(async (req, res) => {
     });
 })
 
-
 const updateAppointment = catchAsync(async (req, res) => {
-    const { appointmentId } = req.params;
-    const loggedInUser = req.user;
-    const updateData = req.body;
+  const { appointmentId } = req.params;
+  const loggedInUser = getLoggedInUser(req);
+  let updateData = req.body;
 
-    const appointment = await appointmentService.findAppointment(appointmentId);
+  const appointment = await appointmentService.findAppointment(appointmentId);
 
-    if (!appointment) {
-        return res.status(404).json({
-            success: false,
-            message: 'Appointment not found'
-        });
-    }
-    
-    try {
-        await authorizeUserForAppointment(appointment, loggedInUser);
-    } catch (err: any) {
-        return res.status(403).json({ success: false, message: err.message });
-    }
-    
-    const updatedAppointment = await appointmentService.updateAppointment(
-        { id: appointmentId },
-        updateData
-    );
-    
-    return res.status(200).json({
-        success: true,
-        message: 'Appointment updated successfully',
-        data: updatedAppointment
+  if (!appointment) {
+    return res.status(404).json({
+      success: false,
+      message: 'Appointment not found'
     });
-});
+  }
 
+  try {
+    authorizeUserForViewingAppointment(appointment, loggedInUser);
+    authorizeSensitiveAppointmentFields(req, updateData);
+  } catch (err: any) {
+    return res.status(err.statusCode || 400).json({ success: false, message: err.message });
+  }
+
+  const updatedAppointment = await appointmentService.updateAppointment(
+    { id: appointmentId },
+    updateData
+  );
+
+  return res.status(200).json({
+    success: true,
+    message: 'Appointment updated successfully',
+    data: updatedAppointment
+  });
+});
 
 const appointmentDelete = catchAsync(async (req, res) => {
     const { appointmentId } = req.params;
+    const loggedInUser = getLoggedInUser(req);
 
     const appointment = await appointmentService.findAppointment(appointmentId);
 

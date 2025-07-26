@@ -1,4 +1,4 @@
-import type { Appointment, AppointmentProviders, Patient, Prisma } from "@prisma/client";
+import type { Appointment, AppointmentProviders, Prisma } from "@prisma/client";
 import prisma from "../../config/prisma.js";
 
 export type AppointmentWhereUniqueInput = Prisma.AppointmentWhereUniqueInput
