@@ -1,9 +1,10 @@
 import type {
-    AppointmentRegisterSchema
-} from './appointment.validation.js'
-import appointmentService from './appointment.service.js'
-import catchAsync from '../../utils/catchAsync.js'
-import { UserType } from '../../types/index.js'
+  AppointmentRegisterSchema,
+  AssignAppointmentProviderSchema,
+} from './appointment.validation.js';
+import appointmentService from './appointment.service.js';
+import catchAsync from '../../utils/catchAsync.js';
+import { UserType } from '../../types/index.js';
 
 async function authorizeUserForAppointment(appointment: any, user: any) {
   if (!user) throw new Error('User not authenticated');
@@ -25,184 +26,205 @@ async function authorizeUserForAppointment(appointment: any, user: any) {
 }
 
 const appointmentCreate = catchAsync(async (req, res) => {
-    const newAppointment: AppointmentRegisterSchema = req.body
+  const newAppointment: AppointmentRegisterSchema = req.body;
 
-    const prismaCreateInput: any = {
-        ...newAppointment,
-        purposes: Array.isArray(newAppointment.purposes)
-          ? newAppointment.purposes
-          : [newAppointment.purposes],
-        other_purpose: typeof newAppointment.other_purpose === 'string' ? newAppointment.other_purpose : '',
-        patient: {
-            connect: {
-                id: newAppointment.patient_id.id
-            },
-        },
-        patient_id: undefined,
+  const prismaCreateInput: any = {
+    ...newAppointment,
+    purposes: Array.isArray(newAppointment.purposes)
+      ? newAppointment.purposes
+      : [newAppointment.purposes],
+    other_purpose:
+      typeof newAppointment.other_purpose === 'string'
+        ? newAppointment.other_purpose
+        : '',
+    patient: {
+      connect: {
+        id: newAppointment.patient_id.id,
+      },
+    },
+    patient_id: undefined,
+  };
 
+  if (newAppointment.soap_note) {
+    prismaCreateInput.soap_note = {
+      create: newAppointment.soap_note,
     };
+  }
 
-    if (newAppointment.soap_note) {
-        prismaCreateInput.soap_note = {
-            create: newAppointment.soap_note
-        };
-    }
+  if (newAppointment.vitals) {
+    prismaCreateInput.vitals = {
+      create: newAppointment.vitals,
+    };
+  }
 
-    if (newAppointment.vitals) {
-        prismaCreateInput.vitals = {
-            create: newAppointment.vitals
-        };
-    }
+  if (newAppointment.appointment_providers) {
+    prismaCreateInput.appointment_providers = {
+      create: newAppointment.appointment_providers,
+    };
+  }
 
-    if (newAppointment.appointment_providers) {
-        prismaCreateInput.appointment_providers = {
-            create: newAppointment.appointment_providers
-        };
-    }
+  const savedAppointment = await appointmentService.createAppointment(
+    prismaCreateInput
+  );
 
-    const savedAppointment = await appointmentService.createAppointment(prismaCreateInput)
-
-    if (savedAppointment) {
-        res.status(201).json({
-            success: true,
-            message: 'Appointment created succesfully',
-            data: savedAppointment
-        })
-    } else {
-        res.status(500).json({
-            success: false,
-            message: 'Failed to create appointment',
-        })
-    }
-})
-
-
-const getAppointment = catchAsync(async (req, res) => {
-    const { appointmentId } = req.params;
-    const loggedInUser = req.user;
-
-    if (!loggedInUser) {
-        return res.status(401).json({
-            success: false,
-            message: 'User not authenticated',
-        });
-    }
-
-    const appointment = await appointmentService.findAppointment(appointmentId);
-
-    if (!appointment) {
-        return res.status(404).json({
-            success: false,
-            message: 'Appointment not found'
-        });
-    }
-
-    try {
-        await authorizeUserForAppointment(appointment, loggedInUser);
-    } catch (err: any) {
-        return res.status(403).json({ success: false, message: err.message });
-    }
-
-    return res.status(200).json({
-        success: true,
-        message: 'Appointment found',
-        data: appointment
+  if (savedAppointment) {
+    res.status(201).json({
+      success: true,
+      message: 'Appointment created succesfully',
+      data: savedAppointment,
     });
-        
-})
-
-const getAppointments = catchAsync(async (req, res) => {
-    const loggedInUser = req.user;
-
-    if (!loggedInUser) {
-        return res.status(401).json({
-           success: false,
-           message: 'User not authenticated',
-        });
-    }
-
-    let appointments = [];
-
-    if (loggedInUser?.type === UserType.PATIENT) {
-        appointments = await appointmentService.findAppointmentsByPatient(loggedInUser.id)
-    } else if (loggedInUser?.type === UserType.PROVIDER) {
-        appointments = await appointmentService.findAppointmentsByProvider(loggedInUser.id)
-    } else {
-        return res.status(403).json({
-            success: false,
-            message: 'Unauthorized Access'
-        });
-    }
-
-    return res.status(200).json({
-        success: true,
-        message: 'Appointments fetched successfully',
-        data: appointments
+  } else {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create appointment',
     });
-})
-
-
-const updateAppointment = catchAsync(async (req, res) => {
-    const { appointmentId } = req.params;
-    const loggedInUser = req.user;
-    const updateData = req.body;
-
-    const appointment = await appointmentService.findAppointment(appointmentId);
-
-    if (!appointment) {
-        return res.status(404).json({
-            success: false,
-            message: 'Appointment not found'
-        });
-    }
-    
-    try {
-        await authorizeUserForAppointment(appointment, loggedInUser);
-    } catch (err: any) {
-        return res.status(403).json({ success: false, message: err.message });
-    }
-    
-    const updatedAppointment = await appointmentService.updateAppointment(
-        { id: appointmentId },
-        updateData
-    );
-    
-    return res.status(200).json({
-        success: true,
-        message: 'Appointment updated successfully',
-        data: updatedAppointment
-    });
+  }
 });
 
+const getAppointment = catchAsync(async (req, res) => {
+  const { appointmentId } = req.params;
+  const loggedInUser = req.user;
+
+  if (!loggedInUser) {
+    return res.status(401).json({
+      success: false,
+      message: 'User not authenticated',
+    });
+  }
+
+  const appointment = await appointmentService.findAppointment(appointmentId);
+
+  if (!appointment) {
+    return res.status(404).json({
+      success: false,
+      message: 'Appointment not found',
+    });
+  }
+
+  try {
+    await authorizeUserForAppointment(appointment, loggedInUser);
+  } catch (err: any) {
+    return res.status(403).json({ success: false, message: err.message });
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: 'Appointment found',
+    data: appointment,
+  });
+});
+
+const getAppointments = catchAsync(async (req, res) => {
+  const loggedInUser = req.user;
+
+  if (!loggedInUser) {
+    return res.status(401).json({
+      success: false,
+      message: 'User not authenticated',
+    });
+  }
+
+  let appointments = [];
+
+  if (loggedInUser?.type === UserType.PATIENT) {
+    appointments = await appointmentService.findAppointmentsByPatient(
+      loggedInUser.id
+    );
+  } else if (loggedInUser?.type === UserType.PROVIDER) {
+    appointments = await appointmentService.findAppointmentsByProvider(
+      loggedInUser.id
+    );
+  } else {
+    return res.status(403).json({
+      success: false,
+      message: 'Unauthorized Access',
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: 'Appointments fetched successfully',
+    data: appointments,
+  });
+});
+
+const updateAppointment = catchAsync(async (req, res) => {
+  const { appointmentId } = req.params;
+  const loggedInUser = req.user;
+  const updateData = req.body;
+
+  const appointment = await appointmentService.findAppointment(appointmentId);
+
+  if (!appointment) {
+    return res.status(404).json({
+      success: false,
+      message: 'Appointment not found',
+    });
+  }
+
+  try {
+    await authorizeUserForAppointment(appointment, loggedInUser);
+  } catch (err: any) {
+    return res.status(403).json({ success: false, message: err.message });
+  }
+
+  const updatedAppointment = await appointmentService.updateAppointment(
+    { id: appointmentId },
+    updateData
+  );
+
+  return res.status(200).json({
+    success: true,
+    message: 'Appointment updated successfully',
+    data: updatedAppointment,
+  });
+});
 
 const appointmentDelete = catchAsync(async (req, res) => {
-    const { appointmentId } = req.params;
+  const { appointmentId } = req.params;
 
-    const appointment = await appointmentService.findAppointment(appointmentId);
+  const appointment = await appointmentService.findAppointment(appointmentId);
 
-    if (!appointment) {
-        return res.status(404).json({
-            success: false,
-            message: 'Appointment not found'
-        });
-    }
-
-    const deletedAppointment = await appointmentService.deleteAppointment(appointmentId);
-
-    if (deletedAppointment) {
-        return res.status(204).json()
-    }
-
-    return res.status(500).json({
-        success: false,
-        message: 'Failed to delete appointment'
+  if (!appointment) {
+    return res.status(404).json({
+      success: false,
+      message: 'Appointment not found',
     });
+  }
+
+  const deletedAppointment = await appointmentService.deleteAppointment(
+    appointmentId
+  );
+
+  if (deletedAppointment) {
+    return res.status(204).json();
+  }
+
+  return res.status(500).json({
+    success: false,
+    message: 'Failed to delete appointment',
+  });
+});
+
+const assignAppointmentProvider = catchAsync(async (req, res) => {
+  const newAppointmentProvider: AssignAppointmentProviderSchema = req.body;
+
+  const appointmentProvider =
+    await appointmentService.createAppointmentProvider(newAppointmentProvider);
+
+  // TODO: Create event when provider is assigned
+
+  res.status(201).json({
+    success: true,
+    data: appointmentProvider,
+  });
 });
 
 export default {
-    appointmentCreate,
-    getAppointment,
-    getAppointments,
-    updateAppointment,
-    appointmentDelete,
-}
+  appointmentCreate,
+  getAppointment,
+  getAppointments,
+  updateAppointment,
+  appointmentDelete,
+  assignAppointmentProvider,
+};
