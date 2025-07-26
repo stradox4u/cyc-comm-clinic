@@ -1,6 +1,6 @@
 import { sendEmail } from '../config/email.js'
 import config from '../config/config.js'
-import type { Appointment, Patient } from '@prisma/client'
+import type { Appointment } from '@prisma/client'
 import type { AppointmentSchedule } from '../cron-job.js'
 
 const sendWelcomeMail = async (email: string, firstName: string) => {
@@ -120,7 +120,7 @@ const sendPasswordChangedMail = async (email: string, first_name: string) => {
 
 const sendAppointmentReminderMail = async (
   appointment: Appointment,
-  patient: Patient
+  patient: { email: string; first_name: string }
 ) => {
   return await sendEmail({
     to: patient.email,
