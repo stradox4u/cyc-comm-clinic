@@ -58,9 +58,7 @@ const sendEmailVerificationRequestMail = async (
           ${otp}
         </span>
         <br/><br/>
-        This OTP expires after ${
-          config.OTP_EXPIRATION_MINUTES
-        } minutes. Only enter this code on our official website.
+        This OTP expires after 15 minutes. Only enter this code on our official website.
         Don't share it with anyone. We'll never ask for it outside our official website.
       </div>
       <br/>
