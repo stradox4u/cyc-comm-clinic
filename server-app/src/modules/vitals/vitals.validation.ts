@@ -8,7 +8,7 @@ export const VitalsRecordSchema = z.object({
     height: z.string().optional(),
     weight: z.string().optional(),
     created_by_id: z.uuid(), 
-    // events: z.array(EventFullSchema).nonempty() 
+    events: z.array(EventFullSchema).nonempty() 
 })
 
 export type VitalsRecord = z.infer<typeof VitalsRecordSchema>;
