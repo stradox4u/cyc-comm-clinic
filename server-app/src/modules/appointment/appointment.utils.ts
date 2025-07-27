@@ -10,20 +10,25 @@ export function authorizeUserForViewingAppointment(appointment: any, user: any) 
       throw new Error('Access denied: Not your appointment');
     }
   } else if (user.type === UserType.PROVIDER) {
-    const isAssignedProvider = appointment.appointment_providers?.some(
-      (p: any) => p.provider_id === user.id
-    );
-    if (!isAssignedProvider) {
-      throw new Error('Access denied: Not assigned to this appointment');
+    if (user.role === 'ADMIN' || user.role === 'RECEPTIONIST') {
+      return;
+    } else {
+      const isAssignedProvider = appointment.appointment_providers?.some(
+        (p: any) => p.provider_id === user.id
+      );
+      if (!isAssignedProvider) {
+        throw new Error('Access denied: Not assigned to this appointment');
+      }
     }
   } else {
     throw new Error('Unauthorized user type');
   }
 }
 
+
 export function getLoggedInUser(req: any) {
   const user = req.user;
-  console.log('getLoggedInUser req.user:', req.user);
+  // console.log('getLoggedInUser req.user:', req.user);
 
   if (!user || !user.type) {
     const err: any = new Error('User not authenticated');
@@ -61,4 +66,3 @@ export function authorizeSensitiveAppointmentFields(req: any, updateData: any) {
     }
   }
 }
-

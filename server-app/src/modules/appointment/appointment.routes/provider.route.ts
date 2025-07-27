@@ -9,8 +9,16 @@ router.use(authorize(PROVIDER_ROLES))
 
 // Provider Specific Appointment Route 
 
+//Assign Provider
+router.patch(
+    '/assignprovider',
+    authorize(['RECEPTIONIST', 'ADMIN']),
+    appointmentController.assignApointmentProvider
+)
 
 // Search by status ?*/}
+
+//Delete appointment
 router.delete(
     '/delete/:appointmentId',
     appointmentController.appointmentDelete
