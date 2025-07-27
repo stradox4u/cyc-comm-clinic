@@ -3,10 +3,20 @@ import { Link } from "react-router-dom";
 
 import { Button } from "../../components/ui/button";
 import { useState } from "react";
+import useGoBack from "../../hooks/useGoback";
 
 const Header = () => {
   const pathname = window.location.pathname;
-  const active = pathname === "/signup" || pathname === "/signin";
+  const goBack = useGoBack();
+  const authRoutes = [
+    "/auth/patient/login",
+    "/auth/patient/signup",
+    "/auth/patient/forgot-password",
+    "/auth/provider/login",
+    "/auth/provider/signup",
+    "/auth/provider/forgot-password",
+  ];
+  const active = authRoutes.includes(pathname);
   const [showMobileNav, setShowMobileNav] = useState(false);
   return (
     <nav className="shadow-md bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-[#6A5CA3] sticky top-0 z-50">
@@ -19,36 +29,38 @@ const Header = () => {
             </span>
           </div>
           {active ? (
-            <Link to={"/"}>
-              <Button
-                variant={"outline"}
-                className="bg-transparent border-gray-200/20 text-white"
-              >
-                <ArrowLeft /> Back to Home
-              </Button>
-            </Link>
+            <Button
+              onClick={goBack}
+              variant={"outline"}
+              className="bg-transparent border-gray-200/20 text-white"
+            >
+              <ArrowLeft />
+              Back
+            </Button>
           ) : (
             <div className="relative">
               <div className="hidden md:flex items-center space-x-8 text-white">
                 <Link to="/" className=" hover:text-blue-600 transition-colors">
                   Home
                 </Link>
-                <a href="/#services"
+                <a
+                  href="/#services"
                   className=" hover:text-blue-600 transition-colors"
                 >
                   Services
                 </a>
-                <a href="/#contact"
+                <a
+                  href="/#contact"
                   className=" hover:text-blue-600 transition-colors"
                 >
                   Contact
                 </a>
                 <div className="flex items-center space-x-2">
                   <Button asChild variant="secondary">
-                    <Link to="/signin">Login</Link>
+                    <Link to="/auth/patient/login">Login</Link>
                   </Button>
                   <Button asChild>
-                    <Link to="/signup">Get Started</Link>
+                    <Link to="/auth/patient/signup">Get Started</Link>
                   </Button>
                 </div>
               </div>

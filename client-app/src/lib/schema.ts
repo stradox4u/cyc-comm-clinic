@@ -6,13 +6,13 @@ export const personalSchema = z.object({
   email: z.string().email("Invalid email"),
   phone: z.string().min(11, "Phone is required"),
   date_of_birth: z.string().min(1, "Date of birth is required"),
-  gender: z.enum(["male", "female", "other"], "Gender is required"),
+  gender: z.enum(["MALE", "FEMALE", "NULL"], "Gender is required"),
   address: z.string().min(1, "Address is required"),
-  occupation: z.string().min(1, "Occupation is required"),
+  occupation: z.string().optional(),
   emergency_contact_name: z
     .string()
     .min(1, "Emergency contact name is required"),
-  emergency_contact_number: z.string().min(1, "Emergency contact is required"),
+  emergency_contact_phone: z.string().min(1, "Emergency contact is required"),
   blood_group: z.string().min(1, "Blood group is required"),
   allergies: z.string().optional(),
   insurance_coverage: z.string().min(1, "Insurance coverage is required"),
@@ -32,18 +32,41 @@ export const passwordSchema = z
 export const fullSchema = personalSchema.extend(passwordSchema.shape);
 export type FormData = z.infer<typeof fullSchema>;
 
+const isEmail = (val: string) => {
+  const emailRegex = /^[\w.-]+@([\w-]+\.)+[\w-]{2,4}$/;
+  return emailRegex.test(val);
+};
+
 export const loginSchema = z.object({
-  identifier: z
-    .string()
-    .min(1, "Email or Phone number is required")
-    .refine(
-      (val) =>
-        /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(val) || /^\d{10,15}$/.test(val),
-      {
-        message: "Enter a valid email or phone number",
-      }
-    ),
+  email: z.string().min(1, "Email is required").refine(isEmail, {
+    message: "Enter a valid email",
+  }),
   password: z.string().min(1, "Password is required"),
 });
 
 export type LoginData = z.infer<typeof loginSchema>;
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+});
+
+export const resetPasswordSchema = z
+  .object({
+    otp: z.string().min(1, "OTP is required"),
+    email: z.email(),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+      ),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
+export type ForgotPasswordData = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordData = z.infer<typeof resetPasswordSchema>;
