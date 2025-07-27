@@ -1,5 +1,6 @@
 import type {
-    AppointmentRegisterSchema
+    AppointmentRegisterSchema,
+    AppointmentProviderSchema
 } from './appointment.validation.js'
 import appointmentService from './appointment.service.js'
 import catchAsync from '../../utils/catchAsync.js'
@@ -178,10 +179,54 @@ const appointmentDelete = catchAsync(async (req, res) => {
     });
 });
 
+const assignApointmentProvider = catchAsync(async (req, res) => {
+  const loggedInUser = getLoggedInUser(req);
+  const newAppointmentProvider: AppointmentProviderSchema | undefined = req.body;
+
+  if (!newAppointmentProvider) {
+    return res.status(400).json({
+      success: false,
+      message: 'Appointment provider data is required'
+    });
+  }
+
+  const { appointment_id } = newAppointmentProvider;
+
+  const appointment = await appointmentService.findAppointment({ id: appointment_id });
+  if (!appointment) {
+    return res.status(404).json({
+      success: false,
+      message: 'Appointment not found'
+    });
+  }
+
+  try {
+    authorizeSensitiveAppointmentFields(req, appointment);
+  } catch (err: any) {
+    return res.status(err.statusCode || 400).json({
+      success: false,
+      message: err.message
+    });
+  }
+
+  const assignedProvider = await appointmentService.assignProvider({
+    appointment: { connect: { id: newAppointmentProvider.appointment_id } },
+    provider: { connect: { id: newAppointmentProvider.provider_id } }
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: 'Appointment provider assigned successfully',
+    data: assignedProvider
+  });
+});
+
+
 export default {
     appointmentCreate,
     getAppointment,
     getAppointments,
     updateAppointment,
     appointmentDelete,
+    assignApointmentProvider
 }
