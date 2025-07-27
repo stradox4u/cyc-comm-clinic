@@ -127,6 +127,7 @@ model Appointment {
   soap_note                SoapNote[]
   vitals                   Vitals?
   vitals_id                String?                      @unique
+  events                   Events[]
   appointment_providers    AppointmentProviders[]
   created_at               DateTime                     @default(now())
   updated_at               DateTime                     @updatedAt
@@ -218,12 +219,14 @@ model Vitals {
 model Events {
   id            String              @id @default(uuid())
   type          EventType
-  created_by_id String?
-  created_by    Provider?           @relation("EventCreatedBy", fields: [created_by_id], references: [id])
+  created_by_id String
+  created_by    Provider            @relation("EventCreatedBy", fields: [created_by_id], references: [id])
   vitals_id     String?
   vitals        Vitals?             @relation(fields: [vitals_id], references: [id])
   soap_note_id  String?
   soap_note     SoapNote?           @relation(fields: [soap_note_id], references: [id])
+  appointment_id  String?
+  appointment     Appointment?      @relation(fields: [appointment_id], references: [id])
   created_at    DateTime    @default(now())
   updated_at    DateTime?   @updatedAt
 

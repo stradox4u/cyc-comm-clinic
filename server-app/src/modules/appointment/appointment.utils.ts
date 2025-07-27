@@ -1,6 +1,8 @@
 import { PROVIDER_ROLES, UserType } from '../../types/index.js'
 import vitalsService from '../vitals/vitals.service.js'
 import soapnoteService from '../soapnote/soapnote.service.js';
+import { EventType } from "@prisma/client";
+import { logEvent } from '../events/events.utils.js';
 
 export function authorizeUserForViewingAppointment(appointment: any, user: any) {
   if (!user) throw new Error('User not authenticated');
@@ -64,5 +66,49 @@ export function authorizeSensitiveAppointmentFields(req: any, updateData: any) {
         updateData.soap_note = soapnoteService.buildSoapNoteNestedCreateInput(updateData.soap_note);
       }
     }
+  }
+}
+
+interface AppointmentEventOptions {
+  userId: string;
+  appointmentId: string;
+  statusChanged?: boolean;
+  vitalsId?: string | null;
+  soapNoteId?: string | null;
+  soapNoteUpdated?: boolean;
+}
+
+export async function logAppointmentEvents({
+  userId,
+  appointmentId,
+  statusChanged = false,
+  vitalsId,
+  soapNoteId,
+  soapNoteUpdated = false
+}: AppointmentEventOptions) {
+  if (statusChanged) {
+    await logEvent({
+      type: EventType.APPOINTMENT_STATUS_CHANGED,
+      created_by_id: userId,
+      appointment_id: appointmentId
+    });
+  }
+
+  if (vitalsId) {
+    await logEvent({
+      type: EventType.VITALS_RECORDED,
+      created_by_id: userId,
+      appointment_id: appointmentId,
+      vitals_id: vitalsId
+    });
+  }
+
+  if (soapNoteId) {
+    await logEvent({
+      type: soapNoteUpdated ? EventType.SOAP_NOTE_UPDATED : EventType.SOAP_NOTE_RECORDED,
+      created_by_id: userId,
+      appointment_id: appointmentId,
+      soap_note_id: soapNoteId
+    });
   }
 }

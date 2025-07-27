@@ -48,3 +48,7 @@ export const SoapNoteRecordSchema = z.object({
 })
 
 export type SoapNoteRecord = z.infer<typeof SoapNoteRecordSchema>
+
+export default {
+    SoapNoteRecordSchema
+}

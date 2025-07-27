@@ -7,8 +7,13 @@ export const VitalsRecordSchema = z.object({
     temperature: z.string().optional(), 
     height: z.string().optional(),
     weight: z.string().optional(),
-    created_by_id: z.uuid(), 
+    created_by_id: z.uuid(),
+    appointment_id: z.uuid(),
     events: z.array(EventFullSchema).nonempty() 
 })
 
 export type VitalsRecord = z.infer<typeof VitalsRecordSchema>;
+
+export default {
+    VitalsRecordSchema
+}

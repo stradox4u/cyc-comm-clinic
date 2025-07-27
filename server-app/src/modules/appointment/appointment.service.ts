@@ -1,4 +1,10 @@
-import type { Appointment, AppointmentProviders, Prisma } from "@prisma/client";
+import type {
+  Appointment,
+  AppointmentProviders,
+  Prisma,
+  Vitals,
+  SoapNote
+} from "@prisma/client";
 import prisma from "../../config/prisma.js";
 
 export type AppointmentWhereUniqueInput = Prisma.AppointmentWhereUniqueInput
@@ -16,25 +22,38 @@ async function createAppointment(
     payload: AppointmentCreateInput
 ): Promise<Appointment> {
     return prisma.appointment.create({
-        data: payload
+        data: payload,
+        include: {
+            vitals: true,
+            soap_note: true,
+        }
     })
   }
 
 // Get single Appointment
 async function findAppointment(
-    filter: AppointmentWhereUniqueInput
-): Promise<Appointment & { appointment_providers: AppointmentProviders[] } | null> {
-    const appointment = await prisma.appointment.findUnique({
-        where: filter,
-        include: {
-          appointment_providers: true ,
-        }
+  filter: AppointmentWhereUniqueInput
+): Promise<
+  | (Appointment & {
+      appointment_providers: AppointmentProviders[];
+      vitals?: Vitals | null;
+      soap_note: SoapNote[];
     })
+  | null
+> {
+  const appointment = await prisma.appointment.findUnique({
+    where: filter,
+    include: {
+      appointment_providers: true,
+      vitals: true,
+      soap_note: true,
+    },
+  });
 
-    if (appointment && !appointment.appointment_providers) {
-      appointment.appointment_providers = [];
-    }
-    return appointment;
+  if (appointment && !appointment.appointment_providers) {
+    appointment.appointment_providers = [];
+  }
+  return appointment;
 }
 
 // Get by status(search)
@@ -86,14 +105,46 @@ async function findAppointmentsByProvider(
 
 //Update Appointment
 async function updateAppointment(
-    filter: AppointmentWhereUniqueInput,
-    payload: AppointmentUpdateInput
-): Promise<Appointment> {
-    return prisma.appointment.update({
-        where: filter,
-        data: payload,
-    })
+  filter: AppointmentWhereUniqueInput,
+  payload: AppointmentUpdateInput & { vitals?: any; soap_note?: any[] }
+): Promise<
+  Appointment & {
+    vitals?: any;
+    soap_note?: any[];
+  }
+> {
+  const { vitals, soap_note, ...rest } = payload;
+
+  const prismaData: Prisma.AppointmentUpdateInput = {
+    ...rest,
+    ...(vitals
+      ? 'id' in vitals && vitals.id
+        ? { vitals: { update: { ...vitals, id: undefined } } }
+        : { vitals: { create: vitals } }
+      : {}),
+    ...(soap_note && Array.isArray(soap_note)
+      ? {
+          soap_note: {
+            update: soap_note
+              .filter((n) => n.id)
+              .map(({ id, ...data }) => ({ where: { id }, data })),
+            create: soap_note.filter((n) => !n.id),
+          },
+        }
+      : {}),
+  };
+
+  return prisma.appointment.update({
+    where: filter,
+    data: prismaData,
+    include: {
+      vitals: true,
+      soap_note: true,
+      appointment_providers: true,
+    },
+  });
 }
+
 
 //Cancel or Delete Appointment
 async function deleteAppointment(
