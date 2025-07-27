@@ -21,7 +21,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 
   // If user is not authenticated, redirect to /signin
   if (!user) {
-    return <Navigate to="/signin" replace />;
+    return <Navigate to="/auth/patient/signin" replace />;
   }
 
   return <>{children}</>;

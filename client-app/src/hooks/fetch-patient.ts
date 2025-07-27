@@ -1,5 +1,4 @@
-// hooks/useCheckPatientProfile.ts
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuthStore } from "../store/auth-store";
@@ -8,6 +7,8 @@ export const useCheckPatientProfile = () => {
   const navigate = useNavigate();
   const { user, setUser } = useAuthStore();
   const [loading, setLoading] = useState(true);
+
+  const firstLoad = useRef(true); 
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -23,20 +24,27 @@ export const useCheckPatientProfile = () => {
         });
 
         if (!res.ok) {
-          throw new Error("Unauthorized");
+          if (res.status === 401 && !firstLoad.current) {
+            toast.error("Session expired. Please sign in.");
+            navigate("/auth/patient/login");
+          }
+          return;
         }
 
         const data = await res.json();
-        setUser(data.data); // or data.user based on backend
+        setUser(data.data);
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Session expired. Please sign in.";
-        toast.error(message);
-        navigate("/auth/patient/login");
+        if (!firstLoad.current) {
+          const message =
+            error instanceof Error
+              ? error.message
+              : "Session expired. Please sign in.";
+          toast.error(message);
+          navigate("/auth/patient/login");
+        }
       } finally {
         setLoading(false);
+        firstLoad.current = false; // mark first attempt as done
       }
     };
 
