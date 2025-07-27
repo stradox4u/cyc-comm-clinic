@@ -1,73 +1,85 @@
 import type {
     AppointmentRegisterSchema,
     AppointmentProviderSchema
-} from './appointment.validation.js'
-import appointmentService from './appointment.service.js'
-import catchAsync from '../../utils/catchAsync.js'
-import { UserType } from '../../types/index.js'
+} from './appointment.validation.js';
+import appointmentService from './appointment.service.js';
+import catchAsync from '../../utils/catchAsync.js';
+import { UserType } from '../../types/index.js';
 import { 
     authorizeUserForViewingAppointment,
     getLoggedInUser,
-    authorizeSensitiveAppointmentFields
- } from './appointment.utils.js'
+    authorizeSensitiveAppointmentFields,
+    logAppointmentEvents
+ } from './appointment.utils.js';
 
 const appointmentCreate = catchAsync(async (req, res) => {
-    const newAppointment: AppointmentRegisterSchema = req.body
-    const loggedInUser = getLoggedInUser(req);
+  const newAppointment: AppointmentRegisterSchema = req.body
+  const loggedInUser = getLoggedInUser(req);
 
-    try {
-        authorizeSensitiveAppointmentFields(req, newAppointment);
-    } catch (err: any) {
-        return res.status(err.statusCode || 400).json({ success: false, message: err.message });
-    }
+  try {
+    authorizeSensitiveAppointmentFields(req, newAppointment);
+  } catch (err: any) {
+    return res.status(err.statusCode || 400).json({ success: false, message: err.message });
+  }
     
-    const prismaCreateInput: any = {
-        ...newAppointment,
-        purposes: Array.isArray(newAppointment.purposes)
-          ? newAppointment.purposes
-          : [newAppointment.purposes],
-        other_purpose: typeof newAppointment.other_purpose === 'string' ? newAppointment.other_purpose : '',
-        patient: {
-            connect: {
-                id: newAppointment.patient_id.id
-            },
-        },
-        patient_id: undefined,
-
+  const prismaCreateInput: any = {
+    ...newAppointment,
+    purposes: Array.isArray(newAppointment.purposes)
+    ? newAppointment.purposes
+    : [newAppointment.purposes],
+    other_purpose: typeof newAppointment.other_purpose === 'string' ? newAppointment.other_purpose : '',
+    patient: {
+      connect: {
+        id: newAppointment.patient_id.id
+      },
+    },
+    patient_id: undefined,
+  };
+  
+  if (newAppointment.soap_note) {
+    prismaCreateInput.soap_note = {
+      create: newAppointment.soap_note
     };
-
-    if (newAppointment.soap_note) {
-        prismaCreateInput.soap_note = {
-            create: newAppointment.soap_note
-        };
+  }
+  
+  if (newAppointment.vitals) {
+    prismaCreateInput.vitals = {
+      create: newAppointment.vitals
     }
-
-    if (newAppointment.vitals) {
-        prismaCreateInput.vitals = {
-            create: newAppointment.vitals
-       }
-    }
-
-    if (newAppointment.appointment_providers) {
-        prismaCreateInput.appointment_providers = {
-            create: newAppointment.appointment_providers
-        };
-    }
-
-    const savedAppointment = await appointmentService.createAppointment(prismaCreateInput)
-
-    if (savedAppointment) {
-        res.status(201).json({
-            success: true,
-            message: 'Appointment created succesfully',
-            data: savedAppointment
-        })
-    } else {
-        res.status(500).json({
-            success: false,
-            message: 'Failed to create appointment',
-        })
-    }
+  }
+  
+  if (newAppointment.appointment_providers) {
+    prismaCreateInput.appointment_providers = {
+      create: newAppointment.appointment_providers
+    };
+  }
+  
+  const savedAppointment = await appointmentService.createAppointment(prismaCreateInput)
+  
+  if (savedAppointment) {
+    const vitalsId = (savedAppointment as any).vitals?.id ?? null;
+    const soapNoteId = (savedAppointment as any).soap_note?.id ?? null;
+    
+    await logAppointmentEvents({
+      userId: loggedInUser.id,
+      appointmentId: savedAppointment.id,
+      statusChanged: true,
+      vitalsId,
+      soapNoteId,
+      soapNoteUpdated: false
+    });
+    
+    res.status(201).json({
+      success: true,
+      message: 'Appointment created succesfully',
+      data: savedAppointment
+    })
+  } else {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create appointment',
+    })
+  }
 })
 
 const getAppointment = catchAsync(async (req, res) => {
@@ -124,14 +136,18 @@ const getAppointments = catchAsync(async (req, res) => {
 const updateAppointment = catchAsync(async (req, res) => {
   const { appointmentId } = req.params;
   const loggedInUser = getLoggedInUser(req);
-  let updateData = req.body;
+  const userId = loggedInUser.id;
+  const updateData = req.body;
 
-  const appointment = await appointmentService.findAppointment({id: appointmentId });
+  // Fetch existing appointment with nested vitals and soap notes array
+  const appointment = await appointmentService.findAppointment({
+    id: appointmentId,
+  });
 
   if (!appointment) {
     return res.status(404).json({
       success: false,
-      message: 'Appointment not found'
+      message: 'Appointment not found',
     });
   }
 
@@ -142,15 +158,38 @@ const updateAppointment = catchAsync(async (req, res) => {
     return res.status(err.statusCode || 400).json({ success: false, message: err.message });
   }
 
+  const previousStatus = appointment.status;
+  const newStatus = updateData.status;
+
   const updatedAppointment = await appointmentService.updateAppointment(
     { id: appointmentId },
     updateData
   );
 
+  const statusChanged = newStatus !== undefined && newStatus !== previousStatus;
+  const vitalsChanged = updateData.vitals !== undefined;
+  const soapNoteChanged = updateData.soap_note !== undefined;
+
+
+  const soapNotes = updatedAppointment.soap_note ?? [];
+  const latestSoapNote = soapNotes.length > 0 ? soapNotes[soapNotes.length - 1] : null;
+  const soapNoteId = latestSoapNote?.id ?? null;
+
+  const soapNoteUpdated = soapNoteChanged && (appointment.soap_note?.length ?? 0) > 0;
+
+  await logAppointmentEvents({
+    userId,
+    appointmentId,
+    statusChanged,
+    vitalsId: updatedAppointment.vitals?.id ?? null,
+    soapNoteId,
+    soapNoteUpdated,
+  });
+
   return res.status(200).json({
     success: true,
     message: 'Appointment updated successfully',
-    data: updatedAppointment
+    data: updatedAppointment,
   });
 });
 

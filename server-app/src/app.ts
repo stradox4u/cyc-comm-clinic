@@ -9,6 +9,7 @@ import session from 'express-session'
 import connectPgSimple from 'connect-pg-simple'
 import { appointmentRoute } from './modules/appointment/index.js'
 import { appointmentProviderRoute } from './modules/appointment/index.js'
+import { vitalsRoute } from './modules/vitals/index.js'
 
 const app = express()
 
@@ -58,6 +59,8 @@ app.use('/api/auth', authRoute)
 app.use('/api/appointment', appointmentRoute)
 
 app.use('/api/provider/appointment', appointmentProviderRoute)
+
+app.use('/api/provider/vitals', vitalsRoute)
 
 app.use(notFoundHandler)
 app.use(errorHandler)
