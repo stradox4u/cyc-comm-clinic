@@ -164,6 +164,7 @@ enum AppointmentStatus {
   CHECKED_IN @map("CHECKED IN")
   CANCELLED
   RESCHEDULED
+  ATTENDING
   NO_SHOW    @map("NO SHOW")
   COMPLETED
   CONFIRMED
