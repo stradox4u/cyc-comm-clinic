@@ -27,7 +27,13 @@ app.use(
 
 app.use(helmet())
 
-app.use(express.json())
+app.use((req, res, next) => {
+  if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+    express.json()(req, res, next);
+  } else {
+    next();
+  }
+});
 
 const PgSession = connectPgSimple(session)
 app.use(

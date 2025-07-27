@@ -23,8 +23,9 @@ export function authorizeUserForViewingAppointment(appointment: any, user: any) 
 
 export function getLoggedInUser(req: any) {
   const user = req.user;
+  console.log('getLoggedInUser req.user:', req.user);
 
-  if (!user || !user.UserType) {
+  if (!user || !user.type) {
     const err: any = new Error('User not authenticated');
     err.statusCode = 401;
     throw err;

@@ -73,7 +73,7 @@ const getAppointment = catchAsync(async (req, res) => {
     const { appointmentId } = req.params;
     const loggedInUser = getLoggedInUser(req);
 
-    const appointment = await appointmentService.findAppointment(appointmentId);
+    const appointment = await appointmentService.findAppointment({id: appointmentId });
 
     if (!appointment) {
         return res.status(404).json({
@@ -125,7 +125,7 @@ const updateAppointment = catchAsync(async (req, res) => {
   const loggedInUser = getLoggedInUser(req);
   let updateData = req.body;
 
-  const appointment = await appointmentService.findAppointment(appointmentId);
+  const appointment = await appointmentService.findAppointment({id: appointmentId });
 
   if (!appointment) {
     return res.status(404).json({
@@ -166,7 +166,7 @@ const appointmentDelete = catchAsync(async (req, res) => {
         });
     }
 
-    const deletedAppointment = await appointmentService.deleteAppointment(appointmentId);
+    const deletedAppointment = await appointmentService.deleteAppointment({id: appointmentId});
 
     if (deletedAppointment) {
         return res.status(204).json()

@@ -36,8 +36,11 @@ const authenticateMultipleUser =
     const user = req.session.user
     if (!user) throw new UnauthenticatedError('Not authenticated')
 
-    if (!allowedUsers.includes(user.type))
-      throw new UnauthenticatedError('Forbidden')
+    if (!allowedUsers.includes(user.type)) {
+      return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+    
+    req.user = user;
     next()
   }
 
