@@ -1,6 +1,7 @@
-import type { Patient, Provider } from '@prisma/client'
 import { sendEmail } from '../config/email.js'
 import config from '../config/config.js'
+import type { Appointment } from '@prisma/client'
+import type { AppointmentSchedule } from '../cron-job.js'
 
 const sendWelcomeMail = async (email: string, firstName: string) => {
   return await sendEmail({
@@ -57,9 +58,7 @@ const sendEmailVerificationRequestMail = async (
           ${otp}
         </span>
         <br/><br/>
-        This OTP expires after ${
-          config.OTP_EXPIRATION_MINUTES
-        } minutes. Only enter this code on our official website.
+        This OTP expires after 15 minutes. Only enter this code on our official website.
         Don't share it with anyone. We'll never ask for it outside our official website.
       </div>
       <br/>
@@ -92,12 +91,12 @@ const sendForgotPasswordMail = async (email: string, otp: string) => {
   })
 }
 
-const sendPasswordChangedMail = async (email: string, firstName: string) => {
+const sendPasswordChangedMail = async (email: string, first_name: string) => {
   return await sendEmail({
     to: email,
     subject: 'Your account password was changed!',
     html: `
-      <h3>Hey ${firstName},</h3>
+      <h3>Hey ${first_name},</h3>
       <div>
         Please be informed that your user account password has been updated.
         <br/><br/>
@@ -117,9 +116,47 @@ const sendPasswordChangedMail = async (email: string, firstName: string) => {
   })
 }
 
+const sendAppointmentReminderMail = async (
+  appointment: Appointment,
+  patient: { email: string; first_name: string }
+) => {
+  return await sendEmail({
+    to: patient.email,
+    subject: 'Upcoming appointment reminder',
+    html: `
+      <h3>Dear ${patient.first_name},</h3>
+      <div>
+        This is a friendly reminder for your ${
+          config.ORIGIN_URL
+        } appointment coming up:
+        <br/><br/>
+        <li>
+          ${(appointment.schedule as AppointmentSchedule).appointment_date}
+        </li>
+        <li>
+          ${(appointment.schedule as AppointmentSchedule).appointment_time}
+        </li>
+
+        If this appointment schedule is no longer possible, please feel free to reschedule or cancel here:
+        <br/><br/>
+        <a href="${config.ORIGIN_URL}/appointments/${appointment.id}" 
+          style="text-align:center;background:#4f5ddb;color:#fff;padding:6px 10px;font-size:16px;border-radius:3px;"
+        >
+          Update appointment
+        </a>
+      </div>
+      <br/>
+      Warm Regards, 
+      <br/>
+      ${config.APP_NAME} Team.
+    `,
+  })
+}
+
 export default {
   sendWelcomeMail,
   sendEmailVerificationRequestMail,
   sendForgotPasswordMail,
   sendPasswordChangedMail,
+  sendAppointmentReminderMail,
 }
