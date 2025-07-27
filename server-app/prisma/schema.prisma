@@ -119,7 +119,7 @@ model Appointment {
   other_purpose            String?
   status                   AppointmentStatus
   has_insurance            Boolean
-  is_follow_up_required    Boolean
+  is_follow_up_required    Boolean?
   follow_up_id             String?
   follow_up_appointment    Appointment?                 @relation("FollowUp", fields: [follow_up_id], references: [id])
   follow_up_appointments   Appointment[]                @relation("FollowUp")

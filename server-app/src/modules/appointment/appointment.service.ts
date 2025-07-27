@@ -24,12 +24,17 @@ async function createAppointment(
 async function findAppointment(
     filter: AppointmentWhereUniqueInput
 ): Promise<Appointment & { appointment_providers: AppointmentProviders[] } | null> {
-    return await prisma.appointment.findUnique({
+    const appointment = await prisma.appointment.findUnique({
         where: filter,
         include: {
           appointment_providers: true ,
         }
     })
+
+    if (appointment && !appointment.appointment_providers) {
+      appointment.appointment_providers = [];
+    }
+    return appointment;
 }
 
 // Get by status(search)
@@ -152,7 +157,6 @@ function buildProvidersCreate(
     create: providers.map(({ provider_id }) => ({ provider_id })),
   };
 }
-
 
 
 //Integrate with vitals and soap note

@@ -22,7 +22,7 @@ router.get(
 )
 
 router.get(
-    '/appointments',
+    '/appointments/:userId',
     authenticateMultipleUser([UserType.PATIENT, UserType.PROVIDER]),
     appointmentController.getAppointments
 )

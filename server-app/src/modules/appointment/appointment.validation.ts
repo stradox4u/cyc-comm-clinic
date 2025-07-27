@@ -45,7 +45,7 @@ const appointmentRegisterSchema = z.object({
     other_purpose: z.string().optional(),
     status: z.enum(AppointmentStatus),
     has_insurance: z.boolean(),
-    is_follow_up_required: z.boolean(),
+    is_follow_up_required: z.boolean().optional(),
     follow_up_id: z.uuid().optional(),
     follow_up_appointment: nestedFollowUpAppointmentSchema,
     follow_up_appointments: nestedFollowUpAppointmentsSchema,
@@ -72,6 +72,22 @@ const appointmentRegisterSchema = z.object({
       path: ['other_purpose'],
       code: 'custom',
       message: "'other_purpose' should be empty unless 'OTHERS' is selected"
+    });
+  }
+
+  if (data.status === 'COMPLETED' && typeof data.is_follow_up_required !== 'boolean') {
+    ctx.addIssue({
+      path: ['is_follow_up_required'],
+      code: 'custom',
+      message: "'is_follow_up_required' is required when status is 'COMPLETED'"
+    });
+  }
+
+  if (data.status !== 'COMPLETED' && 'is_follow_up_required' in data) {
+    ctx.addIssue({
+      path: ['is_follow_up_required'],
+      code: 'custom',
+      message: "'is_follow_up_required' should only be provided when status is 'COMPLETED'"
     });
   }
 });
