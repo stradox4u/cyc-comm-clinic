@@ -1,7 +1,8 @@
 import type {
     AppointmentRegisterSchema,
-    AppointmentProviderSchema
+    AppointmentProviderSchema,
 } from './appointment.validation.js';
+import { scheduleInfoSchema } from './appointment.validation.js';
 import appointmentService from './appointment.service.js';
 import catchAsync from '../../utils/catchAsync.js';
 import { UserType } from '../../types/index.js';
@@ -9,8 +10,9 @@ import {
     authorizeUserForViewingAppointment,
     getLoggedInUser,
     authorizeSensitiveAppointmentFields,
-    logAppointmentEvents
- } from './appointment.utils.js';
+    logAppointmentEvents,
+    canScheduleAppointment
+} from './appointment.utils.js';
 
 const appointmentCreate = catchAsync(async (req, res) => {
   const newAppointment: AppointmentRegisterSchema = req.body
@@ -21,7 +23,29 @@ const appointmentCreate = catchAsync(async (req, res) => {
   } catch (err: any) {
     return res.status(err.statusCode || 400).json({ success: false, message: err.message });
   }
-    
+
+  const appointmentDateTime = newAppointment.schedule.appointment_date;
+  const existingAppointment = await appointmentService.findAppointmentByPatientAndDate(
+    newAppointment.patient_id.id,
+    appointmentDateTime
+  );
+
+  const parsedSchedule = scheduleInfoSchema.safeParse(existingAppointment?.schedule);
+  if (!parsedSchedule.success) {
+    throw new Error('Invalid schedule data');
+  }
+  const schedule = parsedSchedule.data;
+  const existingAppointmentDate = schedule.appointment_date;
+  
+  const check = canScheduleAppointment(appointmentDateTime, [existingAppointmentDate]);
+
+  if (!check.allowed) {
+    return res.status(400).json({
+      success: false,
+      message: check.reason
+    });
+  }
+
   const prismaCreateInput: any = {
     ...newAppointment,
     purposes: Array.isArray(newAppointment.purposes)
@@ -139,7 +163,6 @@ const updateAppointment = catchAsync(async (req, res) => {
   const userId = loggedInUser.id;
   const updateData = req.body;
 
-  // Fetch existing appointment with nested vitals and soap notes array
   const appointment = await appointmentService.findAppointment({
     id: appointmentId,
   });
@@ -158,6 +181,34 @@ const updateAppointment = catchAsync(async (req, res) => {
     return res.status(err.statusCode || 400).json({ success: false, message: err.message });
   }
 
+  if (updateData.schedule) {
+    const newAppointmentDate = updateData.schedule.appointment_date;
+
+    const existingAppointment = await appointmentService.findAppointmentByPatientAndDate(
+      appointment.patient_id, 
+      newAppointmentDate
+    );
+
+    if (existingAppointment && existingAppointment.id !== appointmentId) {
+      const parsedSchedule = scheduleInfoSchema.safeParse(existingAppointment.schedule);
+      if (!parsedSchedule.success) {
+        return res.status(400).json({ success: false, message: 'Invalid schedule data for existing appointment' });
+      }
+
+      const existingAppointmentDate = parsedSchedule.data.appointment_date;
+      const check = canScheduleAppointment(newAppointmentDate, [existingAppointmentDate]);
+
+      if (!check.allowed) {
+        return res.status(400).json({ success: false, message: check.reason });
+      }
+    }
+
+    const checkWorkHours = canScheduleAppointment(newAppointmentDate, []);
+    if (!checkWorkHours.allowed) {
+      return res.status(400).json({ success: false, message: checkWorkHours.reason });
+    }
+  }
+
   const previousStatus = appointment.status;
   const newStatus = updateData.status;
 
@@ -167,7 +218,6 @@ const updateAppointment = catchAsync(async (req, res) => {
   );
 
   const statusChanged = newStatus !== undefined && newStatus !== previousStatus;
-  const vitalsChanged = updateData.vitals !== undefined;
   const soapNoteChanged = updateData.soap_note !== undefined;
 
 

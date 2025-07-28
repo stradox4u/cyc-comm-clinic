@@ -3,6 +3,8 @@ import vitalsService from '../vitals/vitals.service.js'
 import soapnoteService from '../soapnote/soapnote.service.js';
 import { EventType } from "@prisma/client";
 import { logEvent } from '../events/events.utils.js';
+import { isSameDay } from 'date-fns';
+import appointmentService from './appointment.service.js';
 
 export function authorizeUserForViewingAppointment(appointment: any, user: any) {
   if (!user) throw new Error('User not authenticated');
@@ -65,6 +67,10 @@ export function authorizeSensitiveAppointmentFields(req: any, updateData: any) {
       if (field === 'soap_note') {
         updateData.soap_note = soapnoteService.buildSoapNoteNestedCreateInput(updateData.soap_note);
       }
+
+      if (field === 'appointment_providers') {
+        updateData.appointment_providers = appointmentService.buildProvidersCreate(updateData.appointment_providers)
+      }
     }
   }
 }
@@ -112,3 +118,41 @@ export async function logAppointmentEvents({
     });
   }
 }
+
+// Prevent same day appointment booking within working hours
+export function isWithinClinicHours(date: Date): boolean {
+  const totalMinutes = date.getHours() * 60 + date.getMinutes();
+  const startMinutes = 8 * 60;
+  const endMinutes = 15 * 60 + 45;
+  return totalMinutes >= startMinutes && totalMinutes <= endMinutes;
+}
+
+export function canScheduleAppointment(
+  newAppointment: Date,
+  existingAppointments: Date[]
+): {
+  allowed: boolean;
+  reason?: string;
+} {
+  const sameDayExists = existingAppointments.some((appt) =>
+    isSameDay(appt, newAppointment)
+  );
+
+  if (sameDayExists) {
+    return {
+      allowed: false,
+      reason: 'An appointment already EXISTS for this day. Please choose another day.',
+    };
+  }
+
+  if (!isWithinClinicHours(newAppointment)) {
+    return {
+      allowed: false,
+      reason: 'Appointment time must be BETWEEN 8:00 AM and 3:45 PM.',
+    };
+  }
+
+  return { allowed: true };
+}
+
+// Appointment wait time tracking for a provider

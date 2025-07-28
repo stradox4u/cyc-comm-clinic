@@ -6,6 +6,7 @@ import type {
   SoapNote
 } from "@prisma/client";
 import prisma from "../../config/prisma.js";
+import { startOfDay, endOfDay } from 'date-fns';
 
 export type AppointmentWhereUniqueInput = Prisma.AppointmentWhereUniqueInput
 export type AppointmentWhereInput = Prisma.AppointmentWhereInput
@@ -102,8 +103,10 @@ async function findAppointmentsByProvider(
   });
 }
 
-
-//Update Appointment
+{/*Update Appointment
+(vitals and soap_note intragration handled too)
+rescheduled count handled
+  */}
 async function updateAppointment(
   filter: AppointmentWhereUniqueInput,
   payload: AppointmentUpdateInput & { vitals?: any; soap_note?: any[] }
@@ -114,9 +117,45 @@ async function updateAppointment(
   }
 > {
   const { vitals, soap_note, ...rest } = payload;
+  const existing = await prisma.appointment.findUnique({
+    where: filter,
+    select: { status: true },
+  });
+  
+  const statusChangeToNoShow =
+    existing?.status !== "NO_SHOW" &&
+      ((typeof rest.status === "string" && rest.status === "NO_SHOW") ||
+       (typeof rest.status === "object" &&
+        rest.status !== null &&
+        "set" in rest.status &&
+        rest.status.set === "NO_SHOW"));
+
+  const statusChangeToAttending =
+    existing?.status === "CHECKED_IN" &&
+    ((typeof rest.status === "string" && rest.status === "ATTENDING") ||
+      (typeof rest.status === "object" &&
+        rest.status !== null &&
+        "set" in rest.status &&
+        rest.status.set === "ATTENDING"));
+
+  const isRescheduled =
+    (typeof rest.status === "string" && rest.status === "RESCHEDULED") ||
+    (typeof rest.status === "object" &&
+      rest.status !== null &&
+      "set" in rest.status &&
+      rest.status.set === "RESCHEDULED");
 
   const prismaData: Prisma.AppointmentUpdateInput = {
     ...rest,
+    ...(statusChangeToNoShow && { no_show_at: new Date() }),
+    ...(statusChangeToAttending && { attending_at: new Date() }),
+    ...(isRescheduled
+      ? {
+          schedule_count: {
+            increment: 1,
+          },
+        }
+      : {}),
     ...(vitals
       ? 'id' in vitals && vitals.id
         ? { vitals: { update: { ...vitals, id: undefined } } }
@@ -145,7 +184,6 @@ async function updateAppointment(
   });
 }
 
-
 //Cancel or Delete Appointment
 async function deleteAppointment(
     filter: AppointmentWhereUniqueInput
@@ -154,35 +192,6 @@ async function deleteAppointment(
         where: filter,
     });
 }
-
-//Schedule Count Update
-async function updateAppointmentWithScheduleCount(
-  appointmentId: string,
-  updateData: AppointmentUncheckedUpdateInput
-): Promise<Appointment> {
-  const isRescheduled =
-    (typeof updateData.status === "string" && updateData.status === "RESCHEDULED") ||
-    (typeof updateData.status === "object" && updateData.status !== null && "set" in updateData.status && updateData.status.set === "RESCHEDULED");
-
-  if (isRescheduled) {
-    const { schedule_count, ...restUpdateData } = updateData as any;
-    return prisma.appointment.update({
-      where: { id: appointmentId },
-      data: {
-        ...restUpdateData,
-        schedule_count: {
-          increment: 1,
-        },
-      },
-    });
-  } else {
-    return prisma.appointment.update({
-      where: { id: appointmentId },
-      data: updateData,
-    });
-  }
-}
-
 
 //Assign Provider (AppointmentProviders)
 async function assignProvider(
@@ -209,8 +218,17 @@ function buildProvidersCreate(
   };
 }
 
-
-//Integrate with vitals and soap note
+export async function findAppointmentByPatientAndDate(patientId: string, date: Date) {
+  return prisma.appointment.findFirst({
+    where: {
+      patient_id: patientId,
+      schedule: {
+        gte: startOfDay(date),
+        lte: endOfDay(date)
+      }
+    }
+  });
+}
 
 
 export default {
@@ -218,10 +236,9 @@ export default {
     findAppointment,
     findAppointmentsByPatient,
     findAppointmentsByProvider,
-    searchAppointments,
     updateAppointment,
     deleteAppointment,
     assignProvider,
-    updateAppointmentWithScheduleCount,
+    findAppointmentByPatientAndDate,
     buildProvidersCreate
 }
