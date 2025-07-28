@@ -1,7 +1,11 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
-import AppLayout from "./layout/AppLayout";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  Outlet,
+} from "react-router";
 import Dashboard from "./pages/Dashboard";
-import UserProfile from "./pages/UserProfile";
 import NotFound from "./pages/NotFound";
 import Home from "./pages/Home";
 import { PageLayout } from "./layout/pageLayout";
@@ -14,28 +18,39 @@ import PatientForgotPassword from "./pages/patient/forgot-password-patient";
 import PatientSignIn from "./pages/patient/patient-sign-in";
 import ProviderSignIn from "./pages/provider/provider-sign-in";
 import { Toaster } from "sonner";
-import PatientAppointments from "./pages/patient/PatientAppointment";
-import AppointmentForm from "./pages/patient/AppointmentForm";
+import PatientAppointments from "./pages/patient/patient-appointment";
+import PatientProfile from "./pages/patient/patient-profile";
+import PatientFiles from "./pages/patient/patient-files";
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const user = useAuthStore((state) => state.user);
 
   // If user is not authenticated, redirect to /signin
-  if (!user) {
-    return <Navigate to="/auth/patient/signin" replace />;
-  }
+  // if (!user) {
+  //   return <Navigate to="/auth/patient/login" replace />;
+  // }
 
   return <>{children}</>;
 }
+
+const ProtectedLayout = () => (
+  <ProtectedRoute>
+    <PageLayout>
+      <Outlet />
+    </PageLayout>
+  </ProtectedRoute>
+);
 
 function App() {
   return (
     <Router>
       <Toaster richColors />
       <Routes>
+        {/* ✅ Public Routes */}
         <Route index path="/" element={<Home />} />
-        {/* Patient Routes */}
+
+        {/* Patient Auth */}
         <Route path="/auth/patient/login" element={<PatientSignIn />} />
         <Route path="/auth/patient/signup" element={<SignUpPage />} />
         <Route
@@ -43,45 +58,25 @@ function App() {
           element={<PatientForgotPassword />}
         />
 
-        {/* Provider Routes */}
+        {/* Provider Auth */}
         <Route path="/auth/provider/login" element={<ProviderSignIn />} />
-        {/* <Route
-          path="/auth/provider/signup"
-          element={<SignUpPage type="provider" />}
-        /> */}
         <Route
           path="/auth/provider/forgot-password"
           element={<ProviderForgotPassword />}
         />
 
+        {/* Common Public Route */}
         <Route path="/change-password" element={<ChangePassword />} />
-        {/* Will return to protected route after API integration*/}
-        <Route
-          path="/dashboard"
-          element={
-            <PageLayout>
-              <Dashboard />
-            </PageLayout>
-          }
-        />
 
-        {/* Protected Routes */}
-        <Route
-          element={
-            <ProtectedRoute>
-              <AppLayout />
-            </ProtectedRoute>
-          }
-        >
+        {/* ✅ Protected Routes - all use ProtectedRoute + PageLayout */}
+        <Route element={<ProtectedLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<UserProfile />} />
+          <Route path="/profile" element={<PatientProfile />} />
+          <Route path="/files" element={<PatientFiles />} />
+          <Route path="/appointment" element={<PatientAppointments />} />
         </Route>
 
-        {/* patient appoitment page and appointment form */}
-        <Route path="/patient-appointment" element={<PatientAppointments />} />
-        <Route path="appointment-form" element={<AppointmentForm />} />
-
-        {/* Fallback for unmatched routes */}
+        {/* ❌ Catch-all (404) */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>

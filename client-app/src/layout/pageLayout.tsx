@@ -58,9 +58,9 @@ export const PageLayout: React.FC<PageLayoutProps> = ({ children }) => {
 
           <button
             onClick={toggleMenu}
-            className="absolute hidden md:block top-0 left-0 translate-x-60"
+            className="absolute hidden md:block lg:top-12 xl:left-36 2xl:left-72 2xl:top-24 left-8"
           >
-            <Menu />
+            <Menu size={20} />
           </button>
 
           <div className="ml-auto pr-12 md:mt-3 flex gap-4 items-center">
