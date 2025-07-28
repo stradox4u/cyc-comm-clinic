@@ -21,7 +21,7 @@ import AppointmentForm from "./pages/patient/AppointmentForm";
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const user = useAuthStore((state) => state.user);
 
-  If user is not authenticated, redirect to /signin
+  // If user is not authenticated, redirect to /signin
   if (!user) {
     return <Navigate to="/auth/patient/signin" replace />;
   }
