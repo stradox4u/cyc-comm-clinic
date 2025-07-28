@@ -48,7 +48,7 @@ const SignInPage = ({ userType }: SignInPageProps) => {
       }
 
       const result = await response.json();
-      setUser(result.user);
+      setUser(result.data);
       toast.success("Logged in successfully!");
       navigate("/dashboard");
     } catch (error) {
