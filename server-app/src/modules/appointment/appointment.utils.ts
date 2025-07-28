@@ -120,10 +120,15 @@ export async function logAppointmentEvents({
 }
 
 // Prevent same day appointment booking within working hours
+const CLINIC_START_HOUR = 8;
+const CLINIC_START_MINUTE = 0;
+const CLINIC_END_HOUR = 15;
+const CLINIC_END_MINUTE = 45;
+
 export function isWithinClinicHours(date: Date): boolean {
   const totalMinutes = date.getHours() * 60 + date.getMinutes();
-  const startMinutes = 8 * 60;
-  const endMinutes = 15 * 60 + 45;
+  const startMinutes = CLINIC_START_HOUR * 60 + CLINIC_START_MINUTE;
+  const endMinutes = CLINIC_END_HOUR * 60 + CLINIC_END_MINUTE;
   return totalMinutes >= startMinutes && totalMinutes <= endMinutes;
 }
 
