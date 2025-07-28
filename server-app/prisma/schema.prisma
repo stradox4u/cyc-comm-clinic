@@ -33,7 +33,8 @@ model Patient {
   insurance_coverage        String?
   created_at                DateTime  @default(now())
   updated_at                DateTime  @updatedAt
-  appointments          Appointment[]
+  appointments              Appointment[]
+  insurance_provider        InsuranceProvider? @relation(fields: [insurance_provider_id], references: [id])
 
   @@map("patients")
 }
@@ -239,4 +240,14 @@ enum EventType {
   SOAP_NOTE_RECORDED            @map("SOAP NOTE RECORDED")
   SOAP_NOTE_UPDATED             @map("SOAP NOTE UPDATED")
   APPOINTMENT_STATUS_CHANGED    @map("APPOINTMENT STATUS CHANGED")
+}
+
+model InsuranceProvider {
+  id            String              @id @default(uuid())
+  name          String
+  description   String
+  created_at    DateTime    @default(now())
+  updated_at    DateTime?   @updatedAt
+
+  patients      Patient[]
 }

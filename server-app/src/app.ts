@@ -10,6 +10,7 @@ import connectPgSimple from 'connect-pg-simple'
 import { appointmentRoute } from './modules/appointment/index.js'
 import { appointmentProviderRoute } from './modules/appointment/index.js'
 import { vitalsRoute } from './modules/vitals/index.js'
+import { insuranceProviderRoute } from './modules/insuranceProvider/index.js'
 
 const app = express()
 
@@ -55,6 +56,7 @@ app.use(
 )
 
 app.use('/api/auth', authRoute)
+app.use('/api/insurance-providers', insuranceProviderRoute)
 
 app.use('/api/appointment', appointmentRoute)
 
