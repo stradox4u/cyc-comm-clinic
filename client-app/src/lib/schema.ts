@@ -70,3 +70,13 @@ export const resetPasswordSchema = z
 
 export type ForgotPasswordData = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordData = z.infer<typeof resetPasswordSchema>;
+
+export const appointmentSchema = z.object({
+  date: z.string().min(1, "Date is required"),
+  time: z.string().min(1, "Time is required"),
+  purpose: z.string().min(1, "Purpose is required"),
+  status: z.string().min(1, "Status is required"),
+  insurance: z.string().min(1, "Insurance Coverage is required"),
+});
+
+export type AppointmentFormData = z.infer<typeof appointmentSchema>;

@@ -14,15 +14,17 @@ import PatientForgotPassword from "./pages/patient/forgot-password-patient";
 import PatientSignIn from "./pages/patient/patient-sign-in";
 import ProviderSignIn from "./pages/provider/provider-sign-in";
 import { Toaster } from "sonner";
+import PatientAppointments from "./pages/patient/PatientAppointment";
+import AppointmentForm from "./pages/patient/AppointmentForm";
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const user = useAuthStore((state) => state.user);
 
   // If user is not authenticated, redirect to /signin
-  if (!user) {
-    return <Navigate to="/auth/patient/signin" replace />;
-  }
+  // if (!user) {
+  //   return <Navigate to="/auth/patient/signin" replace />;
+  // }
 
   return <>{children}</>;
 }
@@ -74,6 +76,10 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/profile" element={<UserProfile />} />
         </Route>
+
+        {/* patient appoitment page and appointment form */}
+        <Route path="/patient-appointment" element={<PatientAppointments />} />
+        <Route path="appointment-form" element={<AppointmentForm />} />
 
         {/* Fallback for unmatched routes */}
         <Route path="*" element={<NotFound />} />
