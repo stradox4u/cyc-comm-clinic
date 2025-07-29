@@ -211,8 +211,13 @@ const updateAppointment = catchAsync(async (req, res) => {
   }
 
   if (updateData.schedule) {
-    const newAppointmentDate = new Date(updateData.schedule.appointment_date);
-
+    const { appointment_date, appointment_time } = updateData.schedule;
+    if (!appointment_date || !appointment_time) {
+      return res.status(400).json({ success: false, message: 'Appointment date and time are required' });
+    }
+    
+    const newAppointmentDate = new Date(`${appointment_date}T${appointment_time}:00`);
+    
     const existingAppointment = await appointmentService.findAppointmentByPatientAndDate(
       appointment.patient_id, 
       newAppointmentDate
