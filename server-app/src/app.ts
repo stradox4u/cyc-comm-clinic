@@ -4,9 +4,9 @@ import helmet from 'helmet'
 import config from './config/config.js'
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js'
 import { appLogger } from './middlewares/logger.js'
-import { authRoute } from './modules/auth/index.js'
 import session from 'express-session'
 import connectPgSimple from 'connect-pg-simple'
+import { authRoute, googleAuthRoute } from './modules/auth/index.js'
 
 const app = express()
 
@@ -36,6 +36,7 @@ app.use(
     cookie: {
       secure: config.NODE_ENV === 'production',
       httpOnly: true,
+      sameSite: 'none',
       maxAge: config.SESSION_EXPIRATION_HOURS * 60 * 60 * 1000,
     },
     store: new PgSession({
@@ -46,6 +47,7 @@ app.use(
 )
 
 app.use('/api/auth', authRoute)
+app.use('/api/auth/google', googleAuthRoute)
 
 app.use(notFoundHandler)
 app.use(errorHandler)

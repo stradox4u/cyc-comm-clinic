@@ -19,6 +19,7 @@ model Patient {
   email                     String    @unique
   password                  String
   is_verified               Boolean   @default(false)
+  has_calendar_access       Boolean?
   first_name                String
   last_name                 String
   phone                     String
@@ -33,7 +34,8 @@ model Patient {
   insurance_coverage        String?
   created_at                DateTime  @default(now())
   updated_at                DateTime  @updatedAt
-  appointments          Appointment[]
+  appointments              Appointment[]
+  calendar_tokens           CalendarToken[]
 
   @@map("patients")
 }
@@ -127,6 +129,7 @@ model Appointment {
   soap_note                SoapNote[]
   vitals                   Vitals?
   vitals_id                String?                      @unique
+  calendar_event_id        String?
   appointment_providers    AppointmentProviders[]
   created_at               DateTime                     @default(now())
   updated_at               DateTime                     @updatedAt
@@ -235,4 +238,15 @@ enum EventType {
   SOAP_NOTE_RECORDED            @map("SOAP NOTE RECORDED")
   SOAP_NOTE_UPDATED             @map("SOAP NOTE UPDATED")
   APPOINTMENT_STATUS_CHANGED    @map("APPOINTMENT STATUS CHANGED")
+}
+
+
+model CalendarToken {
+  id            String          @id @default(uuid())
+  tokens        Json
+  patient_id    String          @unique
+  created_at    DateTime        @default(now())
+  updated_at    DateTime        @updatedAt
+
+  patient       Patient         @relation(fields: [patient_id], references: [id])
 }
