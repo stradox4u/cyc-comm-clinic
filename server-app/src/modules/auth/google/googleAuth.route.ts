@@ -1,7 +1,7 @@
 import express from 'express'
 import { authenticate } from '../../../middlewares/auth.js'
 import { UserType } from '../../../types/index.js'
-import authController from './auth.controller.js'
+import authController from './googleAuth.controller.js'
 
 const router = express.Router()
 
