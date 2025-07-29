@@ -120,12 +120,16 @@ export async function logAppointmentEvents({
 }
 
 // Prevent same day appointment booking within working hours
-const CLINIC_START_HOUR = 8;
+const CLINIC_START_HOUR = 7;
 const CLINIC_START_MINUTE = 0;
 const CLINIC_END_HOUR = 15;
 const CLINIC_END_MINUTE = 45;
 
 export function isWithinClinicHours(date: Date): boolean {
+  if (!(date instanceof Date) || isNaN(date.getTime())) {
+    throw new Error("Invalid date object passed to isWithinClinicHours");
+  }
+
   const totalMinutes = date.getHours() * 60 + date.getMinutes();
   const startMinutes = CLINIC_START_HOUR * 60 + CLINIC_START_MINUTE;
   const endMinutes = CLINIC_END_HOUR * 60 + CLINIC_END_MINUTE;

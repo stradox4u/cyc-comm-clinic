@@ -87,8 +87,8 @@ async function findAppointmentsByPatient(
 async function findAppointmentsByProvider(
   provider_id: string,
   filter?: Prisma.AppointmentProvidersWhereInput
-): Promise<AppointmentProviders[]> {
-  return prisma.appointmentProviders.findMany({
+): Promise<Appointment[]> {
+  const appointmentProviders = await prisma.appointmentProviders.findMany({
     where: {
       provider_id,
       ...(filter || {}),
@@ -101,6 +101,7 @@ async function findAppointmentsByProvider(
       },
     },
   });
+  return appointmentProviders.map((entry) => entry.appointment);
 }
 
 {/*Update Appointment
@@ -119,9 +120,9 @@ async function updateAppointment(
   const { vitals, soap_note, ...rest } = payload;
   const existing = await prisma.appointment.findUnique({
     where: filter,
-    select: { status: true },
+    select: { status: true, schedule: true },
   });
-  
+
   const statusChangeToNoShow =
     existing?.status !== "NO_SHOW" &&
       ((typeof rest.status === "string" && rest.status === "NO_SHOW") ||
@@ -145,17 +146,25 @@ async function updateAppointment(
       "set" in rest.status &&
       rest.status.set === "RESCHEDULED");
 
+  let updatedSchedule = rest.schedule;
+  if (isRescheduled) {
+    const currentSchedule =
+      typeof existing?.schedule === "string"
+        ? JSON.parse(existing.schedule)
+        : existing?.schedule ?? {};
+
+    updatedSchedule = {
+      ...currentSchedule,
+      ...(typeof updatedSchedule === "object" ? updatedSchedule : {}),
+      schedule_count: (currentSchedule.schedule_count ?? 0) + 1,
+    };
+  }
+
   const prismaData: Prisma.AppointmentUpdateInput = {
     ...rest,
     ...(statusChangeToNoShow && { no_show_at: new Date() }),
     ...(statusChangeToAttending && { attending_at: new Date() }),
-    ...(isRescheduled
-      ? {
-          schedule_count: {
-            increment: 1,
-          },
-        }
-      : {}),
+    ...(updatedSchedule ? { schedule: updatedSchedule } : {}),
     ...(vitals
       ? 'id' in vitals && vitals.id
         ? { vitals: { update: { ...vitals, id: undefined } } }
