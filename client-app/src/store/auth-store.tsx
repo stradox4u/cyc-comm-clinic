@@ -5,7 +5,7 @@ interface User {
   email: string;
   first_name: string;
   last_name: string;
-  role?: string;
+  role_title?: string;
   // add more fields as needed
 }
 

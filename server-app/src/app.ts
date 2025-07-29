@@ -7,6 +7,7 @@ import { appLogger } from './middlewares/logger.js'
 import session from 'express-session'
 import connectPgSimple from 'connect-pg-simple'
 import { authRoute, googleAuthRoute } from './modules/auth/index.js'
+import { insuranceProviderRoute } from './modules/insuranceProvider/index.js'
 
 const app = express()
 
@@ -48,6 +49,7 @@ app.use(
 
 app.use('/api/auth', authRoute)
 app.use('/api/auth/google', googleAuthRoute)
+app.use('/api/insurance-providers', insuranceProviderRoute)
 
 app.use(notFoundHandler)
 app.use(errorHandler)

@@ -1,13 +1,14 @@
 import logger from '../src/middlewares/logger.js'
 import prisma from '../src/config/prisma.js'
 import { faker } from '@faker-js/faker'
-import { ProviderRoleTitle } from '@prisma/client'
+import { Prisma, ProviderRoleTitle } from '@prisma/client'
 import patientService from '../src/modules/patient/patient.service.js'
 import providerService from '../src/modules/provider/provider.service.js'
 import type { PatientRegisterSchema } from '../src/modules/auth/auth.validation.js'
-import type { PatientCreateInput } from '../src/modules/patient/patient.service.js'
 import type { ProviderCreateInput } from '../src/modules/provider/provider.service.js'
 import bcrypt from 'bcryptjs'
+
+export type PatientCreateInput = Prisma.PatientCreateInput
 
 const createRandomPatient = (): PatientRegisterSchema => ({
   email: faker.internet.email(),
@@ -36,8 +37,8 @@ const createRandomPatient = (): PatientRegisterSchema => ({
     ['Pollen', 'Dust', 'Peanuts', 'Shellfish', 'Milk', 'Eggs', 'Latex'],
     { min: 0, max: 3 }
   ),
-  insurance_coverage: faker.datatype.boolean() ? faker.lorem.words(2) : null,
-  insurance_provider_id: faker.datatype.boolean() ? faker.string.uuid() : null,
+  insurance_coverage: null,
+  insurance_provider_id: null,
 })
 
 const fakePatients = faker.helpers.multiple(createRandomPatient, {
@@ -58,8 +59,14 @@ const customPatient: PatientCreateInput = {
   emergency_contact_phone: '081' + faker.string.numeric(8),
   blood_group: 'A+',
   allergies: ['Chloroquine'],
-  insurance_coverage: null,
-  insurance_provider_id: null,
+  insurance_coverage: 'Basic Health Package',
+  insurance_provider: {
+    create: {
+      name: 'Leads Insurance Coporation',
+      description:
+        'Providing the best in insurance package for all your health care needs. Your Number one most trusted insurance provider',
+    },
+  },
 }
 
 const customProvider: ProviderCreateInput = {

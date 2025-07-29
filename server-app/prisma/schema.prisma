@@ -36,6 +36,7 @@ model Patient {
   updated_at                DateTime  @updatedAt
   appointments              Appointment[]
   calendar_tokens           CalendarToken[]
+  insurance_provider        InsuranceProvider? @relation(fields: [insurance_provider_id], references: [id])
 
   @@map("patients")
 }
@@ -240,6 +241,15 @@ enum EventType {
   APPOINTMENT_STATUS_CHANGED    @map("APPOINTMENT STATUS CHANGED")
 }
 
+model InsuranceProvider {
+  id            String              @id @default(uuid())
+  name          String
+  description   String
+  created_at    DateTime    @default(now())
+  updated_at    DateTime?   @updatedAt
+
+  patients      Patient[]
+}
 
 model CalendarToken {
   id            String          @id @default(uuid())
