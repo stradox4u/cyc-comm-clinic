@@ -6,6 +6,7 @@ import ProviderDashboard from "./patient/provider-dashboard";
 
 const Dashboard = () => {
   const user = useAuthStore((state) => state.user);
+  console.log(user);
 
   const providerRoles = new Set([
     "GENERAL_PRACTIONER",

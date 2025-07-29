@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
-
 import { Eye, EyeClosed } from "lucide-react";
 import type { FormData } from "../../../lib/schema";
 import { Label } from "../../ui/label";

@@ -13,11 +13,13 @@ interface AuthState {
   user: User | null;
   setUser: (user: User) => void;
   logout: () => void;
+  isInitialized: boolean;
   initializeUser: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
+  isInitialized: false, // ✅ track init status
   setUser: (user) => {
     localStorage.setItem("user", JSON.stringify(user));
     set({ user });
@@ -28,7 +30,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   initializeUser: () => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      set({ user: JSON.parse(storedUser) });
+      set({ user: JSON.parse(storedUser), isInitialized: true });
+    } else {
+      set({ isInitialized: true });
     }
   },
 }));

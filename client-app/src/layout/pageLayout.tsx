@@ -2,6 +2,10 @@ import { useState, useEffect } from "react";
 import { Menu } from "lucide-react";
 import { Sidebar, FloatingMenu } from "../components/ui/menu";
 import { Mode } from "../components/ui/mode";
+import { Button } from "../components/ui/button";
+import { toast } from "sonner";
+import { useAuthStore } from "../store/auth-store";
+import { useNavigate } from "react-router-dom";
 
 interface PageLayoutProps {
   children: React.ReactNode;
@@ -10,26 +14,26 @@ interface PageLayoutProps {
 export const PageLayout: React.FC<PageLayoutProps> = ({ children }) => {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [isOpen, setIsOpen] = useState(false);
-  // const navigate = useNavigate();
-  // const logout = useAuthStore((state) => state.logout);
+  const navigate = useNavigate();
+  const logout = useAuthStore((state) => state.logout);
 
-  // const handleLogout = async () => {
-  //   try {
-  //     const res = await fetch("/api/auth/logout", {
-  //       method: "POST",
-  //       credentials: "include",
-  //     });
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
 
-  //     if (!res.ok) throw new Error("Logout failed");
+      if (!res.ok) throw new Error("Logout failed");
 
-  //     logout();
-  //     toast.success("Logged out successfully");
-  //     navigate("/auth/patient/login");
-  //   } catch (error) {
-  //     console.error("Logout error:", error);
-  //     toast.error("Failed to logout. Please try again.");
-  //   }
-  // };
+      logout();
+      toast.success("Logged out successfully");
+      navigate("/auth/patient/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Failed to logout. Please try again.");
+    }
+  };
 
   const toggleMenu = () => setIsOpen((prev) => !prev);
 
@@ -67,7 +71,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({ children }) => {
             <Mode theme={theme} toggleTheme={toggleTheme} />
           </div>
 
-          {/* <Button onClick={handleLogout}>Logout</Button> */}
+          <Button onClick={handleLogout}>Logout</Button>
         </div>
       </header>
 

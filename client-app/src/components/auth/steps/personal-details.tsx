@@ -4,17 +4,33 @@ import type { FormData } from "../../../lib/schema";
 import { Label } from "../../ui/label";
 import { Input } from "../../ui/input";
 import { Button } from "../../ui/button";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface PersonalDetailsStepProps {
   onNext: () => void;
   onPrev: () => void;
 }
 
+const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+
+type InsuranceProvider = {
+  id: string;
+  name: string;
+  description: string;
+  created_at: Date;
+  updated_at: Date;
+};
+
 const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
   const {
     register,
     formState: { errors },
   } = useFormContext<FormData>();
+  const [insuranceProviders, setInsuranceProviders] = useState<
+    InsuranceProvider[]
+  >([]);
+  const [loading, setLoading] = useState(false);
 
   const personalFields = [
     ["First Name", "first_name", "text", "e.g. John"],
@@ -33,11 +49,43 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
       "emergency_contact_phone",
       "e.g. 0803-456-7890",
     ],
-    ["Blood Group", "blood_group", "e.g. O+ / A-"],
     ["Allergies", "allergies", "e.g. Peanuts, Penicillin"],
-    ["Insurance Coverage", "insurance_coverage", "e.g. HealthPlus or N/A"],
-    ["Insurance Provider", "insurance_provider_id", "e.g. 362HGSD"],
+    [
+      "Insurance Coverage",
+      "insurance_coverage",
+      "e.g. Basic Health Package or N/A",
+    ],
   ];
+
+  useEffect(() => {
+    const fetchInsuranceProvider = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch("/api/insurance-providers");
+
+        // Ensure response is ok and content-type is JSON
+        const contentType = response.headers.get("content-type");
+        if (!response.ok || !contentType?.includes("application/json")) {
+          throw new Error("Invalid response");
+        }
+
+        const result = await response.json();
+
+        if (!result.success) {
+          toast.error("Error fetching providers");
+        } else {
+          setInsuranceProviders(result.data);
+        }
+      } catch (err) {
+        console.error("Fetch failed:", err);
+        toast.error("Failed to fetch insurance providers.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInsuranceProvider();
+  }, []);
 
   return (
     <div className="text-black">
@@ -69,13 +117,31 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
             {...register("gender")}
             className="bg-black text-white border-b w-full p-2 rounded"
           >
-            <option value="">Select Gender</option>
+            <option value="">-- Select Gender --</option>
             <option value="MALE">Male</option>
             <option value="FEMALE">Female</option>
             <option value="NULL">Other</option>
           </select>
           {errors.gender && (
             <p className="text-red-500 text-sm">{errors.gender.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label className="font-semibold">Gender</Label>
+          <select
+            {...register("blood_group")}
+            className="bg-black text-white border-b w-full p-2 rounded"
+          >
+            <option value="">-- Select Blood Group --</option>
+            {BLOOD_GROUPS.map((group) => (
+              <option key={group} value={group}>
+                {group}
+              </option>
+            ))}
+          </select>
+          {errors.blood_group && (
+            <p className="text-red-500 text-sm">{errors.blood_group.message}</p>
           )}
         </div>
 
@@ -94,6 +160,33 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
             )}
           </div>
         ))}
+
+        <div className="space-y-2">
+          <Label className="font-semibold">Insurance Provider</Label>
+
+          {loading ? (
+            <div className="w-full">
+              <div className="h-10 rounded bg-zinc-700 animate-pulse" />
+            </div>
+          ) : (
+            <select
+              {...register("insurance_provider_id")}
+              className="bg-black text-white border-b w-full p-2 rounded"
+            >
+              <option value="">-- Select Insurance Provider --</option>
+              {insuranceProviders.map((insurance) => (
+                <option key={insurance.id} value={insurance.id}>
+                  {insurance.name}
+                </option>
+              ))}
+            </select>
+          )}
+          {errors.insurance_provider_id && (
+            <p className="text-red-500 text-sm">
+              {errors.insurance_provider_id.message}
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="flex justify-between md:gap-8 my-6">
