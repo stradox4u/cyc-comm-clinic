@@ -5,7 +5,7 @@
 
 */
 -- AlterTable
-ALTER TABLE "appointments" ADD COLUMN     "vitals_id" TEXT;
+/*ALTER TABLE "appointments" ADD COLUMN     "vitals_id" TEXT;*/
 
 -- CreateTable
 CREATE TABLE "InsuranceProvider" (
@@ -19,7 +19,7 @@ CREATE TABLE "InsuranceProvider" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "appointments_vitals_id_key" ON "appointments"("vitals_id");
+/*CREATE UNIQUE INDEX "appointments_vitals_id_key" ON "appointments"("vitals_id");*/
 
 -- AddForeignKey
 ALTER TABLE "patients" ADD CONSTRAINT "patients_insurance_provider_id_fkey" FOREIGN KEY ("insurance_provider_id") REFERENCES "InsuranceProvider"("id") ON DELETE SET NULL ON UPDATE CASCADE;

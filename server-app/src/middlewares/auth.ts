@@ -8,6 +8,8 @@ const authenticate = (userType: UserType) => {
     const user = req.session.user
     if (!user) throw new UnauthenticatedError('You need to login first')
 
+    if (user.type !== userType) throw new UnauthorizedError('Access denied')
+
     req.user = user
     next()
   }
@@ -19,13 +21,27 @@ const authorize = (roleTitles: ProviderRoleTitle[]) => {
       throw new UnauthenticatedError('You need to login first')
     }
 
-    const adminRole = req.user?.roleTitle
+    const providerRole = req.user?.roleTitle
 
-    if (!adminRole || !roleTitles.includes(adminRole)) {
-      throw new UnauthorizedError("You don't have the permission for access")
+    if (!providerRole || !roleTitles.includes(providerRole)) {
+      throw new UnauthorizedError('Access denied')
     }
     next()
   }
 }
 
-export { authenticate, authorize }
+const authenticateMultipleUser =
+  (allowedUsers: UserType[]) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    const user = req.session.user
+    if (!user) throw new UnauthenticatedError('Not authenticated')
+
+    if (!allowedUsers.includes(user.type)) {
+      return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+    
+    req.user = user;
+    next()
+  }
+
+export { authenticate, authorize, authenticateMultipleUser }

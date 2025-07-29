@@ -7,6 +7,9 @@ import { appLogger } from './middlewares/logger.js'
 import session from 'express-session'
 import connectPgSimple from 'connect-pg-simple'
 import { authRoute, googleAuthRoute } from './modules/auth/index.js'
+import { appointmentRoute } from './modules/appointment/index.js'
+import { appointmentProviderRoute } from './modules/appointment/index.js'
+import { vitalsRoute } from './modules/vitals/index.js'
 import { insuranceProviderRoute } from './modules/insuranceProvider/index.js'
 
 const app = express()
@@ -26,7 +29,13 @@ app.use(
 
 app.use(helmet())
 
-app.use(express.json())
+app.use((req, res, next) => {
+  if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+    express.json()(req, res, next)
+  } else {
+    next()
+  }
+})
 
 const PgSession = connectPgSimple(session)
 app.use(
@@ -50,6 +59,12 @@ app.use(
 app.use('/api/auth', authRoute)
 app.use('/api/auth/google', googleAuthRoute)
 app.use('/api/insurance-providers', insuranceProviderRoute)
+
+app.use('/api/appointment', appointmentRoute)
+
+app.use('/api/provider/appointment', appointmentProviderRoute)
+
+app.use('/api/provider/vitals', vitalsRoute)
 
 app.use(notFoundHandler)
 app.use(errorHandler)
