@@ -87,8 +87,8 @@ async function findAppointmentsByPatient(
 async function findAppointmentsByProvider(
   provider_id: string,
   filter?: Prisma.AppointmentProvidersWhereInput
-): Promise<AppointmentProviders[]> {
-  return prisma.appointmentProviders.findMany({
+): Promise<Appointment[]> {
+  const appointmentProviders = await prisma.appointmentProviders.findMany({
     where: {
       provider_id,
       ...(filter || {}),
@@ -101,6 +101,7 @@ async function findAppointmentsByProvider(
       },
     },
   });
+  return appointmentProviders.map((entry) => entry.appointment);
 }
 
 {/*Update Appointment
@@ -121,7 +122,7 @@ async function updateAppointment(
     where: filter,
     select: { status: true },
   });
-  
+
   const statusChangeToNoShow =
     existing?.status !== "NO_SHOW" &&
       ((typeof rest.status === "string" && rest.status === "NO_SHOW") ||
