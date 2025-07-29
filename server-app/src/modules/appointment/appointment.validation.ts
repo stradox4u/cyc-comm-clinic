@@ -45,7 +45,7 @@ const appointmentRegisterSchema = z.object({
     schedule: scheduleInfoSchema,
     purposes: z.array(z.enum(AppointmentPurpose)),
     other_purpose: z.string().optional(),
-    status: z.enum(AppointmentStatus),
+    status: z.enum(AppointmentStatus).optional(),
     has_insurance: z.boolean(),
     is_follow_up_required: z.boolean().optional(),
     follow_up_id: z.uuid().optional(),
