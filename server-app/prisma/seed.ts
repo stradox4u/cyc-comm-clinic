@@ -2,14 +2,12 @@ import logger from '../src/middlewares/logger.js'
 import prisma from '../src/config/prisma.js'
 import { faker } from '@faker-js/faker'
 import { Prisma, ProviderRoleTitle } from '@prisma/client'
-import patientService from '../src/modules/patient/patient.service.js'
-import providerService from '../src/modules/provider/provider.service.js'
 import type { PatientRegisterSchema } from '../src/modules/auth/auth.validation.js'
-import type { ProviderCreateInput } from '../src/modules/provider/provider.service.js'
 import bcrypt from 'bcryptjs'
 
 export type PatientCreateInput = Prisma.PatientCreateInput
 export type ProviderRoleCreateInput = Prisma.ProviderRoleCreateInput
+export type ProviderUncheckedCreateInput = Prisma.ProviderUncheckedCreateInput
 
 const createRandomPatient = (): PatientRegisterSchema => ({
   email: faker.internet.email(),
@@ -70,14 +68,72 @@ const customPatient: PatientCreateInput = {
   },
 }
 
-const customProvider: ProviderCreateInput = {
-  email: 'testprovider@gmail.com',
-  password: await bcrypt.hash('test1234', 10),
-  first_name: 'Super',
-  last_name: 'Admin',
-  phone: '081' + faker.string.numeric(8),
-  role: { connect: { title: 'ADMIN' } },
-}
+const customProviders: ProviderUncheckedCreateInput[] = [
+  {
+    email: 'testprovider@gmail.com',
+    password: await bcrypt.hash('test1234', 10),
+    first_name: 'Super',
+    last_name: 'Admin',
+    phone: '081' + faker.string.numeric(8),
+    role_title: ProviderRoleTitle.ADMIN,
+  },
+  {
+    email: 'testgeneralpractitioner@gmail.com',
+    password: await bcrypt.hash('test1234', 10),
+    first_name: 'Dr. Mary',
+    last_name: 'Aliya',
+    phone: '081' + faker.string.numeric(8),
+    role_title: ProviderRoleTitle.GENERAL_PRACTIONER,
+  },
+  {
+    email: 'testgynaecologist@gmail.com',
+    password: await bcrypt.hash('test1234', 10),
+    first_name: 'Dr. Tim',
+    last_name: 'Peters',
+    phone: '081' + faker.string.numeric(8),
+    role_title: ProviderRoleTitle.GYNAECOLOGIST,
+  },
+  {
+    email: 'testlabtechnician@gmail.com',
+    password: await bcrypt.hash('test1234', 10),
+    first_name: 'Dr. Lawal',
+    last_name: 'King',
+    phone: '081' + faker.string.numeric(8),
+    role_title: ProviderRoleTitle.LAB_TECHNICIAN,
+  },
+  {
+    email: 'testnurse@gmail.com',
+    password: await bcrypt.hash('test1234', 10),
+    first_name: 'Miss Sims',
+    last_name: 'Martin',
+    phone: '081' + faker.string.numeric(8),
+    role_title: ProviderRoleTitle.NURSE,
+  },
+  {
+    email: 'testpaediatrician@gmail.com',
+    password: await bcrypt.hash('test1234', 10),
+    first_name: 'Dr. Wilson',
+    last_name: 'Jeffries',
+    phone: '081' + faker.string.numeric(8),
+    role_title: ProviderRoleTitle.PAEDIATRICIAN,
+  },
+  {
+    email: 'testpharmacist@gmail.com',
+    password: await bcrypt.hash('test1234', 10),
+    first_name: 'Dr. Jade',
+    last_name: 'Wilson',
+    phone: '081' + faker.string.numeric(8),
+    role_title: ProviderRoleTitle.PHARMACIST,
+  },
+  {
+    email: 'testprovider@gmail.com',
+    password: await bcrypt.hash('test1234', 10),
+    first_name: 'Miss Joanna',
+    last_name: 'Jones',
+    phone: '081' + faker.string.numeric(8),
+    role_title: ProviderRoleTitle.RECEPTIONIST,
+  },
+]
 
 const providerRoles: ProviderRoleCreateInput[] = [
   {
@@ -123,8 +179,9 @@ const seed = async () => {
       prisma.patient.create({ data: customPatient }),
       prisma.providerRole.createMany({ data: providerRoles }),
     ])
-    await prisma.provider.create({ data: customProvider }),
-      logger.info('Database seeded successfully!')
+    await prisma.provider.createMany({ data: customProviders })
+
+    logger.info('Database seeded successfully!')
     await prisma.$disconnect()
     process.exit(1)
   } catch (err) {
