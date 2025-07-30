@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { VitalsRecordSchema } from '../vitals/vitals.validation.js';
 import { SoapNoteRecordSchema } from '../soapnote/soapnote.validation.js';
 
-const scheduleInfoSchema = z.object({
+export const scheduleInfoSchema = z.object({
     schedule_count: z.number(),
     appointment_date: z.coerce.date(),
     appointment_time: z
@@ -12,6 +12,8 @@ const scheduleInfoSchema = z.object({
           message: "Invalid time format (expected HH:mm or HH:mm:ss)",
     }),
 })
+
+export type ScheduleInfo = z.infer<typeof scheduleInfoSchema>;
 
 const nestedAppointmentCreateSchema = z.object({
   patient: z.object({
@@ -43,7 +45,7 @@ const appointmentRegisterSchema = z.object({
     schedule: scheduleInfoSchema,
     purposes: z.array(z.enum(AppointmentPurpose)),
     other_purpose: z.string().optional(),
-    status: z.enum(AppointmentStatus),
+    status: z.enum(AppointmentStatus).optional(),
     has_insurance: z.boolean(),
     is_follow_up_required: z.boolean().optional(),
     follow_up_id: z.uuid().optional(),

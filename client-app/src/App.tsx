@@ -29,6 +29,7 @@ import AllPatients from "./pages/admin/all-patients";
 import MobileOutreach from "./pages/admin/mobile-outreach";
 import Reminders from "./pages/admin/reminders";
 
+
 // Protected Route Component
 export const ProtectedLayout = () => {
   const user = useAuthStore((state) => state.user);
@@ -50,6 +51,10 @@ export const ProtectedLayout = () => {
   }
   // Dynamically choose layout based on user role
   const Layout = user.role_title ? ProviderLayout : PageLayout;
+  // If user is not authenticated, redirect to /signin
+  // if (!user) {
+  //   return <Navigate to="/auth/patient/login" replace />;
+  // }
 
   return (
     <Layout>
@@ -57,6 +62,14 @@ export const ProtectedLayout = () => {
     </Layout>
   );
 };
+
+const ProtectedLayout = () => (
+  <ProtectedRoute>
+    <PageLayout>
+      <Outlet />
+    </PageLayout>
+  </ProtectedRoute>
+);
 
 function App() {
   const initializeUser = useAuthStore((state) => state.initializeUser);
