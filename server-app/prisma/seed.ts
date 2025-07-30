@@ -9,6 +9,7 @@ import type { ProviderCreateInput } from '../src/modules/provider/provider.servi
 import bcrypt from 'bcryptjs'
 
 export type PatientCreateInput = Prisma.PatientCreateInput
+export type ProviderRoleCreateInput = Prisma.ProviderRoleCreateInput
 
 const createRandomPatient = (): PatientRegisterSchema => ({
   email: faker.internet.email(),
@@ -75,27 +76,55 @@ const customProvider: ProviderCreateInput = {
   first_name: 'Super',
   last_name: 'Admin',
   phone: '081' + faker.string.numeric(8),
-  role: {
-    create: {
-      title: ProviderRoleTitle.ADMIN,
-      description: 'Super admin with unrestricted access to every feature',
-    },
-  },
+  role: { connect: { title: 'ADMIN' } },
 }
+
+const providerRoles: ProviderRoleCreateInput[] = [
+  {
+    title: ProviderRoleTitle.ADMIN,
+    description: 'Super admin with unrestricted access to every feature',
+  },
+  {
+    title: ProviderRoleTitle.GENERAL_PRACTIONER,
+    description: 'Provides primary and preventive healthcare services',
+  },
+  {
+    title: ProviderRoleTitle.GYNAECOLOGIST,
+    description: "Specializes in women's reproductive health",
+  },
+  {
+    title: ProviderRoleTitle.LAB_TECHNICIAN,
+    description: 'Conducts diagnostic tests and analyzes lab samples',
+  },
+  {
+    title: ProviderRoleTitle.NURSE,
+    description: 'Offers patient care and clinical support',
+  },
+  {
+    title: ProviderRoleTitle.PAEDIATRICIAN,
+    description: 'Treats and monitors the health of children',
+  },
+  {
+    title: ProviderRoleTitle.PHARMACIST,
+    description: 'Dispenses medications and advises on drug use',
+  },
+  {
+    title: ProviderRoleTitle.RECEPTIONIST,
+    description: 'Manages front-desk operations and patient scheduling',
+  },
+]
 
 const seed = async () => {
   try {
     logger.info('Seeding database tables...')
 
-    const createPatientPromises = fakePatients.map((fakePatient) => {
-      patientService.createPatient(fakePatient)
-    })
-    await Promise.all(createPatientPromises)
-
-    await patientService.createPatient(customPatient)
-    await providerService.createProvider(customProvider)
-
-    logger.info('Database seeded successfully!')
+    await Promise.all([
+      prisma.patient.createMany({ data: fakePatients }),
+      prisma.patient.create({ data: customPatient }),
+      prisma.providerRole.createMany({ data: providerRoles }),
+    ])
+    await prisma.provider.create({ data: customProvider }),
+      logger.info('Database seeded successfully!')
     await prisma.$disconnect()
     process.exit(1)
   } catch (err) {
