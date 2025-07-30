@@ -15,7 +15,7 @@ const Header = () => {
     <nav className="shadow-md bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-[#6A5CA3] sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-8 md:px-16 lg:px-24 xl:px-32">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center space-x-2">
+          <Link to={"/"} className="flex items-center space-x-2">
             {!active && (
               <>
                 {" "}
@@ -25,7 +25,7 @@ const Header = () => {
                 </span>
               </>
             )}
-          </div>
+          </Link>
           {active ? (
             <Button
               onClick={goBack}
@@ -38,18 +38,21 @@ const Header = () => {
           ) : (
             <div className="relative">
               <div className="hidden md:flex items-center space-x-8 text-white">
-                <Link to="/" className=" hover:text-blue-600 transition-colors">
+                <Link
+                  to="/"
+                  className=" hover:text-purple-300 transition-colors"
+                >
                   Home
                 </Link>
                 <a
                   href="/#services"
-                  className=" hover:text-blue-600 transition-colors"
+                  className=" hover:text-purple-300 transition-colors"
                 >
                   Services
                 </a>
                 <a
                   href="/#contact"
-                  className=" hover:text-blue-600 transition-colors"
+                  className=" hover:text-purple-300 transition-colors"
                 >
                   Contact
                 </a>
@@ -58,7 +61,7 @@ const Header = () => {
                     <Link to="/login">Login</Link>
                   </Button>
                   <Button asChild>
-                    <Link to="/auth/patient/signup">Get Started</Link>
+                    <Link to="/signup">Get Started</Link>
                   </Button>
                 </div>
               </div>

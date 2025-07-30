@@ -308,7 +308,7 @@ const Home = () => {
                     asChild
                     className="text-lg px-8 py-6"
                   >
-                    <Link to="/landing/register">Book Appointment</Link>
+                    <Link to="/signup">Book Appointment</Link>
                   </Button>
                   <Button
                     size="lg"
