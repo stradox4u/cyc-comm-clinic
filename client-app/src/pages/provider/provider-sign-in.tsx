@@ -1,7 +1,7 @@
 import SignInPage from "../signin";
 
 const ProviderSignIn = () => {
-  return <SignInPage userType="provider" />;
+  return <SignInPage />;
 };
 
 export default ProviderSignIn;

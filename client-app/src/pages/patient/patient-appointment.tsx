@@ -1,133 +1,202 @@
-import { Search, Plus, ArrowLeft } from "lucide-react";
+import { Search, Plus, ArrowLeft, CheckCircle, Eye } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../../components/ui/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { appointmentSchema, type AppointmentFormData } from "../../lib/schema";
+import {
+  appointmentPurposes,
+  appointmentSchema,
+  getWeekdays,
+  timeSlots,
+  type AppointmentFormData,
+} from "../../lib/schema";
 import { useNavigate } from "react-router-dom";
 import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../components/ui/tabs";
 
-type Appointment = {
-  provider?: string;
-  purpose?: string;
-  date?: string;
-  time?: string;
-};
+const upcomingAppointments = [
+  {
+    id: 1,
+    date: "2024-01-25",
+    time: "10:00 AM",
+    provider: "Dr. Smith",
+    type: "Annual Check-up",
+    location: "Main Clinic",
+    status: "confirmed",
+  },
+  {
+    id: 2,
+    date: "2024-02-10",
+    time: "2:30 PM",
+    provider: "Dr. Johnson",
+    type: "Follow-up",
+    location: "Cardiology Dept",
+    status: "pending",
+  },
+];
 
-const purposes = ["Antenatal", "Therapy"];
-const statuses = ["Scheduled", "Completed", "Cancelled"];
-const coverages = ["Yes", "No", "Pending"];
-
-const appointments: Appointment[] = [
+const recentVisits = [
   {
-    provider: "Dr. Oke",
-    purpose: "Antenatal",
-    date: "Tuesday",
-    time: "09:00am",
+    id: 1,
+    date: "2024-01-10",
+    provider: "Dr. Smith",
+    type: "Consultation",
+    diagnosis: "Hypertension monitoring",
+    status: "completed",
   },
   {
-    provider: "Dr. Temi",
-    purpose: "Colonoscopy",
-    date: "Friday",
-    time: "10:00am",
-  },
-  {
-    provider: "Dr. Mike",
-    purpose: "Obgyn",
-    date: "30th July",
-    time: "12:00pm",
-  },
-  {
-    provider: "Dr. Tuoyo",
-    purpose: "Therapy",
-    date: "7th August",
-    time: "08:00am",
-  },
-  {
-    provider: "Dr. Oke",
-    purpose: "Antenatal",
-    date: "14th August",
-    time: "09:00am",
-  },
-  {
-    provider: "Dr. Karen",
-    purpose: "Dietician",
-    date: "20th August",
-    time: "02:00pm",
-  },
-  {
-    provider: "Dr. Tuoyo",
-    purpose: "Therapy",
-    date: "21st August",
-    time: "04:00pm",
-  },
-  {
-    provider: "Dr. Brown",
-    purpose: "Physiotherapy",
-    date: "30th August",
-    time: "09:00am",
-  },
-  {
-    provider: "Dr. Oke",
-    purpose: "Antenatal",
-    date: "1st September",
-    time: "09:00am",
-  },
-  {
-    provider: "Dr. Oke",
-    purpose: "Antenatal",
-    date: "15th September",
-    time: "09:00am",
+    id: 2,
+    date: "2023-12-15",
+    provider: "Dr. Wilson",
+    type: "Lab Results Review",
+    diagnosis: "Normal blood work",
+    status: "completed",
   },
 ];
 
 export default function PatientAppointments() {
-  const [step, setStep] = useState<"all" | "completed" | "form">("all");
+  const [tab, setTab] = useState("all");
+  const weekdays = getWeekdays();
 
   const {
-    register,
+    // register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
     reset,
   } = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
+    defaultValues: {
+      date: "",
+      time: "",
+      purpose: "",
+    },
   });
 
   const navigate = useNavigate();
 
   const onSubmit = (data: AppointmentFormData) => {
     console.log("Form Data:", data);
-    setStep("all");
+    setTab("all");
     reset(); // Optional: reset form after submit
   };
 
-  const renderTable = (data: Appointment[]) => (
-    <>
-      <div className="bg-white rounded-lg shadow-sm p-3 text-sm sm:text-base flex justify-between items-center text-gray-600">
-        <p>Provider</p>
-        <p>Purpose</p>
-        <p>Date</p>
-        <p>Time</p>
-      </div>
-      {data.map((appt, i) => (
-        <div
-          key={i}
-          className="bg-white rounded-lg shadow-sm p-3 text-sm sm:text-base flex justify-between items-center"
-        >
-          <div className="font-medium text-gray-600">{appt.provider}</div>
-          <div className="text-gray-600">{appt.purpose}</div>
-          <div className="text-gray-500">{appt.date}</div>
-          <div className="text-gray-500">{appt.time}</div>
-        </div>
-      ))}
-    </>
+  const renderTable = () => (
+    <div className="grid gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Upcoming Appointments</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {upcomingAppointments.map((appointment) => (
+              <div
+                key={appointment.id}
+                className="flex items-center justify-between p-4 border border-muted rounded-lg"
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="text-center">
+                    <div className="text-lg font-bold">
+                      {new Date(appointment.date).getDate()}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {new Date(appointment.date).toLocaleDateString("en-US", {
+                        month: "short",
+                      })}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-medium">{appointment.type}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {appointment.time} with {appointment.provider}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {appointment.location}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Badge
+                    variant={
+                      appointment.status === "confirmed"
+                        ? "default"
+                        : "secondary"
+                    }
+                  >
+                    {appointment.status}
+                  </Badge>
+                  <Button variant="outline" size="sm">
+                    Reschedule
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Past Appointments</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {recentVisits.map((visit) => (
+              <div
+                key={visit.id}
+                className="flex items-center justify-between p-4 border rounded-lg border-muted"
+              >
+                <div className="flex items-center space-x-4">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <div>
+                    <div className="font-medium">{visit.type}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {visit.date} with {visit.provider}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {visit.diagnosis}
+                    </div>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm">
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Details
+                </Button>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 
   return (
-    <div className="min-h-screen p-4 sm:p-8">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+    <Tabs value={tab} onValueChange={setTab} className="w-full">
+      <div className="flex justify-between items-center mb-6">
         <Button
           onClick={() => navigate("/dashboard")}
           variant="ghost"
@@ -140,165 +209,113 @@ export default function PatientAppointments() {
         <Search className="w-6 h-6" />
       </div>
 
-      {/* Tabs - Always visible */}
-      <div className="rounded-xl p-2 flex justify-end items-center text-white font-medium mb-4">
-        <div className="flex gap-12">
-          <button
-            className={
-              step === "all" ? "border-b-2 border-white" : "opacity-60"
-            }
-            onClick={() => setStep("all")}
-          >
-            All
-          </button>
-          <button
-            className={
-              step === "completed" ? "border-b-2 border-white" : "opacity-60"
-            }
-            onClick={() => setStep("completed")}
-          >
-            Completed
-          </button>
-          <button
-            onClick={() => setStep("form")}
-            className="flex items-center gap-1 hover:underline"
-          >
-            Add Appointment <Plus size={16} />
-          </button>
+      <TabsList className="mb-4 border-background">
+        <TabsTrigger value="all">All</TabsTrigger>
+        <TabsTrigger value="completed">Completed</TabsTrigger>
+        <TabsTrigger value="form" className="ml-auto">
+          Schedule Appointment
+        </TabsTrigger>
+      </TabsList>
+
+      {/* Tab content below */}
+      <TabsContent value="all">{renderTable()}</TabsContent>
+
+      <TabsContent value="completed">
+        <div className="text-gray-600 italic text-center">
+          No completed appointments yet.
         </div>
-      </div>
+      </TabsContent>
 
-      {/* Page Content Based on Step */}
-      <div className="mt-6 grid gap-3">
-        {step === "form" && (
-          <div className="">
-            <form
-              onSubmit={handleSubmit(onSubmit)}
-              className="bg-[#d6d2e3] p-6 rounded-xl space-y-4 text-sm sm:text-base"
-            >
-              <h2 className="text-center font-semibold text-lg text-black mb-2">
-                New Appointment
-              </h2>
+      <TabsContent value="form">
+        <Card className="max-w-4xl mx-auto">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="p-6 rounded-xl space-y-4 text-sm sm:text-base"
+          >
+            <h2 className="text-start font-semibold text-lg mb-8">
+              New Appointment
+            </h2>
 
-              {/* Date */}
-              <div>
-                <Label className="block mb-1 text-gray-700">Date</Label>
-                <Input
-                  type="date"
-                  {...register("date")}
-                  className="w-full rounded-md p-2"
-                />
-                {errors.date && (
-                  <p className="text-red-500 text-xs">{errors.date.message}</p>
-                )}
-              </div>
-
-              {/* Time */}
-              <div>
-                <Label className="block mb-1 text-gray-700">Time</Label>
-                <Input
-                  type="time"
-                  {...register("time")}
-                  className="w-full rounded-md p-2"
-                />
-                {errors.time && (
-                  <p className="text-red-500 text-xs">{errors.time.message}</p>
-                )}
-              </div>
-
-              {/* Purpose */}
-              <div>
-                <Label className="block mb-1 text-gray-700">Purpose</Label>
-                <select
-                  {...register("purpose")}
-                  className="w-full rounded-md p-2 bg-black"
-                >
-                  <option value="">Select purpose</option>
-                  {purposes.map((p) => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
+            {/* Date */}
+            <div>
+              <Label className="block mb-1 ">Date</Label>
+              <Select
+                onValueChange={(value) => setValue("date", value)}
+                defaultValue={watch("date")}
+              >
+                <SelectTrigger className="w-full rounded-md p-2">
+                  <SelectValue placeholder="Select Weekday" />
+                </SelectTrigger>
+                <SelectContent>
+                  {weekdays.map((day) => (
+                    <SelectItem key={day} value={day}>
+                      {day}
+                    </SelectItem>
                   ))}
-                </select>
-                {errors.purpose && (
-                  <p className="text-red-500 text-xs">
-                    {errors.purpose.message}
-                  </p>
-                )}
-              </div>
+                </SelectContent>
+              </Select>
+              {errors.date && (
+                <p className="text-red-500 text-xs">{errors.date.message}</p>
+              )}
+            </div>
 
-              {/* Status */}
-              <div>
-                <Label className="block mb-1 text-gray-700">Status</Label>
-                <select
-                  {...register("status")}
-                  className="w-full rounded-md p-2 bg-black"
-                >
-                  <option value="">Select status</option>
-                  {statuses.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
+            {/* Time */}
+            <div>
+              <Label className="block mb-1 ">Time</Label>
+              <Select
+                onValueChange={(value) => setValue("time", value)}
+                defaultValue={watch("time")}
+              >
+                <SelectTrigger className="w-full rounded-md p-2">
+                  <SelectValue placeholder="Select Time" />
+                </SelectTrigger>
+                <SelectContent>
+                  {timeSlots.map((time) => (
+                    <SelectItem key={time} value={time}>
+                      {time}
+                    </SelectItem>
                   ))}
-                </select>
-                {errors.status && (
-                  <p className="text-red-500 text-xs">
-                    {errors.status.message}
-                  </p>
-                )}
-              </div>
+                </SelectContent>
+              </Select>
+              {errors.time && (
+                <p className="text-red-500 text-xs">{errors.time.message}</p>
+              )}
+            </div>
 
-              {/* Insurance */}
-              <div>
-                <Label className="block mb-1 text-gray-700">
-                  Insurance Coverage
-                </Label>
-                <select
-                  {...register("insurance")}
-                  className="w-full rounded-md p-2 bg-black"
-                >
-                  <option value="">Select coverage</option>
-                  {coverages.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
+            {/* Purpose */}
+            <div>
+              <Label className="block mb-1 ">Purpose</Label>
+              <Select
+                onValueChange={(value) => setValue("purpose", value)}
+                defaultValue={watch("purpose")}
+              >
+                <SelectTrigger className="w-full rounded-md p-2">
+                  <SelectValue placeholder="Select purpose" />
+                </SelectTrigger>
+                <SelectContent>
+                  {appointmentPurposes.map((purpose) => (
+                    <SelectItem key={purpose} value={purpose}>
+                      {purpose}
+                    </SelectItem>
                   ))}
-                </select>
-                {errors.insurance && (
-                  <p className="text-red-500 text-xs">
-                    {errors.insurance.message}
-                  </p>
-                )}
-              </div>
+                </SelectContent>
+              </Select>
+              {errors.purpose && (
+                <p className="text-red-500 text-xs">{errors.purpose.message}</p>
+              )}
+            </div>
 
-              {/* Buttons */}
-              <div className="flex gap-2 mt-4">
-                <Button
-                  type="submit"
-                  className="flex-1 bg-[#2a2348] text-white py-2 rounded-md"
-                >
-                  Save
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => reset()}
-                  className="flex-1 bg-[#2a2348] text-white py-2 rounded-md"
-                >
-                  Reset
-                </Button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {step === "all" && renderTable(appointments)}
-
-        {step === "completed" && (
-          <div className="text-gray-600 italic text-center">
-            No completed appointments yet.
-          </div>
-        )}
-      </div>
-    </div>
+            <div className="flex gap-2 mt-4 justify-center">
+              <Button
+                type="submit"
+                className="dark:bg-[#2a2348] text-white py-2 rounded-md w-1/2"
+              >
+                Save
+              </Button>
+            </div>
+          </form>
+        </Card>
+      </TabsContent>
+    </Tabs>
   );
 }

@@ -8,6 +8,7 @@ import WelcomeStep from "./welcome-step";
 import PersonalDetailsStep from "./personal-details";
 import PasswordStep from "./password-step";
 import RegistrationCompleteStep from "./registration-complete";
+import { useAuthStore } from "../../../store/auth-store";
 
 const getProgressPercentage = (step: number) => {
   switch (step) {
@@ -29,6 +30,7 @@ interface SignUpFormProps {
 const SignUpForm = ({ onSignupComplete }: SignUpFormProps) => {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const setUser = useAuthStore((state) => state.setUser);
 
   const methods = useForm<FormData>({
     resolver: zodResolver(fullSchema),
@@ -100,6 +102,8 @@ const SignUpForm = ({ onSignupComplete }: SignUpFormProps) => {
 
       // Notify parent
       onSignupComplete?.(data);
+      const result = await response.json();
+      setUser(result?.data);
       setStep(4);
     } catch (error) {
       const message =
