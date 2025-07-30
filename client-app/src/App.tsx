@@ -8,7 +8,7 @@ import {
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import Home from "./pages/Home";
-import { PageLayout } from "./layout/pageLayout";
+import { PageLayout } from "./layout/patientLayout";
 import SignUpPage from "./pages/signup";
 import ChangePassword from "./pages/change-password";
 import { useAuthStore } from "./store/auth-store";
@@ -28,7 +28,8 @@ import PatientIntake from "./pages/admin/patient-intake";
 import AllPatients from "./pages/admin/all-patients";
 import MobileOutreach from "./pages/admin/mobile-outreach";
 import Reminders from "./pages/admin/reminders";
-
+import ProvidersDashboard from "./pages/admin/providers-dashboard";
+import Billings from "./pages/patient/billings";
 
 // Protected Route Component
 export const ProtectedLayout = () => {
@@ -47,7 +48,7 @@ export const ProtectedLayout = () => {
   }
   // Redirect to login if not authenticated
   if (!user) {
-    return <Navigate to="/auth/patient/login" replace />;
+    return <Navigate to="/login" replace />;
   }
   // Dynamically choose layout based on user role
   const Layout = user.role_title ? ProviderLayout : PageLayout;
@@ -63,20 +64,7 @@ export const ProtectedLayout = () => {
   );
 };
 
-const ProtectedLayout = () => (
-  <ProtectedRoute>
-    <PageLayout>
-      <Outlet />
-    </PageLayout>
-  </ProtectedRoute>
-);
-
 function App() {
-  const initializeUser = useAuthStore((state) => state.initializeUser);
-
-  useEffect(() => {
-    initializeUser(); // restore user from localStorage on load
-  }, []);
   return (
     <Router>
       <Toaster richColors />
@@ -85,19 +73,13 @@ function App() {
         <Route index path="/" element={<Home />} />
 
         {/* Patient Auth */}
-        <Route path="/auth/patient/login" element={<PatientSignIn />} />
-        <Route path="/auth/patient/signup" element={<SignUpPage />} />
-        <Route
-          path="/auth/patient/forgot-password"
-          element={<PatientForgotPassword />}
-        />
+        <Route path="/login" element={<PatientSignIn />} />
+        <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/forgot-password" element={<PatientForgotPassword />} />
 
         {/* Provider Auth */}
-        <Route path="/auth/provider/login" element={<ProviderSignIn />} />
-        <Route
-          path="/auth/provider/forgot-password"
-          element={<ProviderForgotPassword />}
-        />
+        <Route path="/login" element={<ProviderSignIn />} />
+        <Route path="/forgot-password" element={<ProviderForgotPassword />} />
 
         {/* Common Public Route */}
         <Route path="/change-password" element={<ChangePassword />} />
@@ -107,7 +89,8 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/profile" element={<PatientProfile />} />
           <Route path="/files" element={<PatientFiles />} />
-          <Route path="/appointment" element={<PatientAppointments />} />
+          <Route path="/billings" element={<Billings />} />
+          <Route path="/appointments" element={<PatientAppointments />} />
         </Route>
 
         <Route element={<ProtectedLayout />}>
@@ -115,6 +98,10 @@ function App() {
           <Route path="/provider/appointments" element={<Appointments />} />
           <Route path="/provider/insurance" element={<InsuranceCheck />} />
           <Route path="/provider/intake" element={<PatientIntake />} />
+          <Route
+            path="/provider/providers-dashboard"
+            element={<ProvidersDashboard />}
+          />
           <Route path="/provider/patients" element={<AllPatients />} />
           <Route path="/provider/outreach" element={<MobileOutreach />} />
           <Route path="/provider/reminders" element={<Reminders />} />

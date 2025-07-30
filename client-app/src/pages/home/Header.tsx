@@ -8,14 +8,7 @@ import useGoBack from "../../hooks/useGoback";
 const Header = () => {
   const pathname = window.location.pathname;
   const goBack = useGoBack();
-  const authRoutes = [
-    "/auth/patient/login",
-    "/auth/patient/signup",
-    "/auth/patient/forgot-password",
-    "/auth/provider/login",
-    "/auth/provider/signup",
-    "/auth/provider/forgot-password",
-  ];
+  const authRoutes = ["/login", "/signup", "/forgot-password"];
   const active = authRoutes.includes(pathname);
   const [showMobileNav, setShowMobileNav] = useState(false);
   return (
@@ -23,10 +16,15 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-8 md:px-16 lg:px-24 xl:px-32">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-2">
-            <Hospital className="h-8 w-8 text-pink-400" />
-            <span className="text-xl font-bold text-white/90">
-              C <span className="text-pink-400">H</span> C
-            </span>
+            {!active && (
+              <>
+                {" "}
+                <Hospital className="h-8 w-8 text-pink-400" />
+                <span className="text-xl font-bold text-white/90">
+                  C <span className="text-pink-400">H</span> C
+                </span>
+              </>
+            )}
           </div>
           {active ? (
             <Button
@@ -57,7 +55,7 @@ const Header = () => {
                 </a>
                 <div className="flex items-center space-x-2">
                   <Button asChild variant="secondary">
-                    <Link to="/auth/patient/login">Login</Link>
+                    <Link to="/login">Login</Link>
                   </Button>
                   <Button asChild>
                     <Link to="/auth/patient/signup">Get Started</Link>
@@ -115,7 +113,7 @@ const Header = () => {
             </a>
           </li>
           <li>
-            <a href="/signin" className="hover:text-pink-300">
+            <a href="/login" className="hover:text-pink-300">
               Login
             </a>
           </li>

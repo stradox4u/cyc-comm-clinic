@@ -6,6 +6,13 @@ import { Input } from "../../ui/input";
 import { Button } from "../../ui/button";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../ui/select";
 
 interface PersonalDetailsStepProps {
   onNext: () => void;
@@ -22,15 +29,28 @@ type InsuranceProvider = {
   updated_at: Date;
 };
 
+export type Gender = "MALE" | "FEMALE" | "NULL";
+
+const GENDER_OPTIONS = [
+  { label: "Male", value: "MALE" },
+  { label: "Female", value: "FEMALE" },
+  { label: "Other", value: "NULL" },
+];
+
 const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
   const {
     register,
+    setValue,
+    watch,
     formState: { errors },
   } = useFormContext<FormData>();
   const [insuranceProviders, setInsuranceProviders] = useState<
     InsuranceProvider[]
   >([]);
   const [loading, setLoading] = useState(false);
+  const insuranceValue = watch("insurance_provider_id");
+  const bloodGroupValue = watch("blood_group");
+  const gender = watch("gender");
 
   const personalFields = [
     ["First Name", "first_name", "text", "e.g. John"],
@@ -89,9 +109,12 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
 
   return (
     <div className="text-black">
-      <h2 className="font-semibold tracking-tight mb-8 text-lg">
-        Personal Details
-      </h2>
+      <div className="mb-8 ">
+        <h2 className="font-semibold tracking-tight text-xl">
+          Personal Information
+        </h2>
+        <p className="text-xs text-muted-foreground">Tell us about yourself</p>
+      </div>
 
       <div className="space-y-4">
         {personalFields.map(([label, name, type = "text", placeholder]) => (
@@ -100,7 +123,9 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
             <Input
               type={type}
               {...register(name as keyof FormData)}
-              className="py-6"
+              className={`${
+                errors[name as keyof FormData] && "border-red-500"
+              } bg-background/20`}
               placeholder={placeholder}
             />
             {errors[name as keyof FormData] && (
@@ -113,36 +138,54 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
 
         <div className="space-y-2">
           <Label className="font-semibold">Gender</Label>
-          <select
-            {...register("gender")}
-            className="bg-black text-white border-b w-full p-2 rounded"
+          <Select
+            value={gender}
+            onValueChange={(val) =>
+              setValue("gender", val as "MALE" | "FEMALE" | "NULL")
+            }
           >
-            <option value="">-- Select Gender --</option>
-            <option value="MALE">Male</option>
-            <option value="FEMALE">Female</option>
-            <option value="NULL">Other</option>
-          </select>
+            <SelectTrigger className="">
+              <SelectValue placeholder="Select Gender" />
+            </SelectTrigger>
+            <SelectContent>
+              {GENDER_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {errors.gender && (
             <p className="text-red-500 text-sm">{errors.gender.message}</p>
           )}
         </div>
 
         <div className="space-y-2">
-          <Label className="font-semibold">Gender</Label>
-          <select
-            {...register("blood_group")}
-            className="bg-black text-white border-b w-full p-2 rounded"
+          <Label className="font-semibold">Blood Group</Label>
+          <Select
+            value={bloodGroupValue}
+            onValueChange={(val) => setValue("blood_group", val)}
           >
-            <option value="">-- Select Blood Group --</option>
-            {BLOOD_GROUPS.map((group) => (
-              <option key={group} value={group}>
-                {group}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select Blood Group" />
+            </SelectTrigger>
+            <SelectContent>
+              {BLOOD_GROUPS.map((group) => (
+                <SelectItem key={group} value={group}>
+                  {group}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {errors.blood_group && (
             <p className="text-red-500 text-sm">{errors.blood_group.message}</p>
           )}
+        </div>
+
+        <div className="mb-8 ">
+          <h2 className="font-semibold tracking-tight text-lg">
+            Contact Information
+          </h2>
         </div>
 
         {additionalFields.map(([label, name, placeholder]) => (
@@ -150,7 +193,9 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
             <Label className="font-semibold">{label}</Label>
             <Input
               {...register(name as keyof FormData)}
-              className="py-6"
+              className={`${
+                errors[name as keyof FormData] && "border-red-500"
+              } bg-background/20`}
               placeholder={placeholder}
             />
             {errors[name as keyof FormData] && (
@@ -169,17 +214,21 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
               <div className="h-10 rounded bg-zinc-700 animate-pulse" />
             </div>
           ) : (
-            <select
-              {...register("insurance_provider_id")}
-              className="bg-black text-white border-b w-full p-2 rounded"
+            <Select
+              value={insuranceValue}
+              onValueChange={(val) => setValue("insurance_provider_id", val)}
             >
-              <option value="">-- Select Insurance Provider --</option>
-              {insuranceProviders.map((insurance) => (
-                <option key={insurance.id} value={insurance.id}>
-                  {insurance.name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Insurance Provider" />
+              </SelectTrigger>
+              <SelectContent>
+                {insuranceProviders.map((insurance: InsuranceProvider) => (
+                  <SelectItem key={insurance.id} value={insurance.id}>
+                    {insurance.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
           {errors.insurance_provider_id && (
             <p className="text-red-500 text-sm">
@@ -195,7 +244,7 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
           onClick={onPrev}
           className="bg-gray-600 font-semibold md:w-1/2"
         >
-          Back
+          Previous
         </Button>
         <Button
           type="button"

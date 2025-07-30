@@ -102,7 +102,7 @@ export default function PatientIntake() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header>
         <div className="flex h-14 items-center px-4">
           <div className="ml-4">
             <h1 className="text-lg font-semibold">Patient Intake</h1>

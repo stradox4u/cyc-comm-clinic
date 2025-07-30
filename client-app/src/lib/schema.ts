@@ -80,3 +80,65 @@ export const appointmentSchema = z.object({
 });
 
 export type AppointmentFormData = z.infer<typeof appointmentSchema>;
+
+export const AppointmentPurpose = {
+  ROUTINE_HEALTH_CHECKUP: "ROUTINE HEALTH CHECKUP",
+  MATERNAL_CHILD_HEALTH: "MATERNAL & CHILD HEALTH",
+  IMMUNIZATIONS_AND_VACCINATIONS: "IMMUNIZATIONS AND VACCINATIONS",
+  FAMILY_PLANNING: "FAMILY PLANNING",
+  HIV_AIDS_COUNSELING_AND_TESTING: "HIV AIDS COUNSELING AND TESTING",
+  TUBERCULOSIS_SCREENING_AND_TREATMENT: "TUBERCULOSIS SCREENING AND TREATMENT",
+  MEDICAL_CONSULTATION_AND_TREATMENT: "MEDICAL CONSULTATION AND TREATMENT",
+  NUTRITION_COUNSELING_AND_SUPPORT: "NUTRITION COUNSELING AND SUPPORT",
+  CHRONIC_DISEASE_MANAGEMENT: "CHRONIC DISEASE MANAGEMENT",
+  MENTAL_HEALTH_SUPPORT_OR_COUNSELING: "MENTAL HEALTH SUPPORT OR COUNSELING",
+  HEALTH_EDUCATION_AND_AWARENESS: "HEALTH EDUCATION AND AWARENESS",
+  ANTENATAL_OR_POSTNATAL_CARE: "ANTENATAL OR POSTNATAL CARE",
+  SEXUAL_AND_REPRODUCTIVE_HEALTH_SERVICES:
+    "SEXUAL AND REPRODUCTIVE HEALTH SERVICES",
+  MALARIA_DIAGNOSIS_AND_TREATMENT: "MALARIA DIAGNOSIS AND TREATMENT",
+  HEALTH_SCREENING_CAMPAIGNS: "HEALTH SCREENING CAMPAIGNS",
+  DRUG_OR_SUBSTANCE_ABUSE_COUNSELING: "DRUG OR SUBSTANCE ABUSE COUNSELING",
+  FOLLOWUP_APPOINTMENT: "FOLLOWUP APPOINTMENT",
+  DENTAL_CARE: "DENTAL CARE",
+  REFERRAL: "REFERRAL",
+  OTHERS: "OTHERS",
+} as const;
+
+export type AppointmentPurpose =
+  (typeof AppointmentPurpose)[keyof typeof AppointmentPurpose];
+
+export const appointmentPurposes = Object.values(AppointmentPurpose);
+
+export const getWeekdays = (): string[] => {
+  const today = new Date();
+  const day = today.getDay(); // 0 (Sun) to 6 (Sat)
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - ((day + 6) % 7)); // Move to Monday
+
+  const weekdays = [];
+
+  for (let i = 0; i < 5; i++) {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + i);
+
+    weekdays.push(
+      date.toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    );
+  }
+
+  return weekdays;
+};
+
+export const timeSlots: string[] = Array.from({ length: 20 }, (_, i) => {
+  const hour = 8 + Math.floor(i / 2);
+  const minute = i % 2 === 0 ? "00" : "30";
+  const date = new Date();
+  date.setHours(hour, Number(minute));
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+});

@@ -1,39 +1,16 @@
 import { useState, useEffect } from "react";
 import { Mode } from "../components/ui/mode";
-import { Button } from "../components/ui/button";
-import { toast } from "sonner";
-import { useAuthStore } from "../store/auth-store";
-import { Link, useNavigate } from "react-router-dom";
-import { ProviderSidebar } from "../components/provider-sidebar";
-import { SidebarTrigger } from "../components/ui/sidebar";
-import { LogOut } from "lucide-react";
 
-interface ProviderLayoutProps {
+import { Link } from "react-router-dom";
+import { PatientSidebar } from "../components/patient-sidebar";
+import { SidebarTrigger } from "../components/ui/sidebar";
+
+interface PageLayoutProps {
   children: React.ReactNode;
 }
 
-export const ProviderLayout: React.FC<ProviderLayoutProps> = ({ children }) => {
+export const PageLayout: React.FC<PageLayoutProps> = ({ children }) => {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
-  const navigate = useNavigate();
-  const logout = useAuthStore((state) => state.logout);
-
-  const handleLogout = async () => {
-    try {
-      const res = await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-
-      if (!res.ok) throw new Error("Logout failed");
-
-      logout();
-      toast.success("Logged out successfully");
-      navigate("/auth/patient/login");
-    } catch (error) {
-      console.error("Logout error:", error);
-      toast.error("Failed to logout. Please try again.");
-    }
-  };
 
   const toggleTheme = () =>
     setTheme((prev) => (prev === "light" ? "dark" : "light"));
@@ -56,26 +33,18 @@ export const ProviderLayout: React.FC<ProviderLayoutProps> = ({ children }) => {
             </h2>
           </Link>
 
-          <div className="">
-            <h1 className="text-lg font-semibold">AdminDashboard</h1>
-          </div>
-
           <div className="flex gap-4 items-center">
             <Mode theme={theme} toggleTheme={toggleTheme} />
-            <Button size={"sm"} variant={"destructive"} onClick={handleLogout}>
-              <LogOut />
-              Logout
-            </Button>
           </div>
         </div>
       </header>
 
-      <ProviderSidebar>
+      <PatientSidebar>
         <main className="min-h-screen mt-24 2xl:mt-36 container px-4 sm:px-8 md:px-16 lg:px-24 xl:px-32">
           <SidebarTrigger className="md:hidden" />
           {children}
         </main>
-      </ProviderSidebar>
+      </PatientSidebar>
     </div>
   );
 };

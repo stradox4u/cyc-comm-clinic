@@ -108,13 +108,13 @@ export default function InsuranceCheck() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      {/* <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-14 items-center px-4">
           <div className="ml-4">
             <h1 className="text-lg font-semibold">Insurance Verification</h1>
           </div>
         </div>
-      </header>
+      </header> */}
 
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
         <div className="flex items-center justify-between space-y-2">
