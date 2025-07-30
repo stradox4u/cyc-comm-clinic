@@ -8,26 +8,24 @@ import useGoBack from "../../hooks/useGoback";
 const Header = () => {
   const pathname = window.location.pathname;
   const goBack = useGoBack();
-  const authRoutes = [
-    "/auth/patient/login",
-    "/auth/patient/signup",
-    "/auth/patient/forgot-password",
-    "/auth/provider/login",
-    "/auth/provider/signup",
-    "/auth/provider/forgot-password",
-  ];
+  const authRoutes = ["/login", "/signup", "/forgot-password"];
   const active = authRoutes.includes(pathname);
   const [showMobileNav, setShowMobileNav] = useState(false);
   return (
     <nav className="shadow-md bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-[#6A5CA3] sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-8 md:px-16 lg:px-24 xl:px-32">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center space-x-2">
-            <Hospital className="h-8 w-8 text-pink-400" />
-            <span className="text-xl font-bold text-white/90">
-              C <span className="text-pink-400">H</span> C
-            </span>
-          </div>
+          <Link to={"/"} className="flex items-center space-x-2">
+            {!active && (
+              <>
+                {" "}
+                <Hospital className="h-8 w-8 text-pink-400" />
+                <span className="text-xl font-bold text-white/90">
+                  C <span className="text-pink-400">H</span> C
+                </span>
+              </>
+            )}
+          </Link>
           {active ? (
             <Button
               onClick={goBack}
@@ -40,27 +38,30 @@ const Header = () => {
           ) : (
             <div className="relative">
               <div className="hidden md:flex items-center space-x-8 text-white">
-                <Link to="/" className=" hover:text-blue-600 transition-colors">
+                <Link
+                  to="/"
+                  className=" hover:text-purple-300 transition-colors"
+                >
                   Home
                 </Link>
                 <a
                   href="/#services"
-                  className=" hover:text-blue-600 transition-colors"
+                  className=" hover:text-purple-300 transition-colors"
                 >
                   Services
                 </a>
                 <a
                   href="/#contact"
-                  className=" hover:text-blue-600 transition-colors"
+                  className=" hover:text-purple-300 transition-colors"
                 >
                   Contact
                 </a>
                 <div className="flex items-center space-x-2">
                   <Button asChild variant="secondary">
-                    <Link to="/auth/patient/login">Login</Link>
+                    <Link to="/login">Login</Link>
                   </Button>
                   <Button asChild>
-                    <Link to="/auth/patient/signup">Get Started</Link>
+                    <Link to="/signup">Get Started</Link>
                   </Button>
                 </div>
               </div>
@@ -115,7 +116,7 @@ const Header = () => {
             </a>
           </li>
           <li>
-            <a href="/signin" className="hover:text-pink-300">
+            <a href="/login" className="hover:text-pink-300">
               Login
             </a>
           </li>

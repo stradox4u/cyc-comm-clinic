@@ -39,7 +39,7 @@ const Hero = () => {
               variant="outline"
               className="md:text-lg px-8 md:py-6 bg-transparent text-white"
             >
-              <Link to="/services">Our Services</Link>
+              <Link to="#services">Our Services</Link>
             </Button>
           </div>
           <div className="flex flex-row items-center space-x-3 sm:space-x-6 text-sm text-white pt-4">

@@ -12,6 +12,7 @@ import { appointmentProviderRoute } from './modules/appointment/index.js'
 import { vitalsRoute } from './modules/vitals/index.js'
 import { insuranceProviderRoute } from './modules/insuranceProvider/index.js'
 import { providerRoute } from './modules/provider/index.js'
+import { patientRoute } from './modules/patient/index.js'
 
 const app = express()
 
@@ -59,11 +60,9 @@ app.use(
 app.use('/api/auth', authRoute)
 app.use('/api/insurance-providers', insuranceProviderRoute)
 app.use('/api/providers', providerRoute)
-
+app.use('/api/patients', patientRoute)
 app.use('/api/appointment', appointmentRoute)
-
 app.use('/api/provider/appointment', appointmentProviderRoute)
-
 app.use('/api/provider/vitals', vitalsRoute)
 
 app.use(notFoundHandler)

@@ -1,7 +1,7 @@
 import SignInPage from "../signin";
 
 const PatientSignIn = () => {
-  return <SignInPage userType="patient" />;
+  return <SignInPage />;
 };
 
 export default PatientSignIn;

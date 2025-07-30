@@ -49,7 +49,8 @@ export function authorizeSensitiveAppointmentFields(req: any, updateData: any) {
     'vitals',
     'soap_note',
     'appointment_providers',
-    'follow_up'
+    'follow_up',
+    'status'
 ];
 
   for (const field of sensitiveFields) {

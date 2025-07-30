@@ -1,7 +1,7 @@
 import ForgotPasswordPage from "../forgot-password";
 
 const PatientForgotPassword = () => {
-  return <ForgotPasswordPage userType="patient" />;
+  return <ForgotPasswordPage />;
 };
 
 export default PatientForgotPassword;

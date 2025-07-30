@@ -20,7 +20,7 @@ import AuthLayout from "../layout/AuthLayout";
 import { resetPasswordSchema, type ResetPasswordData } from "../lib/schema";
 
 type ResetPasswordFormProps = {
-  userType: "patient" | "provider";
+  userType?: string; // made optional
   submittedEmail: string;
   onResend?: () => void;
   isResending?: boolean;
@@ -32,8 +32,11 @@ const ResetPasswordForm = ({
   onResend,
   isResending,
 }: ResetPasswordFormProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Normalize userType to "patient" or "provider"
+  const resolvedUserType = userType === "patient" ? "patient" : "provider";
 
   const {
     register,
@@ -48,20 +51,19 @@ const ResetPasswordForm = ({
     },
   });
 
-  console.log(errors);
-
   const onSubmit = async (data: ResetPasswordData) => {
     setIsSubmitting(true);
-
     const { confirmPassword: _, ...payload } = data;
-    try {
-      const response = await fetch(`/api/auth/${userType}/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
 
-      console.log(data);
+    try {
+      const response = await fetch(
+        `/api/auth/${resolvedUserType}/reset-password`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -69,12 +71,11 @@ const ResetPasswordForm = ({
       }
 
       toast.success("Password reset successfully! You can now sign in.");
-      navigate(`/auth/${userType}/login`);
+      navigate("/login");
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to reset password";
       toast.error(message);
-      console.error("Reset password error:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -95,13 +96,15 @@ const ResetPasswordForm = ({
 
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <div className="space-y-2">
-                <input
-                  type="hidden"
-                  {...register("email")}
-                  defaultValue={submittedEmail}
-                />
+              {/* Hidden email input */}
+              <input
+                type="hidden"
+                {...register("email")}
+                defaultValue={submittedEmail}
+              />
 
+              {/* OTP Field */}
+              <div className="space-y-2">
                 <Label htmlFor="otp" className="text-sm font-medium">
                   OTP
                 </Label>
@@ -111,14 +114,10 @@ const ResetPasswordForm = ({
                   {...register("otp")}
                   className={`h-12 ${errors.otp ? "border-red-500" : ""}`}
                 />
-                {errors.otp && (
-                  <div className="flex items-center gap-2 text-red-600 text-sm mt-1">
-                    <AlertCircle className="h-4 w-4" />
-                    <span>{errors.otp.message}</span>
-                  </div>
-                )}
+                {errors.otp && <ErrorMessage message={errors.otp.message} />}
               </div>
 
+              {/* Password Field */}
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm font-medium">
                   New Password
@@ -131,13 +130,11 @@ const ResetPasswordForm = ({
                   className={`h-12 ${errors.password ? "border-red-500" : ""}`}
                 />
                 {errors.password && (
-                  <div className="flex items-center gap-2 text-red-600 text-sm mt-1">
-                    <AlertCircle className="h-4 w-4" />
-                    <span>{errors.password.message}</span>
-                  </div>
+                  <ErrorMessage message={errors.password.message} />
                 )}
               </div>
 
+              {/* Confirm Password Field */}
               <div className="space-y-2">
                 <Label
                   htmlFor="confirmPassword"
@@ -155,10 +152,7 @@ const ResetPasswordForm = ({
                   }`}
                 />
                 {errors.confirmPassword && (
-                  <div className="flex items-center gap-2 text-red-600 text-sm mt-1">
-                    <AlertCircle className="h-4 w-4" />
-                    <span>{errors.confirmPassword.message}</span>
-                  </div>
+                  <ErrorMessage message={errors.confirmPassword.message} />
                 )}
               </div>
 
@@ -174,10 +168,10 @@ const ResetPasswordForm = ({
             {onResend && (
               <div className="mt-4 text-center">
                 <button
-                  className="text-sm text-purple-600 hover:underline disabled:text-gray-400"
+                  type="button"
                   onClick={onResend}
                   disabled={isResending || isSubmitting}
-                  type="button"
+                  className="text-sm text-purple-600 hover:underline disabled:text-gray-400"
                 >
                   {isResending ? "Resending OTP..." : "Resend OTP"}
                 </button>
@@ -191,3 +185,11 @@ const ResetPasswordForm = ({
 };
 
 export default ResetPasswordForm;
+
+// 🔹 Optional helper component for cleaner error handling
+const ErrorMessage = ({ message }: { message?: string }) => (
+  <div className="flex items-center gap-2 text-red-600 text-sm mt-1">
+    <AlertCircle className="h-4 w-4" />
+    <span>{message}</span>
+  </div>
+);
