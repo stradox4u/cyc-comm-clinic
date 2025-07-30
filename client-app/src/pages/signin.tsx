@@ -11,28 +11,32 @@ import { Label } from "../components/ui/label";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 
-interface SignInPageProps {
-  userType: "patient" | "provider";
-}
-
-const SignInPage = ({ userType }: SignInPageProps) => {
+const SignInPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const setUser = useAuthStore((state) => state.setUser);
   const navigate = useNavigate();
+  const [resolvedUserType, setResolvedUserType] = useState<
+    "patient" | "provider"
+  >("patient");
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
     mode: "onTouched",
+    defaultValues: {
+      email: "",
+      password: "",
+    },
   });
 
   const onSubmit = async (data: LoginData) => {
     setIsSubmitting(true);
-    const endpoint = `/api/auth/${userType}/login`;
+    const endpoint = `/api/auth/${resolvedUserType}/login`;
 
     try {
       const response = await fetch(endpoint, {
@@ -40,7 +44,6 @@ const SignInPage = ({ userType }: SignInPageProps) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      console.log(data);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -63,15 +66,24 @@ const SignInPage = ({ userType }: SignInPageProps) => {
     }
   };
 
+  const toggleUserType = () => {
+    const newType = resolvedUserType === "patient" ? "provider" : "patient";
+    setResolvedUserType(newType);
+    reset({
+      email: "",
+      password: "",
+    });
+  };
+
   return (
     <AuthLayout>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col space-y-8 text-black/80"
+        className="flex flex-col space-y-2 text-black/80"
       >
-        <div className="text-center">
-          <h2 className="capitalize text-2xl font-medium tracking-tight">
-            {userType} Portal Login
+        <div className="text-start">
+          <h2 className="capitalize text-xl font-semibold tracking-tighter text-center">
+            {resolvedUserType} Portal Login
           </h2>
           <p className="text-sm">
             Welcome back! Enter your credentials to access your account.
@@ -81,9 +93,9 @@ const SignInPage = ({ userType }: SignInPageProps) => {
         <div className="space-y-2">
           <Label className="font-semibold">Email</Label>
           <Input
-            className="py-6"
             {...register("email")}
-            placeholder="e.g. user@example.com or 08012345678"
+            className={errors.email ? "border-red-500" : ""}
+            placeholder="e.g. user@example.com"
           />
           {errors.email && (
             <p className="text-red-500 text-sm">{errors.email.message}</p>
@@ -96,18 +108,20 @@ const SignInPage = ({ userType }: SignInPageProps) => {
             {...register("password")}
             placeholder="••••••••"
             type={showPassword ? "text" : "password"}
-            className="placeholder:text-2xl py-6"
+            className={`${
+              errors.email ? "border-red-500" : ""
+            } placeholder:text-2xl`}
           />
-          <div className="text-gray-400 absolute -right-3 top-9">
+          <div className="text-gray-400 absolute -right-3 top-8">
             {showPassword ? (
               <EyeClosed
                 onClick={() => setShowPassword(false)}
-                className="-translate-x-8 cursor-pointer"
+                className="-translate-x-8 cursor-pointer size-5"
               />
             ) : (
               <Eye
                 onClick={() => setShowPassword(true)}
-                className="-translate-x-8 cursor-pointer"
+                className="-translate-x-8 cursor-pointer size-5"
               />
             )}
           </div>
@@ -128,7 +142,7 @@ const SignInPage = ({ userType }: SignInPageProps) => {
             </Label>
           </div>
           <Link
-            to={`/auth/${userType}/forgot-password`}
+            to={`/forgot-password?type=${resolvedUserType}`}
             className="text-sm text-[#6A5CA3] hover:underline"
           >
             Forgot password?
@@ -139,32 +153,29 @@ const SignInPage = ({ userType }: SignInPageProps) => {
           <Button
             size="lg"
             type="submit"
-            className="font-semibold bg-black/90 text-white text-lg w-1/2"
+            className="font-semibold bg-black/90 text-white text-lg w-1/2 my-4"
           >
             {isSubmitting ? "Signing In..." : "Sign In"}
           </Button>
         </div>
 
-        <div className="text-center text-sm font-semibold space-y-1">
+        <div className="text-center text-sm font-semibold">
           <p>
             Don&apos;t have an account yet?{" "}
-            <Link
-              to="/auth/patient/signup"
-              className="text-purple-400 hover:underline"
-            >
+            <Link to="/signup" className="text-purple-400 hover:underline">
               Sign Up
             </Link>
           </p>
           <p>
-            Not a {userType}?{" "}
-            <Link
-              className="text-purple-400 hover:underline"
-              to={`/auth/${
-                userType === "patient" ? "provider" : "patient"
-              }/login`}
+            Not a {resolvedUserType}?{" "}
+            <Button
+              variant={"link"}
+              className="text-purple-400 hover:underline px-1 p-0"
+              onClick={toggleUserType}
             >
-              Switch to {userType === "patient" ? "Provider" : "Patient"} Login
-            </Link>
+              Switch to{" "}
+              {resolvedUserType === "patient" ? "Provider" : "Patient"} Login
+            </Button>
           </p>
         </div>
       </form>
