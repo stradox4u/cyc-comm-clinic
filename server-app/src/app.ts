@@ -11,6 +11,7 @@ import { appointmentRoute } from './modules/appointment/index.js'
 import { appointmentProviderRoute } from './modules/appointment/index.js'
 import { vitalsRoute } from './modules/vitals/index.js'
 import { insuranceProviderRoute } from './modules/insuranceProvider/index.js'
+import { patientRoute } from './modules/patient/index.js'
 
 const app = express()
 
@@ -31,11 +32,11 @@ app.use(helmet())
 
 app.use((req, res, next) => {
   if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
-    express.json()(req, res, next);
+    express.json()(req, res, next)
   } else {
-    next();
+    next()
   }
-});
+})
 
 const PgSession = connectPgSimple(session)
 app.use(
@@ -57,6 +58,7 @@ app.use(
 
 app.use('/api/auth', authRoute)
 app.use('/api/insurance-providers', insuranceProviderRoute)
+app.use('/api/patients', patientRoute)
 
 app.use('/api/appointment', appointmentRoute)
 

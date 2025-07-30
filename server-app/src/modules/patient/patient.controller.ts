@@ -1,0 +1,124 @@
+import bcrypt from 'bcryptjs'
+import {
+  NotFoundError,
+  ValidationError,
+} from '../../middlewares/errorHandler.js'
+import catchAsync from '../../utils/catchAsync.js'
+import patientService, { type PatientWhereInput } from './patient.service.js'
+import type {
+  CreatePatientSchema,
+  UpdatePatientSchema,
+} from './patient.validation.js'
+
+const getPatients = catchAsync(async (req, res) => {
+  const { page, limit } = req.query
+  const options = { page: Number(page), limit: Number(limit) }
+
+  const patients = await patientService.findPatients({}, options)
+
+  res.status(200).json({
+    success: true,
+    data: patients,
+  })
+})
+
+const searchPatientsByName = catchAsync(async (req, res) => {
+  const query = req.query
+
+  const filter: PatientWhereInput = {
+    OR: [
+      { first_name: { contains: query.search } },
+      { last_name: { contains: query.search } },
+    ],
+  }
+  const options = { page: Number(query.page), limit: Number(query.limit) }
+
+  const patients = await patientService.findPatients(filter, options)
+
+  res.status(200).json({
+    success: true,
+    data: patients,
+  })
+})
+
+const getPatient = catchAsync(async (req, res) => {
+  const { id } = req.params
+
+  const patient = await patientService.findPatient({ id })
+  if (!patient) throw new NotFoundError('Patient not found')
+
+  delete (patient as any).password
+
+  res.status(200).json({
+    success: true,
+    data: patient,
+  })
+})
+
+const createPatient = catchAsync(async (req, res) => {
+  const newPatient: CreatePatientSchema = req.body
+
+  const patient = await patientService.findPatient({
+    email: newPatient.email,
+  })
+  if (patient) throw new ValidationError('Patient email already exists')
+
+  newPatient.password = await bcrypt.hash(newPatient.password, 10)
+
+  const savedPatient = await patientService.createPatient(newPatient)
+
+  delete (savedPatient as any).password
+
+  res.status(201).json({
+    success: true,
+    data: savedPatient,
+    message: 'Patient added successfully',
+  })
+})
+
+const updatePatient = catchAsync(async (req, res) => {
+  const { id } = req.params
+  const newPatient: UpdatePatientSchema = req.body
+
+  const patient = await patientService.findPatient({
+    email: newPatient.email,
+  })
+  if (patient && patient.id !== id) {
+    throw new ValidationError('Patient email already exists')
+  }
+  if (newPatient.password) {
+    newPatient.password = await bcrypt.hash(newPatient.password, 10)
+  }
+
+  const updatedPatient = await patientService.updatePatient({ id }, newPatient)
+  if (!updatedPatient) throw new NotFoundError('Patient not found')
+
+  delete (updatedPatient as any).password
+
+  res.status(200).json({
+    success: true,
+    data: updatedPatient,
+    message: 'Patient updated successfully',
+  })
+})
+
+const deletePatient = catchAsync(async (req, res) => {
+  const { id } = req.params
+
+  const deletedPatient = await patientService.deletePatient({ id })
+  if (!deletedPatient) throw new NotFoundError('Patient not found')
+
+  res.status(200).json({
+    success: true,
+    message: 'Patient deleted successfully',
+  })
+})
+
+export default {
+  getPatients,
+  searchPatientsByName,
+  getPatient,
+  createPatient,
+  updatePatient,
+  deletePatient,
+}
