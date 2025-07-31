@@ -7,14 +7,14 @@ interface User {
   last_name: string;
   address: string;
   phone: string;
-  allergies: [];
+  allergies: string[];
   blood_group: string;
+  insurance_provider_id: string;
   gender: string;
   date_of_birth: string | number | Date;
   emergency_contact_name: string;
   emergency_contact_phone: string;
   role_title?: string;
-  // add more fields as needed
 }
 
 interface AuthState {
@@ -30,7 +30,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   isInitialized: false, // ✅ track init status
   setUser: (user) => {
     localStorage.setItem("user", JSON.stringify(user));
-    set({ user });
+    set({ user, isInitialized: true });
   },
   logout: () => {
     localStorage.removeItem("user");
