@@ -22,7 +22,6 @@ import providerService from '../provider/provider.service.js'
 import patientService from '../patient/patient.service.js'
 import { UserType } from '../../types/index.js'
 import awsS3 from '../../config/aws-s3.js'
-import config from '../../config/config.js'
 
 const patientRegister = catchAsync(async (req, res) => {
   let newPatient: PatientRegisterSchema = req.body
@@ -79,6 +78,9 @@ const patientLogin = catchAsync(async (req, res) => {
     throw new ValidationError('verify-email')
   }
 
+  if (patient.image_url) {
+    patient.image_url = await awsS3.getPresignedDownloadUrl(patient.image_url)
+  }
   delete (patient as any).password
 
   req.session.user = {
@@ -99,6 +101,9 @@ const patientGetProfile = catchAsync(async (req, res) => {
   const patient = await patientService.findPatient({ id: patientId })
   if (!patient) throw new NotFoundError('User not found')
 
+  if (patient.image_url) {
+    patient.image_url = await awsS3.getPresignedDownloadUrl(patient.image_url)
+  }
   delete (patient as any).password
 
   res.status(200).json({
@@ -111,12 +116,24 @@ const patientUpdateProfile = catchAsync(async (req, res) => {
   const patientId = req.user?.id
   const newPatient: PatientUpdateProfileSchema = req.body
 
+  const currentPatient = await patientService.findPatient({ id: patientId })
+  if (!currentPatient) throw new NotFoundError('User not found')
+
   const updatedPatient = await patientService.updatePatient(
     { id: patientId },
     newPatient
   )
   if (!updatedPatient) throw new NotFoundError('User not found')
 
+  if (newPatient.image_url && currentPatient.image_url) {
+    await awsS3.deleteObject(currentPatient.image_url)
+  }
+
+  if (updatedPatient.image_url) {
+    updatedPatient.image_url = await awsS3.getPresignedDownloadUrl(
+      updatedPatient.image_url
+    )
+  }
   delete (updatedPatient as any).password
 
   res.status(200).json({
@@ -278,14 +295,11 @@ const patientGenerateUploadUrl = catchAsync(async (req, res) => {
   const { fileType, fileName } = req.query as any
   const key = `profile-images/${Date.now()}-${fileName}`
 
-  const signedUrl = await awsS3.generateUploadUrl({ fileType, key })
+  const signedUrl = await awsS3.getPresignedUploadUrl({ fileType, key })
 
   res.status(200).json({
     success: true,
-    data: {
-      signedUrl,
-      imageUrl: `https://${config.S3_BUCKET_NAME}.s3.${config.AWS_REGION}.amazonaws.com/${key}`,
-    },
+    data: { signedUrl, key },
   })
 })
 

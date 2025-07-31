@@ -39,11 +39,12 @@ const ProfilePhoto: React.FC<ProfilePhotoProps> = ({ photo }) => {
       await axios.put(data.data.signedUrl, file, {
         headers: {
           'Content-Type': file.type,
+          'Content-Length': file.size.toString(),
         },
       })
 
       const savedRes = await axios.put(`/api/auth/patient/profile`, {
-        image_url: data.data.imageUrl,
+        image_url: data.data.key,
       })
       if (!savedRes.data?.success) toast.error('Error uploading photo')
 
@@ -61,16 +62,17 @@ const ProfilePhoto: React.FC<ProfilePhotoProps> = ({ photo }) => {
     <div className="mt-6 md:m-12">
       <div className="relative text-center max-w-48 mx-auto">
         <img
+          onClick={triggerFileInput}
           src={
             userPhoto ||
             'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'
           }
           alt="Profile Image"
-          className="mx-auto size-48 rounded-full object-cover"
+          className="mx-auto cursor-pointer shadow-md dark:bg-black size-48 rounded-full object-cover"
         />
         <button
           onClick={triggerFileInput}
-          className="absolute bottom-[0%] right-[10%] p-2 bg-black text-white rounded-full"
+          className="absolute cursor-pointer shadow-lg bottom-[0%] right-[10%] p-2 bg-black text-white rounded-full"
           disabled={isLoading}
         >
           <Camera className="flex" />
