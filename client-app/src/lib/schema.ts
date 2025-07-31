@@ -71,12 +71,90 @@ export const resetPasswordSchema = z
 export type ForgotPasswordData = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordData = z.infer<typeof resetPasswordSchema>;
 
+export const AppointmentPurpose = {
+  ROUTINE_HEALTH_CHECKUP: "ROUTINE HEALTH CHECKUP",
+  MATERNAL_CHILD_HEALTH: "MATERNAL & CHILD HEALTH",
+  IMMUNIZATIONS_AND_VACCINATIONS: "IMMUNIZATIONS AND VACCINATIONS",
+  FAMILY_PLANNING: "FAMILY PLANNING",
+  HIV_AIDS_COUNSELING_AND_TESTING: "HIV AIDS COUNSELING AND TESTING",
+  TUBERCULOSIS_SCREENING_AND_TREATMENT: "TUBERCULOSIS SCREENING AND TREATMENT",
+  MEDICAL_CONSULTATION_AND_TREATMENT: "MEDICAL CONSULTATION AND TREATMENT",
+  NUTRITION_COUNSELING_AND_SUPPORT: "NUTRITION COUNSELING AND SUPPORT",
+  CHRONIC_DISEASE_MANAGEMENT: "CHRONIC DISEASE MANAGEMENT",
+  MENTAL_HEALTH_SUPPORT_OR_COUNSELING: "MENTAL HEALTH SUPPORT OR COUNSELING",
+  HEALTH_EDUCATION_AND_AWARENESS: "HEALTH EDUCATION AND AWARENESS",
+  ANTENATAL_OR_POSTNATAL_CARE: "ANTENATAL OR POSTNATAL CARE",
+  SEXUAL_AND_REPRODUCTIVE_HEALTH_SERVICES:
+    "SEXUAL AND REPRODUCTIVE HEALTH SERVICES",
+  MALARIA_DIAGNOSIS_AND_TREATMENT: "MALARIA DIAGNOSIS AND TREATMENT",
+  HEALTH_SCREENING_CAMPAIGNS: "HEALTH SCREENING CAMPAIGNS",
+  DRUG_OR_SUBSTANCE_ABUSE_COUNSELING: "DRUG OR SUBSTANCE ABUSE COUNSELING",
+  FOLLOWUP_APPOINTMENT: "FOLLOWUP APPOINTMENT",
+  DENTAL_CARE: "DENTAL CARE",
+  REFERRAL: "REFERRAL",
+  OTHERS: "OTHERS",
+} as const;
+
+export const appointmentPurposeKeys = Object.keys(AppointmentPurpose) as Array<
+  keyof typeof AppointmentPurpose
+>;
+
 export const appointmentSchema = z.object({
-  date: z.string().min(1, "Date is required"),
-  time: z.string().min(1, "Time is required"),
-  purpose: z.string().min(1, "Purpose is required"),
-  status: z.string().min(1, "Status is required"),
-  insurance: z.string().min(1, "Insurance Coverage is required"),
+  patient_id: z.object({
+    id: z.string().min(1, "Patient ID is required"),
+    name: z.string().min(1, "Patient name is required"),
+    insurance_provider_id: z.string().optional(),
+  }),
+  schedule: z.object({
+    schedule_count: z.number().default(1).optional(),
+    appointment_date: z.string().min(1, "Date is required"),
+    appointment_time: z.string().min(1, "Time is required"),
+  }),
+  purposes: z.enum(appointmentPurposeKeys),
+  has_insurance: z.boolean().default(true).optional(),
+  other_purpose: z.string().optional(),
 });
 
 export type AppointmentFormData = z.infer<typeof appointmentSchema>;
+
+export const getWeekdays = (): { label: string; value: string }[] => {
+  const today = new Date();
+  const day = today.getDay(); // 0 (Sun) to 6 (Sat)
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - ((day + 6) % 7)); // Move to Monday
+
+  const weekdays = [];
+
+  for (let i = 0; i < 5; i++) {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + i);
+
+    const iso = new Date(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+    ).toISOString(); // "2025-08-01T00:00:00.000Z"
+
+    const label = date.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+
+    weekdays.push({ label, value: iso });
+  }
+
+  return weekdays;
+};
+
+export function timeSlots(
+  startHour = 8,
+  endHour = 18
+): { id: string; label: string }[] {
+  const slots = [];
+  for (let h = startHour; h <= endHour; h++) {
+    const hour = h.toString().padStart(2, "0");
+    const time = `${hour}:00`;
+    slots.push({ id: time, label: time });
+  }
+  return slots;
+}

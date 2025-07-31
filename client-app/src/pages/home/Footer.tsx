@@ -1,4 +1,4 @@
-import { Heart, Mail, MapPin, Phone } from "lucide-react";
+import { Heart, Hospital, Mail, MapPin, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Footer = () => {
@@ -7,10 +7,12 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-8 md:px-16 lg:px-24 xl:px-32">
         <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
           <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Heart className="h-8 w-8 text-blue-400" />
-              <span className="text-xl font-bold">Community Health Clinic</span>
-            </div>
+            <Link to={"/"} className="flex items-center space-x-2">
+              <Hospital className="h-6 w-6 text-pink-400" />
+              <span className="text-xl font-bold">
+                C <span className="text-pink-400">H</span> C
+              </span>
+            </Link>
             <p className="text-gray-400">
               Providing comprehensive, compassionate healthcare services to our
               community since 2014.
@@ -55,7 +57,9 @@ const Footer = () => {
             </div>
           </div>
           <div className="space-y-4">
-            <h3 id="contact" className="text-lg font-semibold">Contact Info</h3>
+            <h3 id="contact" className="text-lg font-semibold">
+              Contact Info
+            </h3>
             <div className="space-y-2">
               <div className="flex items-center space-x-2 text-gray-400">
                 <Phone className="h-4 w-4" />

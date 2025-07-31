@@ -1,4 +1,11 @@
-import { Activity, Download, Eye, Heart, TrendingUp } from "lucide-react";
+import {
+  Activity,
+  Download,
+  Eye,
+  FileText,
+  Heart,
+  TrendingUp,
+} from "lucide-react";
 import { Button } from "../../components/ui/button";
 import {
   Card,
@@ -9,6 +16,26 @@ import {
 } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 
+const labResults = [
+  {
+    test: "Complete Blood Count",
+    date: "2024-01-10",
+    status: "Normal",
+    provider: "Dr. Smith",
+  },
+  {
+    test: "Lipid Panel",
+    date: "2024-01-10",
+    status: "Elevated",
+    provider: "Dr. Smith",
+  },
+  {
+    test: "HbA1c",
+    date: "2023-12-15",
+    status: "Normal",
+    provider: "Dr. Johnson",
+  },
+];
 const PatientFiles = () => {
   const vitalSigns = {
     bloodPressure: { systolic: 128, diastolic: 82, date: "2024-01-10" },
@@ -45,14 +72,14 @@ const PatientFiles = () => {
         </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-1">
+      <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Vital Signs</CardTitle>
             <CardDescription>Latest measurements</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex justify-between items-center p-3 border rounded-lg">
+            <div className="flex justify-between items-center p-3 border rounded-lg border-muted">
               <div className="flex items-center space-x-3">
                 <Heart className="h-5 w-5 text-red-500" />
                 <div>
@@ -71,7 +98,7 @@ const PatientFiles = () => {
               </div>
             </div>
 
-            <div className="flex justify-between items-center p-3 border rounded-lg">
+            <div className="flex justify-between items-center p-3 border border-muted rounded-lg">
               <div className="flex items-center space-x-3">
                 <Activity className="h-5 w-5 text-blue-500" />
                 <div>
@@ -87,7 +114,7 @@ const PatientFiles = () => {
               </div>
             </div>
 
-            <div className="flex justify-between items-center p-3 border rounded-lg">
+            <div className="flex justify-between items-center p-3 border border-muted rounded-lg">
               <div className="flex items-center space-x-3">
                 <TrendingUp className="h-5 w-5 text-green-500" />
                 <div>
@@ -112,10 +139,13 @@ const PatientFiles = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             {recentVisits.map((visit) => (
-              <div key={visit.id} className="p-3 border rounded-lg">
+              <div
+                key={visit.id}
+                className="p-3 border border-muted rounded-lg"
+              >
                 <div className="flex justify-between items-start mb-2">
                   <div className="font-medium">{visit.type}</div>
-                  <Badge variant="outline">{visit.status}</Badge>
+                  <Badge variant="secondary">{visit.status}</Badge>
                 </div>
                 <div className="text-sm text-muted-foreground mb-1">
                   {visit.date} with {visit.provider}
@@ -130,6 +160,50 @@ const PatientFiles = () => {
           </CardContent>
         </Card>
       </div>
+
+      <div className="flex justify-between items-center space-y-10 mt-4">
+        <h2 className="text-2xl font-bold mb-8">Lab Results</h2>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Lab Results</CardTitle>
+          <CardDescription>Your latest test results</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {labResults.map((result, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-4 border rounded-lg border-muted"
+              >
+                <div className="flex items-center space-x-4">
+                  <FileText className="h-6 w-6 text-green-500" />
+                  <div>
+                    <div className="font-medium">{result.test}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {result.date} - Ordered by {result.provider}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Badge
+                    variant={
+                      result.status === "Normal" ? "default" : "destructive"
+                    }
+                  >
+                    {result.status}
+                  </Badge>
+                  <Button variant="outline" size="sm">
+                    <Eye className="h-4 w-4 mr-2" />
+                    View Details
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </>
   );
 };

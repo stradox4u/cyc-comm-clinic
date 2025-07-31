@@ -18,15 +18,17 @@ import { Mail, AlertCircle } from "lucide-react";
 import AuthLayout from "../layout/AuthLayout";
 import { forgotPasswordSchema, type ForgotPasswordData } from "../lib/schema";
 import ResetPasswordForm from "./reset-password";
+import { useSearchParams } from "react-router-dom";
 
-type ForgotPasswordPageProps = {
-  userType: "patient" | "provider";
-};
+const ForgotPasswordPage = () => {
+  // Default to "patient", fallback to "provider"
 
-const ForgotPasswordPage = ({ userType }: ForgotPasswordPageProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEmailSent, setIsEmailSent] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState("");
+  const [searchParams] = useSearchParams();
+  const userTypeParam = searchParams.get("type");
+  const resolvedUserType = userTypeParam === "patient" ? "patient" : "provider";
 
   const {
     register,
@@ -41,11 +43,14 @@ const ForgotPasswordPage = ({ userType }: ForgotPasswordPageProps) => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`/api/auth/${userType}/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      const response = await fetch(
+        `/api/auth/${resolvedUserType}/forgot-password`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -75,7 +80,7 @@ const ForgotPasswordPage = ({ userType }: ForgotPasswordPageProps) => {
   const handleResendEmail = async () => {
     setIsSubmitting(true);
     try {
-      await fetch(`/api/auth/${userType}/forgot-password`, {
+      await fetch(`/api/auth/${resolvedUserType}/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: submittedEmail }),
@@ -91,11 +96,10 @@ const ForgotPasswordPage = ({ userType }: ForgotPasswordPageProps) => {
     }
   };
 
-  // --- RESET PASSWORD UI ---
   if (isEmailSent) {
     return (
       <ResetPasswordForm
-        userType={userType}
+        userType={resolvedUserType}
         submittedEmail={submittedEmail}
         onResend={handleResendEmail}
         isResending={isSubmitting}
@@ -103,7 +107,8 @@ const ForgotPasswordPage = ({ userType }: ForgotPasswordPageProps) => {
     );
   }
 
-  // --- MAIN FORGOT FORM ---
+  console.log(resolvedUserType);
+
   return (
     <AuthLayout>
       <div className="w-full mx-auto">
@@ -134,7 +139,7 @@ const ForgotPasswordPage = ({ userType }: ForgotPasswordPageProps) => {
                   type="email"
                   placeholder="Enter your email address"
                   {...register("email")}
-                  className={`h-12 ${errors.email ? "border-red-500" : ""}`}
+                  className={`${errors.email ? "border-red-500" : ""}`}
                 />
                 {errors.email && (
                   <div className="flex items-center gap-2 text-red-600 text-sm">
@@ -147,7 +152,7 @@ const ForgotPasswordPage = ({ userType }: ForgotPasswordPageProps) => {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full h-12 bg-[#6A5CA3] hover:bg-[#6A5CA3]/90"
+                className="w-full  bg-[#6A5CA3] hover:bg-[#6A5CA3]/90"
               >
                 {isSubmitting ? "Sending..." : "Send Reset Email"}
               </Button>

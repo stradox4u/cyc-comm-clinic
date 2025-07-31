@@ -2,13 +2,12 @@ import logger from '../src/middlewares/logger.js'
 import prisma from '../src/config/prisma.js'
 import { faker } from '@faker-js/faker'
 import { Prisma, ProviderRoleTitle } from '@prisma/client'
-import patientService from '../src/modules/patient/patient.service.js'
-import providerService from '../src/modules/provider/provider.service.js'
 import type { PatientRegisterSchema } from '../src/modules/auth/auth.validation.js'
-import type { ProviderCreateInput } from '../src/modules/provider/provider.service.js'
 import bcrypt from 'bcryptjs'
 
 export type PatientCreateInput = Prisma.PatientCreateInput
+export type ProviderRoleCreateInput = Prisma.ProviderRoleCreateInput
+export type ProviderUncheckedCreateInput = Prisma.ProviderUncheckedCreateInput
 
 const createRandomPatient = (): PatientRegisterSchema => ({
   email: faker.internet.email(),
@@ -69,31 +68,128 @@ const customPatient: PatientCreateInput = {
   },
 }
 
-const customProvider: ProviderCreateInput = {
-  email: 'testprovider@gmail.com',
-  password: await bcrypt.hash('test1234', 10),
-  first_name: 'Super',
-  last_name: 'Admin',
-  phone: '081' + faker.string.numeric(8),
-  role: {
-    create: {
-      title: ProviderRoleTitle.ADMIN,
-      description: 'Super admin with unrestricted access to every feature',
-    },
+const customProviders: ProviderUncheckedCreateInput[] = [
+  {
+    email: 'testprovider@gmail.com',
+    password: await bcrypt.hash('test1234', 10),
+    first_name: 'Super',
+    last_name: 'Admin',
+    phone: '081' + faker.string.numeric(8),
+    role_title: ProviderRoleTitle.ADMIN,
   },
-}
+  {
+    email: 'testgeneralpractitioner@gmail.com',
+    password: await bcrypt.hash('test1234', 10),
+    first_name: 'Dr. Mary',
+    last_name: 'Aliya',
+    phone: '081' + faker.string.numeric(8),
+    role_title: ProviderRoleTitle.GENERAL_PRACTIONER,
+  },
+  {
+    email: 'testgynaecologist@gmail.com',
+    password: await bcrypt.hash('test1234', 10),
+    first_name: 'Dr. Tim',
+    last_name: 'Peters',
+    phone: '081' + faker.string.numeric(8),
+    role_title: ProviderRoleTitle.GYNAECOLOGIST,
+  },
+  {
+    email: 'testlabtechnician@gmail.com',
+    password: await bcrypt.hash('test1234', 10),
+    first_name: 'Dr. Lawal',
+    last_name: 'King',
+    phone: '081' + faker.string.numeric(8),
+    role_title: ProviderRoleTitle.LAB_TECHNICIAN,
+  },
+  {
+    email: 'testnurse@gmail.com',
+    password: await bcrypt.hash('test1234', 10),
+    first_name: 'Miss Sims',
+    last_name: 'Martin',
+    phone: '081' + faker.string.numeric(8),
+    role_title: ProviderRoleTitle.NURSE,
+  },
+  {
+    email: 'testpaediatrician@gmail.com',
+    password: await bcrypt.hash('test1234', 10),
+    first_name: 'Dr. Wilson',
+    last_name: 'Jeffries',
+    phone: '081' + faker.string.numeric(8),
+    role_title: ProviderRoleTitle.PAEDIATRICIAN,
+  },
+  {
+    email: 'testpharmacist@gmail.com',
+    password: await bcrypt.hash('test1234', 10),
+    first_name: 'Dr. Jade',
+    last_name: 'Wilson',
+    phone: '081' + faker.string.numeric(8),
+    role_title: ProviderRoleTitle.PHARMACIST,
+  },
+  {
+    email: 'testprovider@gmail.com',
+    password: await bcrypt.hash('test1234', 10),
+    first_name: 'Miss Joanna',
+    last_name: 'Jones',
+    phone: '081' + faker.string.numeric(8),
+    role_title: ProviderRoleTitle.RECEPTIONIST,
+  },
+]
+
+const providerRoles: ProviderRoleCreateInput[] = [
+  {
+    title: ProviderRoleTitle.ADMIN,
+    description: 'Super admin with unrestricted access to every feature',
+  },
+  {
+    title: ProviderRoleTitle.GENERAL_PRACTIONER,
+    description: 'Provides primary and preventive healthcare services',
+  },
+  {
+    title: ProviderRoleTitle.GYNAECOLOGIST,
+    description: "Specializes in women's reproductive health",
+  },
+  {
+    title: ProviderRoleTitle.LAB_TECHNICIAN,
+    description: 'Conducts diagnostic tests and analyzes lab samples',
+  },
+  {
+    title: ProviderRoleTitle.NURSE,
+    description: 'Offers patient care and clinical support',
+  },
+  {
+    title: ProviderRoleTitle.PAEDIATRICIAN,
+    description: 'Treats and monitors the health of children',
+  },
+  {
+    title: ProviderRoleTitle.PHARMACIST,
+    description: 'Dispenses medications and advises on drug use',
+  },
+  {
+    title: ProviderRoleTitle.RECEPTIONIST,
+    description: 'Manages front-desk operations and patient scheduling',
+  },
+]
 
 const seed = async () => {
   try {
     logger.info('Seeding database tables...')
 
-    const createPatientPromises = fakePatients.map((fakePatient) => {
-      patientService.createPatient(fakePatient)
+    await Promise.all([
+      prisma.patient.createMany({ data: fakePatients, skipDuplicates: true }),
+      await prisma.patient.upsert({
+        where: { email: customPatient.email },
+        update: {}, // no update if it exists
+        create: customPatient,
+      }),
+      prisma.providerRole.createMany({
+        data: providerRoles,
+        skipDuplicates: true,
+      }),
+    ])
+    await prisma.provider.createMany({
+      data: customProviders,
+      skipDuplicates: true,
     })
-    await Promise.all(createPatientPromises)
-
-    await patientService.createPatient(customPatient)
-    await providerService.createProvider(customProvider)
 
     logger.info('Database seeded successfully!')
     await prisma.$disconnect()

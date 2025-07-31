@@ -12,7 +12,8 @@ import {
     getLoggedInUser,
     authorizeSensitiveAppointmentFields,
     logAppointmentEvents,
-    canScheduleAppointment
+    canScheduleAppointment,
+    isWithinClinicHours
 } from './appointment.utils.js';
 
 const appointmentCreate = catchAsync(async (req, res) => {
@@ -25,13 +26,36 @@ const appointmentCreate = catchAsync(async (req, res) => {
     return res.status(err.statusCode || 400).json({ success: false, message: err.message });
   }
 
-  const dateRaw = newAppointment.schedule.appointment_date;
+  const { appointment_date, appointment_time } = newAppointment.schedule;
   
-  const appointmentDateTime = new Date(dateRaw);
-  if (isNaN(appointmentDateTime.getTime())) {
+  if (!appointment_date || !appointment_time) {
     return res.status(400).json({
       success: false,
-      message: "Invalid appointment date" 
+      message: "Appointment date and time are required"
+    });
+  }
+  
+  const dateStr = appointment_date instanceof Date
+    ? appointment_date.toISOString().slice(0, 10)
+    : appointment_date;
+  
+  const dateTimeString = `${dateStr}T${appointment_time.trim()}:00`;
+  console.log('Date string:', dateTimeString);
+  
+  const appointmentDateTime = new Date(dateTimeString);
+  
+  if (isNaN(appointmentDateTime.getTime())) {
+    console.log('Invalid Date:', appointmentDateTime);
+    return res.status(400).json({
+      success: false,
+      message: "Invalid date format"
+    });
+  }
+  
+  if (!isWithinClinicHours(appointmentDateTime)) {
+    return res.status(400).json({
+      success: false,
+      message: "Appointment time must be BETWEEN 8:00 AM and 4:45 PM" 
     });
   }
 
@@ -41,7 +65,7 @@ const appointmentCreate = catchAsync(async (req, res) => {
   );
 
   if (!existingAppointment) {
-
+    
   } else {
     if (!existingAppointment.schedule) {
       throw new Error("Missing schedule data");
@@ -171,7 +195,11 @@ const getAppointments = catchAsync(async (req, res) => {
     if (loggedInUser?.type === UserType.PATIENT) {
         appointments = await appointmentService.findAppointmentsByPatient(loggedInUser.id)
     } else if (loggedInUser?.type === UserType.PROVIDER) {
-        appointments = await appointmentService.findAppointmentsByProvider(loggedInUser.id)
+      if (loggedInUser.roleTitle === 'ADMIN' || loggedInUser.roleTitle === 'RECEPTIONIST') {
+        appointments = await appointmentService.searchAppointments({});
+      } else {
+        appointments = await appointmentService.findAppointmentsByProvider(loggedInUser.id);
+      }
     } else {
         return res.status(403).json({
             success: false,
@@ -212,15 +240,29 @@ const updateAppointment = catchAsync(async (req, res) => {
 
   if (updateData.schedule) {
     const { appointment_date, appointment_time } = updateData.schedule;
+    
     if (!appointment_date || !appointment_time) {
-      return res.status(400).json({ success: false, message: 'Appointment date and time are required' });
+      return res.status(400).json({
+        success: false,
+        message: "Appointment date and time are required"
+      });
     }
     
-    const newAppointmentDate = new Date(`${appointment_date}T${appointment_time}:00`);
+    const dateStr = appointment_date instanceof Date
+      ? appointment_date.toISOString().slice(0, 10)
+      : appointment_date;
+  
+    const dateTimeString = `${dateStr}T${appointment_time.trim()}:00`;
+    console.log('Date string:', dateTimeString);
+  
+    const newAppointmentDateTime = new Date(dateTimeString);
+      if (!appointment_date || !appointment_time) {
+        return res.status(400).json({ success: false, message: 'Appointment date and time are required' });
+      }
     
     const existingAppointment = await appointmentService.findAppointmentByPatientAndDate(
       appointment.patient_id, 
-      newAppointmentDate
+      newAppointmentDateTime
     );
 
     if (existingAppointment && existingAppointment.id !== appointmentId) {
@@ -230,14 +272,14 @@ const updateAppointment = catchAsync(async (req, res) => {
       }
 
       const existingAppointmentDate = new Date(parsedSchedule.data.appointment_date);
-      const check = canScheduleAppointment(newAppointmentDate, [existingAppointmentDate]);
+      const check = canScheduleAppointment(newAppointmentDateTime, [existingAppointmentDate]);
 
       if (!check.allowed) {
         return res.status(400).json({ success: false, message: check.reason });
       }
     }
 
-    const checkWorkHours = canScheduleAppointment(newAppointmentDate, []);
+    const checkWorkHours = canScheduleAppointment(newAppointmentDateTime, []);
     if (!checkWorkHours.allowed) {
       return res.status(400).json({ success: false, message: checkWorkHours.reason });
     }
@@ -283,7 +325,7 @@ const appointmentDelete = catchAsync(async (req, res) => {
     const { appointmentId } = req.params;
     const loggedInUser = getLoggedInUser(req);
 
-    const appointment = await appointmentService.findAppointment(appointmentId);
+    const appointment = await appointmentService.findAppointment({id: appointmentId});
 
     if (!appointment) {
         return res.status(404).json({
@@ -304,7 +346,7 @@ const appointmentDelete = catchAsync(async (req, res) => {
     });
 });
 
-const assignApointmentProvider = catchAsync(async (req, res) => {
+const assignAppointmentProvider = catchAsync(async (req, res) => {
   const loggedInUser = getLoggedInUser(req);
   const newAppointmentProvider: AppointmentProviderSchema | undefined = req.body;
 
@@ -315,7 +357,7 @@ const assignApointmentProvider = catchAsync(async (req, res) => {
     });
   }
 
-  const { appointment_id } = newAppointmentProvider;
+  const { appointment_id, provider_id } = newAppointmentProvider;
 
   const appointment = await appointmentService.findAppointment({ id: appointment_id });
   if (!appointment) {
@@ -353,5 +395,5 @@ export default {
     getAppointments,
     updateAppointment,
     appointmentDelete,
-    assignApointmentProvider
+    assignAppointmentProvider
 }

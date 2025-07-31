@@ -120,7 +120,7 @@ model Appointment {
   patient_id               String
   purposes                 AppointmentPurpose[]
   other_purpose            String?
-  status                   AppointmentStatus
+  status                   AppointmentStatus           @default(SUBMITTED)
   has_insurance            Boolean
   is_follow_up_required    Boolean?                    @default(false)
   follow_up_id             String?
