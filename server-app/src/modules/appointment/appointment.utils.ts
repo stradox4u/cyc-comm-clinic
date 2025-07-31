@@ -62,11 +62,11 @@ export function authorizeSensitiveAppointmentFields(req: any, updateData: any) {
       }
 
       if (field === 'vitals') {
-        updateData.vitals = vitalsService.buildVitals(updateData.vitals);
+        updateData.vitals = vitalsService.buildVitals(updateData.vitals, loggedInUser);
       }
 
       if (field === 'soap_note') {
-        updateData.soap_note = soapnoteService.buildSoapNoteNestedCreateInput(updateData.soap_note);
+        updateData.soap_note = soapnoteService.buildSoapNoteNestedCreateInput(updateData.soap_note, loggedInUser);
       }
 
       if (field === 'appointment_providers') {
