@@ -62,11 +62,11 @@ export function authorizeSensitiveAppointmentFields(req: any, updateData: any) {
       }
 
       if (field === 'vitals') {
-        updateData.vitals = vitalsService.buildVitals(updateData.vitals);
+        updateData.vitals = vitalsService.buildVitals(updateData.vitals, loggedInUser);
       }
 
       if (field === 'soap_note') {
-        updateData.soap_note = soapnoteService.buildSoapNoteNestedCreateInput(updateData.soap_note);
+        updateData.soap_note = soapnoteService.buildSoapNoteNestedCreateInput(updateData.soap_note, loggedInUser);
       }
 
       if (field === 'appointment_providers') {
@@ -121,9 +121,9 @@ export async function logAppointmentEvents({
 }
 
 // Prevent same day appointment booking within working hours
-const CLINIC_START_HOUR = 7;
+const CLINIC_START_HOUR = 8;
 const CLINIC_START_MINUTE = 0;
-const CLINIC_END_HOUR = 15;
+const CLINIC_END_HOUR = 16;
 const CLINIC_END_MINUTE = 45;
 
 export function isWithinClinicHours(date: Date): boolean {
@@ -158,7 +158,7 @@ export function canScheduleAppointment(
   if (!isWithinClinicHours(newAppointment)) {
     return {
       allowed: false,
-      reason: 'Appointment time must be BETWEEN 8:00 AM and 3:45 PM.',
+      reason: 'Appointment time must be BETWEEN 8:00 AM and 4:45 PM.',
     };
   }
 

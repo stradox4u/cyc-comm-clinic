@@ -27,7 +27,7 @@ const recordVitals = catchAsync(async (req, res) => {
     },
   };
 
-  const savedVitals = await vitalsService.recordVitals(prismaCreateInput);
+  const savedVitals = await vitalsService.recordVitals(prismaCreateInput, loggedInUser);
 
   res.status(201).json({
     success: true,
