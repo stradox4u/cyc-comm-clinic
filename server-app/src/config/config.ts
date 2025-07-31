@@ -14,6 +14,10 @@ const config = {
     USER: env('EMAIL_USER'),
     PASS: env('EMAIL_PASS'),
   },
+  AWS_ACCESS_KEY_ID: env('AWS_ACCESS_KEY_ID'),
+  AWS_SECRET_ACCESS_KEY: env('AWS_SECRET_ACCESS_KEY'),
+  AWS_REGION: env('AWS_REGION'),
+  S3_BUCKET_NAME: env('S3_BUCKET_NAME'),
 }
 
 export default config

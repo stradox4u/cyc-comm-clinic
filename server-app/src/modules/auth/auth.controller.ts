@@ -12,6 +12,7 @@ import type {
   ForgotPasswordSchema,
   LoginSchema,
   PatientRegisterSchema,
+  PatientUpdateProfileSchema,
   RequestOTPSchema,
   ResetPasswordSchema,
   VerifyEmailSchema,
@@ -20,6 +21,8 @@ import { TokenType } from '@prisma/client'
 import providerService from '../provider/provider.service.js'
 import patientService from '../patient/patient.service.js'
 import { UserType } from '../../types/index.js'
+import awsS3 from '../../config/aws-s3.js'
+import config from '../../config/config.js'
 
 const patientRegister = catchAsync(async (req, res) => {
   let newPatient: PatientRegisterSchema = req.body
@@ -90,7 +93,7 @@ const patientLogin = catchAsync(async (req, res) => {
   })
 })
 
-const patientProfile = catchAsync(async (req, res) => {
+const patientGetProfile = catchAsync(async (req, res) => {
   const patientId = req.user?.id
 
   const patient = await patientService.findPatient({ id: patientId })
@@ -101,6 +104,25 @@ const patientProfile = catchAsync(async (req, res) => {
   res.status(200).json({
     success: true,
     data: patient,
+  })
+})
+
+const patientUpdateProfile = catchAsync(async (req, res) => {
+  const patientId = req.user?.id
+  const newPatient: PatientUpdateProfileSchema = req.body
+
+  const updatedPatient = await patientService.updatePatient(
+    { id: patientId },
+    newPatient
+  )
+  if (!updatedPatient) throw new NotFoundError('User not found')
+
+  delete (updatedPatient as any).password
+
+  res.status(200).json({
+    success: true,
+    data: updatedPatient,
+    message: 'Profile updated successfully',
   })
 })
 
@@ -252,6 +274,21 @@ const patientChangePassword = catchAsync(async (req, res) => {
   })
 })
 
+const patientGenerateUploadUrl = catchAsync(async (req, res) => {
+  const { fileType, fileName } = req.query as any
+  const key = `profile-images/${Date.now()}-${fileName}`
+
+  const signedUrl = await awsS3.generateUploadUrl({ fileType, key })
+
+  res.status(200).json({
+    success: true,
+    data: {
+      signedUrl,
+      imageUrl: `https://${config.S3_BUCKET_NAME}.s3.${config.AWS_REGION}.amazonaws.com/${key}`,
+    },
+  })
+})
+
 const providerLogin = catchAsync(async (req, res) => {
   let newProvider: LoginSchema = req.body
 
@@ -386,12 +423,14 @@ const logout = catchAsync((req, res, next) => {
 export default {
   patientRegister,
   patientLogin,
-  patientProfile,
+  patientGetProfile,
+  patientUpdateProfile,
   patientVerifyEmail,
   patientRequestOTP,
   patientForgotPassword,
   patientResetPassword,
   patientChangePassword,
+  patientGenerateUploadUrl,
   providerLogin,
   providerProfile,
   providerForgotPassword,

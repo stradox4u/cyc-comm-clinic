@@ -22,6 +22,7 @@ model Patient {
   first_name                String
   last_name                 String
   phone                     String
+  image_url                 String?
   date_of_birth             DateTime
   address                   String
   gender                    PatientGender
