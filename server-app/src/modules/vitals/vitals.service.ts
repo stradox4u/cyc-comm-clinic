@@ -1,28 +1,49 @@
 import type { Vitals, Prisma } from '@prisma/client';
 import prisma from '../../config/prisma.js';
 import type { VitalsRecord } from '../vitals/vitals.validation.js';
+import { EventType } from '@prisma/client';
 
 export type VitalsCreateInput = Prisma.VitalsCreateInput
 
 // for nested vitals in appointment create
 function buildVitals(
-  payload?: VitalsRecord
-): { create: Omit<VitalsRecord, 'appointment'> } | undefined {
+  payload: VitalsRecord | undefined,
+  createdById: string
+): { create: Omit<VitalsRecord, 'events'> & { events: { create: { type: EventType, created_by_id: string }[] } } } | undefined {
   if (!payload) return undefined;
 
-  const rest = payload;
+  const { events, ...rest } = payload;
 
   return {
-    create: rest,
+    create: {
+      ...rest,
+      events: {
+        create: [
+          {
+            type: EventType.VITALS_RECORDED,
+            created_by_id: createdById,
+          }
+        ]
+      }
+    }
   };
 }
 
 async function recordVitals(
-  payload: VitalsCreateInput
-) : Promise<Vitals | null> {
-  return prisma.vitals.create ({
-    data: payload
-  })
+  payload: VitalsCreateInput,
+  createdById: string
+): Promise<Vitals> {
+  return prisma.vitals.create({
+    data: {
+      ...payload,
+      events: {
+        create: [{
+          type: EventType.VITALS_RECORDED,
+          created_by_id: createdById,
+        }]
+      }
+    }
+  });
 }
 
 async function getVitalsByAppointmentId(appointmentId: string) {
