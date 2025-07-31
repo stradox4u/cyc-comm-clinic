@@ -175,11 +175,21 @@ const seed = async () => {
     logger.info('Seeding database tables...')
 
     await Promise.all([
-      prisma.patient.createMany({ data: fakePatients }),
-      prisma.patient.create({ data: customPatient }),
-      prisma.providerRole.createMany({ data: providerRoles }),
+      prisma.patient.createMany({ data: fakePatients, skipDuplicates: true }),
+      await prisma.patient.upsert({
+        where: { email: customPatient.email },
+        update: {}, // no update if it exists
+        create: customPatient,
+      }),
+      prisma.providerRole.createMany({
+        data: providerRoles,
+        skipDuplicates: true,
+      }),
     ])
-    await prisma.provider.createMany({ data: customProviders })
+    await prisma.provider.createMany({
+      data: customProviders,
+      skipDuplicates: true,
+    })
 
     logger.info('Database seeded successfully!')
     await prisma.$disconnect()

@@ -71,16 +71,6 @@ export const resetPasswordSchema = z
 export type ForgotPasswordData = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordData = z.infer<typeof resetPasswordSchema>;
 
-export const appointmentSchema = z.object({
-  date: z.string().min(1, "Date is required"),
-  time: z.string().min(1, "Time is required"),
-  purpose: z.string().min(1, "Purpose is required"),
-  status: z.string().min(1, "Status is required"),
-  insurance: z.string().min(1, "Insurance Coverage is required"),
-});
-
-export type AppointmentFormData = z.infer<typeof appointmentSchema>;
-
 export const AppointmentPurpose = {
   ROUTINE_HEALTH_CHECKUP: "ROUTINE HEALTH CHECKUP",
   MATERNAL_CHILD_HEALTH: "MATERNAL & CHILD HEALTH",
@@ -105,12 +95,29 @@ export const AppointmentPurpose = {
   OTHERS: "OTHERS",
 } as const;
 
-export type AppointmentPurpose =
-  (typeof AppointmentPurpose)[keyof typeof AppointmentPurpose];
+export const appointmentPurposeKeys = Object.keys(AppointmentPurpose) as Array<
+  keyof typeof AppointmentPurpose
+>;
 
-export const appointmentPurposes = Object.values(AppointmentPurpose);
+export const appointmentSchema = z.object({
+  patient_id: z.object({
+    id: z.string().min(1, "Patient ID is required"),
+    name: z.string().min(1, "Patient name is required"),
+    insurance_provider_id: z.string().optional(),
+  }),
+  schedule: z.object({
+    schedule_count: z.number().default(1).optional(),
+    appointment_date: z.string().min(1, "Date is required"),
+    appointment_time: z.string().min(1, "Time is required"),
+  }),
+  purposes: z.enum(appointmentPurposeKeys),
+  has_insurance: z.boolean().default(true).optional(),
+  other_purpose: z.string().optional(),
+});
 
-export const getWeekdays = (): string[] => {
+export type AppointmentFormData = z.infer<typeof appointmentSchema>;
+
+export const getWeekdays = (): { label: string; value: string }[] => {
   const today = new Date();
   const day = today.getDay(); // 0 (Sun) to 6 (Sat)
   const monday = new Date(today);
@@ -122,23 +129,32 @@ export const getWeekdays = (): string[] => {
     const date = new Date(monday);
     date.setDate(monday.getDate() + i);
 
-    weekdays.push(
-      date.toLocaleDateString("en-US", {
-        weekday: "long",
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
-    );
+    const iso = new Date(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+    ).toISOString(); // "2025-08-01T00:00:00.000Z"
+
+    const label = date.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+
+    weekdays.push({ label, value: iso });
   }
 
   return weekdays;
 };
 
-export const timeSlots: string[] = Array.from({ length: 20 }, (_, i) => {
-  const hour = 8 + Math.floor(i / 2);
-  const minute = i % 2 === 0 ? "00" : "30";
-  const date = new Date();
-  date.setHours(hour, Number(minute));
-  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-});
+export function timeSlots(
+  startHour = 8,
+  endHour = 18
+): { id: string; label: string }[] {
+  const slots = [];
+  for (let h = startHour; h <= endHour; h++) {
+    const hour = h.toString().padStart(2, "0");
+    const time = `${hour}:00`;
+    slots.push({ id: time, label: time });
+  }
+  return slots;
+}
