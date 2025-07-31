@@ -82,7 +82,6 @@ async function findAppointmentsByPatient(
   });
 }
 
-
 // Find appointments by provider
 async function findAppointmentsByProvider(
   provider_id: string,
@@ -197,6 +196,24 @@ async function updateAppointment(
 async function deleteAppointment(
     filter: AppointmentWhereUniqueInput
 ): Promise<Appointment> {
+    await prisma.appointmentProviders.deleteMany({
+      where: {
+        appointment_id: filter.id
+      }
+    })
+
+    await prisma.vitals.deleteMany({
+      where: {
+        appointment_id: filter.id
+      }
+    })
+
+    await prisma.soapNote.deleteMany({
+      where: {
+        appointment_id: filter.id
+      }
+    })
+
     return prisma.appointment.delete({
         where: filter,
     });
@@ -205,12 +222,22 @@ async function deleteAppointment(
 //Assign Provider (AppointmentProviders)
 async function assignProvider(
   data: AppointmentProvidersCreateInput
-): Promise<AppointmentProviders> {
-  return prisma.appointmentProviders.create({
-    data
-  });
+): Promise<Appointment | null> {
+  await prisma.appointmentProviders.create({ data });
+  const appointmentId = data.appointment?.connect?.id;
+  return appointmentId
+    ? prisma.appointment.findUnique({
+        where: { id: appointmentId },
+        include: {
+          appointment_providers: {
+            select: {
+              provider_id: true
+            }
+          }
+        },
+      })
+    : null;
 }
-
 
 function isProviderArray(arr: any): arr is { provider_id: string }[] {
   return Array.isArray(arr) && arr.every(p => typeof p.provider_id === "string");
@@ -249,5 +276,6 @@ export default {
     deleteAppointment,
     assignProvider,
     findAppointmentByPatientAndDate,
-    buildProvidersCreate
+    buildProvidersCreate,
+    searchAppointments
 }
