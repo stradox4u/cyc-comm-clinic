@@ -7,6 +7,7 @@ import type {
 } from "@prisma/client";
 import prisma from "../../config/prisma.js";
 import { startOfDay, endOfDay } from 'date-fns';
+import { includes } from "zod";
 
 export type AppointmentWhereUniqueInput = Prisma.AppointmentWhereUniqueInput
 export type AppointmentWhereInput = Prisma.AppointmentWhereInput
@@ -230,8 +231,13 @@ async function assignProvider(
         where: { id: appointmentId },
         include: {
           appointment_providers: {
-            select: {
-              provider_id: true
+            include: {
+              provider: {
+                select: {
+                  first_name: true,
+                  last_name: true,
+                }
+              }
             }
           }
         },
