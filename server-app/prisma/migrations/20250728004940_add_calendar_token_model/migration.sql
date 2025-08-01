@@ -5,7 +5,7 @@
 
 */
 -- AlterTable
-ALTER TABLE "appointments" ADD COLUMN     "vitals_id" TEXT;
+-- ALTER TABLE "appointments" ADD COLUMN     "vitals_id" TEXT;
 
 -- CreateTable
 CREATE TABLE "CalendarToken" (
@@ -22,7 +22,7 @@ CREATE TABLE "CalendarToken" (
 CREATE UNIQUE INDEX "CalendarToken_patient_id_key" ON "CalendarToken"("patient_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "appointments_vitals_id_key" ON "appointments"("vitals_id");
+-- CREATE UNIQUE INDEX "appointments_vitals_id_key" ON "appointments"("vitals_id");
 
 -- AddForeignKey
 ALTER TABLE "CalendarToken" ADD CONSTRAINT "CalendarToken_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "patients"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
