@@ -1,22 +1,23 @@
-import { LogOut, Mail, MapPin, Phone, Settings, User } from "lucide-react";
-import { Button } from "../../components/ui/button";
+import { LogOut, Mail, MapPin, Phone, Settings, User } from 'lucide-react'
+import { Button } from '../../components/ui/button'
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { useCheckPatientProfile } from "../../hooks/fetch-patient";
-import { Skeleton } from "../../components/ui/skeleton";
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../../store/auth-store";
+} from '../../components/ui/card'
+import { Badge } from '../../components/ui/badge'
+import { useCheckPatientProfile } from '../../hooks/fetch-patient'
+import { Skeleton } from '../../components/ui/skeleton'
+import { toast } from 'sonner'
+import { useNavigate } from 'react-router-dom'
+import { useAuthStore } from '../../store/auth-store'
+import ProfilePhoto from '../../components/profile-photo'
 
 const PatientProfile = () => {
-  const { user: patientData, loading } = useCheckPatientProfile();
-  const navigate = useNavigate();
-  const logout = useAuthStore((state) => state.logout);
+  const { user: patientData, loading } = useCheckPatientProfile()
+  const navigate = useNavigate()
+  const logout = useAuthStore((state) => state.logout)
 
   if (loading) {
     return (
@@ -64,26 +65,26 @@ const PatientProfile = () => {
           </Card>
         </div>
       </>
-    );
+    )
   }
 
   const handleLogout = async () => {
     try {
-      const res = await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
+      const res = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      })
 
-      if (!res.ok) throw new Error("Logout failed");
+      if (!res.ok) throw new Error('Logout failed')
 
-      logout();
-      toast.success("Logged out successfully");
-      navigate("/auth/patient/login");
+      logout()
+      toast.success('Logged out successfully')
+      navigate('/auth/patient/login')
     } catch (error) {
-      console.error("Logout error:", error);
-      toast.error("Failed to logout. Please try again.");
+      console.error('Logout error:', error)
+      toast.error('Failed to logout. Please try again.')
     }
-  };
+  }
 
   return (
     <>
@@ -97,47 +98,52 @@ const PatientProfile = () => {
 
       <div className="grid gap-6 lg:grid-cols-">
         <Card>
-          <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center space-x-3">
-              <User className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <div className="font-medium">Full Name</div>
-                <div className="text-sm text-muted-foreground">
-                  {patientData?.first_name} {patientData?.last_name}
+          <div className="md:flex md:justify-between">
+            <ProfilePhoto photo={patientData?.image_url} />
+            <div>
+              <CardHeader>
+                <CardTitle>Personal Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <User className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <div className="font-medium">Full Name</div>
+                    <div className="text-sm text-muted-foreground">
+                      {patientData?.first_name} {patientData?.last_name}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Mail className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <div className="font-medium">Email</div>
-                <div className="text-sm text-muted-foreground">
-                  {patientData?.email}
+                <div className="flex items-center space-x-3">
+                  <Mail className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <div className="font-medium">Email</div>
+                    <div className="text-sm text-muted-foreground">
+                      {patientData?.email}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Phone className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <div className="font-medium">Phone</div>
-                <div className="text-sm text-muted-foreground">
-                  {patientData?.phone}
+                <div className="flex items-center space-x-3">
+                  <Phone className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <div className="font-medium">Phone</div>
+                    <div className="text-sm text-muted-foreground">
+                      {patientData?.phone}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <MapPin className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <div className="font-medium">Address</div>
-                <div className="text-sm text-muted-foreground">
-                  {patientData?.address}
+                <div className="flex items-center space-x-3">
+                  <MapPin className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <div className="font-medium">Address</div>
+                    <div className="text-sm text-muted-foreground">
+                      {patientData?.address}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </CardContent>
             </div>
-          </CardContent>
+          </div>
         </Card>
 
         <Card>
@@ -150,11 +156,11 @@ const PatientProfile = () => {
               <div className="text-sm text-muted-foreground">
                 {patientData?.date_of_birth
                   ? new Date(patientData.date_of_birth).toLocaleDateString(
-                      "en-GB",
+                      'en-GB',
                       {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
                       }
                     )
                   : null}
@@ -179,7 +185,7 @@ const PatientProfile = () => {
             <div>
               <div className="font-medium">Emergency Contact</div>
               <div className="text-sm text-muted-foreground">
-                {patientData?.emergency_contact_name}{" "}
+                {patientData?.emergency_contact_name}{' '}
               </div>
               <div className="text-sm text-muted-foreground">
                 {patientData?.emergency_contact_phone}
@@ -190,8 +196,8 @@ const PatientProfile = () => {
         <div className="flex justify-end">
           <Button
             className="w-fit 2xl:w-1/5"
-            size={"sm"}
-            variant={"destructive"}
+            size={'sm'}
+            variant={'destructive'}
             onClick={handleLogout}
           >
             <LogOut />
@@ -200,6 +206,6 @@ const PatientProfile = () => {
         </div>
       </div>
     </>
-  );
-};
-export default PatientProfile;
+  )
+}
+export default PatientProfile

@@ -3,78 +3,87 @@ import {
   AlertCircle,
   Calendar,
   CheckCircle,
-  CircleUserRound,
   Heart,
   MessageSquare,
   Pill,
   Plus,
-} from "lucide-react";
-import { useCheckPatientProfile } from "../../hooks/fetch-patient";
-import { Button } from "../../components/ui/button";
+} from 'lucide-react'
+import { useCheckPatientProfile } from '../../hooks/fetch-patient'
+import { Button } from '../../components/ui/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
+} from '../../components/ui/card'
+import { Badge } from '../../components/ui/badge'
 
 const upcomingAppointments = [
   {
     id: 1,
-    date: "2024-01-25",
-    time: "10:00 AM",
-    provider: "Dr. Smith",
-    type: "Annual Check-up",
-    location: "Main Clinic",
-    status: "confirmed",
+    date: '2024-01-25',
+    time: '10:00 AM',
+    provider: 'Dr. Smith',
+    type: 'Annual Check-up',
+    location: 'Main Clinic',
+    status: 'confirmed',
   },
   {
     id: 2,
-    date: "2024-02-10",
-    time: "2:30 PM",
-    provider: "Dr. Johnson",
-    type: "Follow-up",
-    location: "Cardiology Dept",
-    status: "pending",
+    date: '2024-02-10',
+    time: '2:30 PM',
+    provider: 'Dr. Johnson',
+    type: 'Follow-up',
+    location: 'Cardiology Dept',
+    status: 'pending',
   },
-];
+]
 
 const medications = [
   {
-    name: "Lisinopril",
-    dosage: "10mg",
-    frequency: "Once daily",
-    prescriber: "Dr. Smith",
+    name: 'Lisinopril',
+    dosage: '10mg',
+    frequency: 'Once daily',
+    prescriber: 'Dr. Smith',
     refillsLeft: 3,
-    nextRefill: "2024-02-15",
+    nextRefill: '2024-02-15',
   },
   {
-    name: "Metformin",
-    dosage: "500mg",
-    frequency: "Twice daily",
-    prescriber: "Dr. Johnson",
+    name: 'Metformin',
+    dosage: '500mg',
+    frequency: 'Twice daily',
+    prescriber: 'Dr. Johnson',
     refillsLeft: 1,
-    nextRefill: "2024-01-30",
+    nextRefill: '2024-01-30',
   },
-];
+]
 function PatientDashboard() {
-  const { user, loading } = useCheckPatientProfile();
-  console.log(user);
+  const { user, loading } = useCheckPatientProfile()
+  console.log(user)
 
-  if (loading) return <p>Loading profile...</p>;
+  if (loading) return <p>Loading profile...</p>
   return (
     <div className="px-4 mb-12">
       <Card className="p-4 w-full mb-8 bg-background">
         <div className="flex justify-between items-center">
           <div className="space-y-2 flex items-center flex-row w-fit gap-2">
             <div className="h-12 w-12 dark:bg-black flex items-center justify-center rounded-full font-semibold border border-muted">
-              {user?.first_name.charAt(0)}
-              {user?.last_name.charAt(0)}
+              {user?.image_url ? (
+                <img
+                  src={user.image_url}
+                  alt="Profile Image"
+                  className="rounded-full object-cover"
+                />
+              ) : (
+                <>
+                  {user?.first_name.charAt(0)}
+                  {user?.last_name.charAt(0)}
+                </>
+              )}
             </div>
             <h1 className="text-sm font-semibold">
-              Welcome back, {user?.first_name || "Jane Doe"}{" "}
+              Welcome back, {user?.first_name || 'Jane Doe'}{' '}
             </h1>
           </div>
 
@@ -187,7 +196,7 @@ function PatientDashboard() {
                 </div>
                 <Badge
                   variant={
-                    appointment.status === "confirmed" ? "default" : "secondary"
+                    appointment.status === 'confirmed' ? 'default' : 'secondary'
                   }
                 >
                   {appointment.status}
@@ -348,7 +357,7 @@ function PatientDashboard() {
         </div>
       </section> */}
     </div>
-  );
+  )
 }
 
-export default PatientDashboard;
+export default PatientDashboard

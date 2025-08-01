@@ -12,6 +12,7 @@ import type {
   ForgotPasswordSchema,
   LoginSchema,
   PatientRegisterSchema,
+  PatientUpdateProfileSchema,
   RequestOTPSchema,
   ResetPasswordSchema,
   VerifyEmailSchema,
@@ -20,6 +21,7 @@ import { TokenType } from '@prisma/client'
 import providerService from '../provider/provider.service.js'
 import patientService from '../patient/patient.service.js'
 import { UserType } from '../../types/index.js'
+import awsS3 from '../../config/aws-s3.js'
 
 const patientRegister = catchAsync(async (req, res) => {
   let newPatient: PatientRegisterSchema = req.body
@@ -76,6 +78,9 @@ const patientLogin = catchAsync(async (req, res) => {
     throw new ValidationError('verify-email')
   }
 
+  if (patient.image_url) {
+    patient.image_url = await awsS3.getPresignedDownloadUrl(patient.image_url)
+  }
   delete (patient as any).password
 
   req.session.user = {
@@ -90,17 +95,51 @@ const patientLogin = catchAsync(async (req, res) => {
   })
 })
 
-const patientProfile = catchAsync(async (req, res) => {
+const patientGetProfile = catchAsync(async (req, res) => {
   const patientId = req.user?.id
 
   const patient = await patientService.findPatient({ id: patientId })
   if (!patient) throw new NotFoundError('User not found')
 
+  if (patient.image_url) {
+    patient.image_url = await awsS3.getPresignedDownloadUrl(patient.image_url)
+  }
   delete (patient as any).password
 
   res.status(200).json({
     success: true,
     data: patient,
+  })
+})
+
+const patientUpdateProfile = catchAsync(async (req, res) => {
+  const patientId = req.user?.id
+  const newPatient: PatientUpdateProfileSchema = req.body
+
+  const currentPatient = await patientService.findPatient({ id: patientId })
+  if (!currentPatient) throw new NotFoundError('User not found')
+
+  const updatedPatient = await patientService.updatePatient(
+    { id: patientId },
+    newPatient
+  )
+  if (!updatedPatient) throw new NotFoundError('User not found')
+
+  if (newPatient.image_url && currentPatient.image_url) {
+    await awsS3.deleteObject(currentPatient.image_url)
+  }
+
+  if (updatedPatient.image_url) {
+    updatedPatient.image_url = await awsS3.getPresignedDownloadUrl(
+      updatedPatient.image_url
+    )
+  }
+  delete (updatedPatient as any).password
+
+  res.status(200).json({
+    success: true,
+    data: updatedPatient,
+    message: 'Profile updated successfully',
   })
 })
 
@@ -252,6 +291,18 @@ const patientChangePassword = catchAsync(async (req, res) => {
   })
 })
 
+const patientGenerateUploadUrl = catchAsync(async (req, res) => {
+  const { fileType, fileName } = req.query as any
+  const key = `profile-images/${Date.now()}-${fileName}`
+
+  const signedUrl = await awsS3.getPresignedUploadUrl({ fileType, key })
+
+  res.status(200).json({
+    success: true,
+    data: { signedUrl, key },
+  })
+})
+
 const providerLogin = catchAsync(async (req, res) => {
   let newProvider: LoginSchema = req.body
 
@@ -386,12 +437,14 @@ const logout = catchAsync((req, res, next) => {
 export default {
   patientRegister,
   patientLogin,
-  patientProfile,
+  patientGetProfile,
+  patientUpdateProfile,
   patientVerifyEmail,
   patientRequestOTP,
   patientForgotPassword,
   patientResetPassword,
   patientChangePassword,
+  patientGenerateUploadUrl,
   providerLogin,
   providerProfile,
   providerForgotPassword,
