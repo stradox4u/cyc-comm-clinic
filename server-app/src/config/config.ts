@@ -23,6 +23,10 @@ const config = {
     CLIENT_ID: env('GOOGLE_CLIENT_ID'),
     CLIENT_SECRET: env('GOOGLE_CLIENT_SECRET'),
   },
+  AWS_ACCESS_KEY_ID: env('AWS_ACCESS_KEY_ID'),
+  AWS_SECRET_ACCESS_KEY: env('AWS_SECRET_ACCESS_KEY'),
+  AWS_REGION: env('AWS_REGION'),
+  S3_BUCKET_NAME: env('S3_BUCKET_NAME'),
 }
 
 export default config

@@ -61,6 +61,7 @@ const medications = [
 ]
 function PatientDashboard() {
   const { user, loading } = useCheckPatientProfile()
+  console.log(user)
 
   if (loading) return <p>Loading profile...</p>
   return (
@@ -71,8 +72,18 @@ function PatientDashboard() {
           <div className="flex justify-between items-center">
             <div className="space-y-2 flex items-center flex-row w-fit gap-2">
               <div className="h-12 w-12 dark:bg-black flex items-center justify-center rounded-full font-semibold border border-muted">
-                {user?.first_name.charAt(0)}
-                {user?.last_name.charAt(0)}
+                {user?.image_url ? (
+                  <img
+                    src={user.image_url}
+                    alt="Profile Image"
+                    className="rounded-full object-cover"
+                  />
+                ) : (
+                  <>
+                    {user?.first_name.charAt(0)}
+                    {user?.last_name.charAt(0)}
+                  </>
+                )}
               </div>
               <h1 className="text-sm font-semibold">
                 Welcome back, {user?.first_name || 'Jane Doe'}{' '}

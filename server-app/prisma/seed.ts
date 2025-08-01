@@ -126,7 +126,7 @@ const customProviders: ProviderUncheckedCreateInput[] = [
     role_title: ProviderRoleTitle.PHARMACIST,
   },
   {
-    email: 'testprovider@gmail.com',
+    email: 'testreceptionist@gmail.com',
     password: await bcrypt.hash('test1234', 10),
     first_name: 'Miss Joanna',
     last_name: 'Jones',

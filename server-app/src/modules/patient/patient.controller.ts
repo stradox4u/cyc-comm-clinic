@@ -9,6 +9,7 @@ import type {
   CreatePatientSchema,
   UpdatePatientSchema,
 } from './patient.validation.js'
+import awsS3 from '../../config/aws-s3.js'
 
 const getPatients = catchAsync(async (req, res) => {
   const { page, limit } = req.query
@@ -47,6 +48,9 @@ const getPatient = catchAsync(async (req, res) => {
   const patient = await patientService.findPatient({ id })
   if (!patient) throw new NotFoundError('Patient not found')
 
+  if (patient.image_url) {
+    patient.image_url = await awsS3.getPresignedDownloadUrl(patient.image_url)
+  }
   delete (patient as any).password
 
   res.status(200).json({
