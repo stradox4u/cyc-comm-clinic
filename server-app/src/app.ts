@@ -4,9 +4,9 @@ import helmet from 'helmet'
 import config from './config/config.js'
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js'
 import { appLogger } from './middlewares/logger.js'
-import { authRoute } from './modules/auth/index.js'
 import session from 'express-session'
 import connectPgSimple from 'connect-pg-simple'
+import { authRoute, googleAuthRoute } from './modules/auth/index.js'
 import { appointmentRoute } from './modules/appointment/index.js'
 import { appointmentProviderRoute } from './modules/appointment/index.js'
 import { vitalsRoute } from './modules/vitals/index.js'
@@ -32,13 +32,7 @@ app.use(
 
 app.use(helmet())
 
-app.use((req, res, next) => {
-  if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
-    express.json()(req, res, next)
-  } else {
-    next()
-  }
-})
+app.use(express.json())
 
 const PgSession = connectPgSimple(session)
 app.use(
@@ -49,6 +43,7 @@ app.use(
     cookie: {
       secure: config.NODE_ENV === 'production',
       httpOnly: true,
+      sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: config.SESSION_EXPIRATION_HOURS * 60 * 60 * 1000,
     },
     store: new PgSession({
@@ -59,6 +54,7 @@ app.use(
 )
 
 app.use('/api/auth', authRoute)
+app.use('/api/auth/google', googleAuthRoute)
 app.use('/api/insurance-providers', insuranceProviderRoute)
 app.use('/api/providers', providerRoute)
 app.use('/api/patients', patientRoute)

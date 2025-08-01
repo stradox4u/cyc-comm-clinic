@@ -7,6 +7,7 @@ interface User {
   last_name: string
   address: string
   phone: string
+  has_calendar_acccess?: boolean
   image_url: string
   allergies: string[]
   blood_group: string
