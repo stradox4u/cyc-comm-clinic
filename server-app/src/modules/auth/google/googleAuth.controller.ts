@@ -27,10 +27,10 @@ const handleCallback = async (req: Request, res: Response) => {
       { patient_id, tokens }
     )
 
-    res.redirect(`${config.ORIGIN_URL}/profile/calendar?auth=success`)
+    res.redirect(`${config.ORIGIN_URL}/settings?calendar-auth=success`)
   } catch (err) {
     logger.error(`Error authenticating google calendar, ${err}`)
-    res.redirect(`${config.ORIGIN_URL}/profile/calendar?auth=failed`)
+    res.redirect(`${config.ORIGIN_URL}/settings?calendar-auth=failed`)
   }
 }
 

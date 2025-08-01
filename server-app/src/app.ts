@@ -32,13 +32,7 @@ app.use(
 
 app.use(helmet())
 
-app.use((req, res, next) => {
-  if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
-    express.json()(req, res, next)
-  } else {
-    next()
-  }
-})
+app.use(express.json())
 
 const PgSession = connectPgSimple(session)
 app.use(
@@ -49,7 +43,7 @@ app.use(
     cookie: {
       secure: config.NODE_ENV === 'production',
       httpOnly: true,
-      sameSite: 'none',
+      sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: config.SESSION_EXPIRATION_HOURS * 60 * 60 * 1000,
     },
     store: new PgSession({

@@ -12,7 +12,7 @@ import { Calendar } from 'lucide-react'
 import axios from 'axios'
 import { toast } from 'sonner'
 
-const GoogleModal = () => {
+const GoogleModal = ({ open }: { open?: boolean }) => {
   const [searchParams] = useSearchParams()
 
   const isOnboarding = !!searchParams.get('onboarding')
@@ -20,7 +20,6 @@ const GoogleModal = () => {
   if (!isOnboarding) return
 
   const handleClick = async () => {
-    console.log('iran')
     const res = await axios.get('/api/auth/google', { withCredentials: true })
     if (!res || !res.data || !res.data.success) {
       toast.error('Error connecting to google')
@@ -30,7 +29,7 @@ const GoogleModal = () => {
   }
 
   return (
-    <Dialog defaultOpen={isOnboarding}>
+    <Dialog defaultOpen={isOnboarding} open={open}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="text-center">
