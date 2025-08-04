@@ -34,6 +34,7 @@ import {
   type Appointment,
 } from "../../lib/type";
 import { Skeleton } from "../../components/ui/skeleton";
+import { useAuthStore } from "../../store/auth-store";
 
 export default function Appointments() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -41,6 +42,7 @@ export default function Appointments() {
   const [loadingProviders, setLoadingProviders] = useState(false);
   const [appointments, setAppointments] = useState<Appointment[]>();
   const [toggle, setToggle] = useState(false);
+  const user = useAuthStore((state) => state.user);
   const [providers, setProviders] = useState<Provider[]>();
 
   // const appointments = [
@@ -147,9 +149,7 @@ export default function Appointments() {
   useEffect(() => {
     const fetchAppointments = async () => {
       setIsLoading(true);
-      const res = await fetch(
-        `/api/appointment/appointments/68f514cf-35f1-4e0e-921d-b78f552b468b`
-      );
+      const res = await fetch(`/api/appointment/appointments/${user?.id}`);
       const result = await res.json();
       if (!result?.success) {
         toast.error(result?.message || "Failed to fetch appointments");
@@ -158,7 +158,7 @@ export default function Appointments() {
       setIsLoading(false);
     };
     fetchAppointments();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     const fetchProviderss = async () => {
@@ -357,7 +357,7 @@ export default function Appointments() {
                           >
                             Email
                           </Button>
-                          {appointment.appointment_providers?.length === 0 &&
+                          {appointment.status === "SUBMITTED" &&
                             (toggle ? (
                               <Select
                                 onValueChange={(value) => {
