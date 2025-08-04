@@ -42,6 +42,7 @@ export default function Appointments() {
   const [appointments, setAppointments] = useState<Appointment[]>();
   const [toggle, setToggle] = useState(false);
   const [providers, setProviders] = useState<Provider[]>();
+  const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
 
   // const appointments = [
   //   {
@@ -132,22 +133,24 @@ export default function Appointments() {
   const sendReminder = (appointmentId: string, method: "sms" | "email") => {
     const appointment = appointments?.find((apt) => apt.id === appointmentId);
     toast(
-      `${method.toUpperCase()} reminder sent to ${appointment?.patient_id}`
+      `${method.toUpperCase()} reminder sent to ${appointment?.patient}`
     );
   };
 
-  const filteredAppointments = appointments?.filter(
-    (apt) =>
-      apt.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      apt.patient_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      apt.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredAppointments = appointments?.filter((apt) => {
+  const patientName = `${apt.patient.first_name} ${apt.patient.last_name}`.toLowerCase();
 
-  useEffect(() => {
-    const fetchAppointments = async () => {
+  return (
+    apt.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    patientName.includes(searchTerm.toLowerCase()) ||
+    apt.id.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+});
+
+  const fetchAppointments = async () => {
       setIsLoading(true);
       const res = await fetch(
-        `/api/appointment/appointments/68f514cf-35f1-4e0e-921d-b78f552b468b`
+        `/api/appointment/appointments`
       );
       const result = await res.json();
       if (!result?.success) {
@@ -156,6 +159,8 @@ export default function Appointments() {
       setAppointments(result?.data ?? []);
       setIsLoading(false);
     };
+
+  useEffect(() => {
     fetchAppointments();
   }, []);
 
@@ -172,6 +177,33 @@ export default function Appointments() {
     };
     fetchProviderss();
   }, [toggle]);
+
+  const handleAssignProvider = async (providerId: string, appointmentId: string) => {
+    try {
+      const res = await fetch(`/api/provider/appointment/assign-provider`, {
+        method: 'PATCH',
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          appointment_id: appointmentId,
+          provider_id: providerId,
+        }),
+      });
+      
+      const result = await res.json();
+      
+      if (!result.success) {
+        toast.error(result.message || "Failed to assign provider");
+      } else {
+        toast.success("Provider assigned successfully");
+        setToggle(false);
+        await fetchAppointments();
+      }
+    } catch (error) {
+      toast.error("Something went wrong");
+    }
+  }
 
   if (isLoading) {
     return (
@@ -278,7 +310,13 @@ export default function Appointments() {
                           <div className="flex items-center space-x-2 mb-1">
                             <User className="h-4 w-4 text-muted-foreground" />
                             <span className="font-medium">
-                              {appointment?.patient_id}
+                              {appointment?.patient? (
+                                <>
+                                {appointment.patient.first_name} {appointment.patient.last_name}
+                                </>
+                                ) : (
+                                  'No patient info'
+                                )}
                             </span>
                             <Badge
                               variant={
@@ -301,7 +339,10 @@ export default function Appointments() {
                                 <>
                                   with{" "}
                                   {appointment.appointment_providers
-                                    .map((ap) => `${ap}`)
+                                    .map((ap) => {
+                                      const p = ap.provider;
+                                      return `${p.role_title} ${p.first_name} ${p.last_name}`;
+                                    })
                                     .join(", ")}
                                 </>
                               )}
@@ -339,44 +380,57 @@ export default function Appointments() {
                         >
                           Email
                         </Button>
-                        {appointment.appointment_providers.length === 0 &&
-                          (toggle ? (
+                        {appointment.appointment_providers.length === 0 && (
+                          toggle ? (
+                          <div className="space-y-2">
                             <Select
-                              onValueChange={(value) => {
-                                console.log("Selected provider ID:", value);
-                                // Optionally set provider here
-                              }}
-                              disabled={loadingProviders}
+                            onValueChange={(value) => {
+                              setSelectedProviderId(value);
+                            }}
+                            disabled={loadingProviders}
                             >
                               <SelectTrigger className="w-full">
                                 <SelectValue
-                                  placeholder={
-                                    loadingProviders
-                                      ? "Loading..."
-                                      : "Select Provider"
-                                  }
+                                placeholder={
+                                  loadingProviders
+                                  ? "Loading..."
+                                  : "Select Provider"
+                                }
                                 />
-                              </SelectTrigger>
-
-                              <SelectContent>
-                                {loadingProviders ? (
-                                  <div className="space-y-2">
-                                    <Skeleton className="h-10 w-full" />
-                                  </div>
-                                ) : (
-                                  providers?.map((pro) => (
-                                    <SelectItem key={pro.id} value={pro.id}>
-                                      {pro.first_name} {pro.last_name}
-                                    </SelectItem>
-                                  ))
-                                )}
-                              </SelectContent>
+                                </SelectTrigger>
+                                
+                                <SelectContent>
+                                  {loadingProviders ? (
+                                    <div className="space-y-2">
+                                      <Skeleton className="h-10 w-full" />
+                                      </div>
+                                      ) : (
+                                      providers?.map((pro) => (
+                                        <SelectItem key={pro.id} value={pro.id}>
+                                          {pro.first_name} {pro.last_name}
+                                          </SelectItem>
+                                      ))
+                                  )}
+                                </SelectContent>
                             </Select>
+                            
+                            <Button
+                            size="sm"
+                            disabled={!selectedProviderId}
+                            onClick={() =>
+                              selectedProviderId &&
+                              handleAssignProvider(selectedProviderId, appointment.id)
+                            }
+                            >
+                              Assign Provider
+                              </Button>
+                              </div>
                           ) : (
-                            <Button onClick={() => setToggle(true)} size="sm">
-                              Schedule Provider
-                            </Button>
-                          ))}
+                          <Button onClick={() => setToggle(true)} size="sm">
+                            Schedule Provider
+                          </Button>
+                          )
+                        )}
                       </div>
                     </div>
                   ))}

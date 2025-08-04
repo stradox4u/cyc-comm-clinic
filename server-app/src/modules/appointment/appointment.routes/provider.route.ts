@@ -14,7 +14,7 @@ router.use(authenticate(UserType.PROVIDER))
 
 //Assign Provider
 router.patch(
-    '/assignprovider',
+    '/assign-provider',
     authorize([ProviderRoleTitle.ADMIN, ProviderRoleTitle.RECEPTIONIST]),
     validate(appointmentValidation.appointmentProvidersSchema),
     appointmentController.assignAppointmentProvider
