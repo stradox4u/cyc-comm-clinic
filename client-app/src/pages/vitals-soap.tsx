@@ -50,12 +50,12 @@ const vitalsHistory = [
     patientId: "P001",
     date: "2024-01-15",
     time: "10:30 AM",
-    temperature: "98.6°F",
+    temperature: "98.6°C",
     bloodPressure: "120/80",
     heartRate: "72",
     respiratoryRate: "16",
     oxygenSaturation: "98%",
-    weight: "145 lbs",
+    weight: "75 kg",
     height: "5'6\"",
     bmi: "23.4",
     recordedBy: "Nurse Johnson",
@@ -67,7 +67,7 @@ const vitalsHistory = [
     patientId: "P002",
     date: "2024-01-20",
     time: "2:15 PM",
-    temperature: "99.2°F",
+    temperature: "99.2°C",
     bloodPressure: "135/85",
     heartRate: "78",
     respiratoryRate: "18",
@@ -233,7 +233,7 @@ export default function VitalsSoapPage() {
                         className="flex items-center"
                       >
                         <Thermometer className="mr-1 h-4 w-4" />
-                        Temperature (°F)
+                        Temperature (°C)
                       </Label>
                       <Input
                         id="temperature"
@@ -319,7 +319,7 @@ export default function VitalsSoapPage() {
                     <div className="space-y-2">
                       <Label htmlFor="weight" className="flex items-center">
                         <Scale className="mr-1 h-4 w-4" />
-                        Weight (lbs)
+                        Weight (kg)
                       </Label>
                       <Input
                         id="weight"
@@ -391,7 +391,7 @@ export default function VitalsSoapPage() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center p-2 bg-muted rounded">
                     <span className="font-medium">Temperature:</span>
-                    <span>97.8°F - 99.1°F</span>
+                    <span>97.8°F - 99.1°C</span>
                   </div>
                   <div className="flex justify-between items-center p-2 bg-muted rounded">
                     <span className="font-medium">Blood Pressure:</span>

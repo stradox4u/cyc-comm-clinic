@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeClosed } from "lucide-react";
+import { Eye, EyeClosed, Loader2 } from "lucide-react";
 import { useAuthStore } from "../store/auth-store";
 import { loginSchema, type LoginData } from "../lib/schema";
 import { toast } from "sonner";
@@ -151,9 +151,17 @@ const SignInPage = () => {
 
         <Button
           type="submit"
-          className="font-semibold bg-black/90 text-white text-lg w-full"
+          className="font-semibold bg-black/90 text-white w-full"
+          disabled={isSubmitting}
         >
-          {isSubmitting ? "Signing In..." : "Sign In"}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="animate-spin size-6" />
+              Signing In...
+            </>
+          ) : (
+            "Sign In"
+          )}
         </Button>
 
         <div className="text-center text-sm font-semibold pt-2">
