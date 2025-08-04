@@ -34,6 +34,7 @@ import {
   type Appointment,
 } from "../../lib/type";
 import { Skeleton } from "../../components/ui/skeleton";
+import { useAuthStore } from "../../store/auth-store";
 
 export default function Appointments() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -41,6 +42,7 @@ export default function Appointments() {
   const [loadingProviders, setLoadingProviders] = useState(false);
   const [appointments, setAppointments] = useState<Appointment[]>();
   const [toggle, setToggle] = useState(false);
+  const user = useAuthStore((state) => state.user);
   const [providers, setProviders] = useState<Provider[]>();
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
 
@@ -162,7 +164,7 @@ export default function Appointments() {
 
   useEffect(() => {
     fetchAppointments();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     const fetchProviderss = async () => {
@@ -190,9 +192,9 @@ export default function Appointments() {
           provider_id: providerId,
         }),
       });
-      
+
       const result = await res.json();
-      
+
       if (!result.success) {
         toast.error(result.message || "Failed to assign provider");
       } else {
@@ -398,7 +400,7 @@ export default function Appointments() {
                                 }
                                 />
                                 </SelectTrigger>
-                                
+
                                 <SelectContent>
                                   {loadingProviders ? (
                                     <div className="space-y-2">
@@ -413,7 +415,7 @@ export default function Appointments() {
                                   )}
                                 </SelectContent>
                             </Select>
-                            
+
                             <Button
                             size="sm"
                             disabled={!selectedProviderId}
