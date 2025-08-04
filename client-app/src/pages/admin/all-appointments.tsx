@@ -44,6 +44,7 @@ export default function Appointments() {
   const [toggle, setToggle] = useState(false);
   const user = useAuthStore((state) => state.user);
   const [providers, setProviders] = useState<Provider[]>();
+  const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
 
   // const appointments = [
   //   {
@@ -134,22 +135,25 @@ export default function Appointments() {
   const sendReminder = (appointmentId: string, method: "sms" | "email") => {
     const appointment = appointments?.find((apt) => apt.id === appointmentId);
     toast(
-      `${method.toUpperCase()} reminder sent to ${appointment?.patient_id}`
+      `${method.toUpperCase()} reminder sent to ${appointment?.patient}`
     );
   };
 
-  const filteredAppointments =
-    appointments?.filter(
-      (apt) =>
-        apt.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        apt.patient_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        apt.id.toLowerCase().includes(searchTerm.toLowerCase())
-    ) || [];
+  const filteredAppointments = appointments?.filter((apt) => {
+  const patientName = `${apt.patient.first_name} ${apt.patient.last_name}`.toLowerCase();
 
-  useEffect(() => {
-    const fetchAppointments = async () => {
+  return (
+    apt.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    patientName.includes(searchTerm.toLowerCase()) ||
+    apt.id.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+});
+
+  const fetchAppointments = async () => {
       setIsLoading(true);
-      const res = await fetch(`/api/appointment/appointments/${user?.id}`);
+      const res = await fetch(
+        `/api/appointment/appointments`
+      );
       const result = await res.json();
       if (!result?.success) {
         toast.error(result?.message || "Failed to fetch appointments");
@@ -157,6 +161,8 @@ export default function Appointments() {
       setAppointments(result?.data ?? []);
       setIsLoading(false);
     };
+
+  useEffect(() => {
     fetchAppointments();
   }, [user]);
 
@@ -173,6 +179,33 @@ export default function Appointments() {
     };
     fetchProviderss();
   }, [toggle]);
+
+  const handleAssignProvider = async (providerId: string, appointmentId: string) => {
+    try {
+      const res = await fetch(`/api/provider/appointment/assign-provider`, {
+        method: 'PATCH',
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          appointment_id: appointmentId,
+          provider_id: providerId,
+        }),
+      });
+
+      const result = await res.json();
+
+      if (!result.success) {
+        toast.error(result.message || "Failed to assign provider");
+      } else {
+        toast.success("Provider assigned successfully");
+        setToggle(false);
+        await fetchAppointments();
+      }
+    } catch (error) {
+      toast.error("Something went wrong");
+    }
+  }
 
   if (isLoading) {
     return (
@@ -256,149 +289,153 @@ export default function Appointments() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {filteredAppointments?.length === 0 ? (
-                    <div className="text-center space-y-1">
-                      <h1 className="text-lg font-semibold text-muted-foreground">
-                        No Appointments Scheduled
-                      </h1>
-                      <p className="text-sm text-gray-500">
-                        There are currently no appointments scheduled for any
-                        patients. Please check back later or create a new
-                        appointment.
-                      </p>
-                    </div>
-                  ) : (
-                    filteredAppointments?.map((appointment) => (
-                      <div
-                        key={appointment.id}
-                        className="flex items-center justify-between p-4 border border-muted rounded-lg"
-                      >
-                        <div className="flex items-center space-x-4">
-                          <div className="text-center">
-                            <div className="text-lg font-semibold">
-                              {
-                                formatDateParts(
-                                  appointment.schedule.appointment_date
-                                ).day
-                              }
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              <Clock className="h-3 w-3 inline mr-1" />
-                              30 min
-                            </div>
+                  {filteredAppointments?.map((appointment) => (
+                    <div
+                      key={appointment.id}
+                      className="flex items-center justify-between p-4 border border-muted rounded-lg"
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className="text-center">
+                          <div className="text-lg font-semibold">
+                            {
+                              formatDateParts(
+                                appointment.schedule.appointment_date
+                              ).day
+                            }
                           </div>
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-1">
-                              <User className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium">
-                                {appointment?.patient_id}
-                              </span>
-                              <Badge
-                                variant={
-                                  appointment.status === "CONFIRMED"
-                                    ? "default"
-                                    : appointment.status === "SCHEDULED"
-                                    ? "secondary"
-                                    : "destructive"
-                                }
-                              >
-                                {appointment.status}
-                              </Badge>
-                            </div>
-                            <div className="text-sm text-muted-foreground space-y-1">
-                              <div>
-                                {appointment.purposes.includes("OTHERS")
-                                  ? appointment.other_purpose
-                                  : formatPurposeText(
-                                      appointment.purposes
-                                    )}{" "}
-                                {appointment.appointment_providers?.length >
-                                  0 && (
-                                  <>
-                                    with{" "}
-                                    {appointment.appointment_providers
-                                      .map((ap) => `${ap}`)
-                                      .join(", ")}
-                                  </>
-                                )}
-                              </div>
-                              <div className="flex items-center space-x-4">
-                                <span className="flex items-center">
-                                  <Phone className="h-3 w-3 mr-1" />
-                                  {appointment?.phone ?? "09034348483"}
-                                </span>
-                                <span className="flex items-center">
-                                  <Mail className="h-3 w-3 mr-1" />
-                                  {appointment?.email ?? "test@gmail.com"}
-                                </span>
-                              </div>
-                              {appointment.notes && (
-                                <div className="text-xs italic">
-                                  {appointment.notes}
-                                </div>
-                              )}
-                            </div>
+                          <div className="text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3 inline mr-1" />
+                            30 min
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => sendReminder(appointment.id, "sms")}
-                          >
-                            SMS
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              sendReminder(appointment.id, "email")
-                            }
-                          >
-                            Email
-                          </Button>
-                          {appointment.status === "SUBMITTED" &&
-                            (toggle ? (
-                              <Select
-                                onValueChange={(value) => {
-                                  console.log("Selected provider ID:", value);
-                                  // Optionally set provider here
-                                }}
-                                disabled={loadingProviders}
-                              >
-                                <SelectTrigger className="w-full">
-                                  <SelectValue
-                                    placeholder={
-                                      loadingProviders
-                                        ? "Loading..."
-                                        : "Select Provider"
-                                    }
-                                  />
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium">
+                              {appointment?.patient? (
+                                <>
+                                {appointment.patient.first_name} {appointment.patient.last_name}
+                                </>
+                                ) : (
+                                  'No patient info'
+                                )}
+                            </span>
+                            <Badge
+                              variant={
+                                appointment.status === "CONFIRMED"
+                                  ? "default"
+                                  : appointment.status === "SCHEDULED"
+                                  ? "secondary"
+                                  : "destructive"
+                              }
+                            >
+                              {appointment.status}
+                            </Badge>
+                          </div>
+                          <div className="text-sm text-muted-foreground space-y-1">
+                            <div>
+                              {appointment.purposes.includes("OTHERS")
+                                ? appointment.other_purpose
+                                : formatPurposeText(appointment.purposes)}{" "}
+                              {appointment.appointment_providers.length > 0 && (
+                                <>
+                                  with{" "}
+                                  {appointment.appointment_providers
+                                    .map((ap) => {
+                                      const p = ap.provider;
+                                      return `${p.role_title} ${p.first_name} ${p.last_name}`;
+                                    })
+                                    .join(", ")}
+                                </>
+                              )}
+                            </div>
+                            <div className="flex items-center space-x-4">
+                              <span className="flex items-center">
+                                <Phone className="h-3 w-3 mr-1" />
+                                {appointment?.phone ?? "09034348483"}
+                              </span>
+                              <span className="flex items-center">
+                                <Mail className="h-3 w-3 mr-1" />
+                                {appointment?.email ?? "test@gmail.com"}
+                              </span>
+                            </div>
+                            {appointment.notes && (
+                              <div className="text-xs italic">
+                                {appointment.notes}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => sendReminder(appointment.id, "sms")}
+                        >
+                          SMS
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => sendReminder(appointment.id, "email")}
+                        >
+                          Email
+                        </Button>
+                        {appointment.appointment_providers.length === 0 && (
+                          toggle ? (
+                          <div className="space-y-2">
+                            <Select
+                            onValueChange={(value) => {
+                              setSelectedProviderId(value);
+                            }}
+                            disabled={loadingProviders}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue
+                                placeholder={
+                                  loadingProviders
+                                  ? "Loading..."
+                                  : "Select Provider"
+                                }
+                                />
                                 </SelectTrigger>
 
                                 <SelectContent>
                                   {loadingProviders ? (
                                     <div className="space-y-2">
                                       <Skeleton className="h-10 w-full" />
-                                    </div>
-                                  ) : (
-                                    providers?.map((pro) => (
-                                      <SelectItem key={pro.id} value={pro.id}>
-                                        {pro.first_name} {pro.last_name}
-                                      </SelectItem>
-                                    ))
+                                      </div>
+                                      ) : (
+                                      providers?.map((pro) => (
+                                        <SelectItem key={pro.id} value={pro.id}>
+                                          {pro.first_name} {pro.last_name}
+                                          </SelectItem>
+                                      ))
                                   )}
                                 </SelectContent>
-                              </Select>
-                            ) : (
-                              <Button onClick={() => setToggle(true)} size="sm">
-                                Schedule Provider
+                            </Select>
+
+                            <Button
+                            size="sm"
+                            disabled={!selectedProviderId}
+                            onClick={() =>
+                              selectedProviderId &&
+                              handleAssignProvider(selectedProviderId, appointment.id)
+                            }
+                            >
+                              Assign Provider
                               </Button>
-                            ))}
-                        </div>
+                              </div>
+                          ) : (
+                          <Button onClick={() => setToggle(true)} size="sm">
+                            Schedule Provider
+                          </Button>
+                          )
+                        )}
                       </div>
-                    ))
-                  )}
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>

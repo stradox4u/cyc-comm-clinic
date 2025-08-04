@@ -16,15 +16,15 @@ router.post(
 )
 
 router.get(
-    '/:appointmentId',
+    '/appointments',
     authenticateMultipleUser([UserType.PATIENT, UserType.PROVIDER]),
-    appointmentController.getAppointment
+    appointmentController.getAppointments
 )
 
 router.get(
-    '/appointments/:userId',
+    '/:appointmentId',
     authenticateMultipleUser([UserType.PATIENT, UserType.PROVIDER]),
-    appointmentController.getAppointments
+    appointmentController.getAppointment
 )
 
 router.put(
