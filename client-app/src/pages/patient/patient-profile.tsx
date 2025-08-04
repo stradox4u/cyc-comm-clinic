@@ -1,23 +1,18 @@
-import { LogOut, Mail, MapPin, Phone, Settings, User } from 'lucide-react'
-import { Button } from '../../components/ui/button'
+import { Mail, MapPin, Phone, Settings, User } from "lucide-react";
+import { Button } from "../../components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../../components/ui/card'
-import { Badge } from '../../components/ui/badge'
-import { useCheckPatientProfile } from '../../hooks/fetch-patient'
-import { Skeleton } from '../../components/ui/skeleton'
-import { toast } from 'sonner'
-import { useNavigate } from 'react-router-dom'
-import { useAuthStore } from '../../store/auth-store'
-import ProfilePhoto from '../../components/profile-photo'
+} from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
+import { useCheckPatientProfile } from "../../hooks/fetch-patient";
+import { Skeleton } from "../../components/ui/skeleton";
+import ProfilePhoto from "../../components/profile-photo";
 
 const PatientProfile = () => {
-  const { user: patientData, loading } = useCheckPatientProfile()
-  const navigate = useNavigate()
-  const logout = useAuthStore((state) => state.logout)
+  const { user: patientData, loading } = useCheckPatientProfile();
 
   if (loading) {
     return (
@@ -65,25 +60,7 @@ const PatientProfile = () => {
           </Card>
         </div>
       </>
-    )
-  }
-
-  const handleLogout = async () => {
-    try {
-      const res = await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      })
-
-      if (!res.ok) throw new Error('Logout failed')
-
-      logout()
-      toast.success('Logged out successfully')
-      navigate('/auth/patient/login')
-    } catch (error) {
-      console.error('Logout error:', error)
-      toast.error('Failed to logout. Please try again.')
-    }
+    );
   }
 
   return (
@@ -96,9 +73,9 @@ const PatientProfile = () => {
         </Button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-">
+      <div className="grid gap-6">
         <Card>
-          <div className="md:flex md:justify-between">
+          <div className="md:flex md:justify-between px-12">
             <ProfilePhoto photo={patientData?.image_url} />
             <div>
               <CardHeader>
@@ -156,11 +133,11 @@ const PatientProfile = () => {
               <div className="text-sm text-muted-foreground">
                 {patientData?.date_of_birth
                   ? new Date(patientData.date_of_birth).toLocaleDateString(
-                      'en-GB',
+                      "en-GB",
                       {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric',
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
                       }
                     )
                   : null}
@@ -185,7 +162,7 @@ const PatientProfile = () => {
             <div>
               <div className="font-medium">Emergency Contact</div>
               <div className="text-sm text-muted-foreground">
-                {patientData?.emergency_contact_name}{' '}
+                {patientData?.emergency_contact_name}{" "}
               </div>
               <div className="text-sm text-muted-foreground">
                 {patientData?.emergency_contact_phone}
@@ -193,19 +170,8 @@ const PatientProfile = () => {
             </div>
           </CardContent>
         </Card>
-        <div className="flex justify-end">
-          <Button
-            className="w-fit 2xl:w-1/5"
-            size={'sm'}
-            variant={'destructive'}
-            onClick={handleLogout}
-          >
-            <LogOut />
-            Logout
-          </Button>
-        </div>
       </div>
     </>
-  )
-}
-export default PatientProfile
+  );
+};
+export default PatientProfile;

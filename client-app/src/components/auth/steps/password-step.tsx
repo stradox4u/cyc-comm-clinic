@@ -171,18 +171,18 @@ const PasswordStep = ({ onPrev, isSubmitting }: PasswordStepProps) => {
         </div>
       </div>
 
-      <div className="flex justify-between pt-8">
+      <div className="flex justify-between pt-8 w-full gap-12">
         <Button
           type="button"
           onClick={onPrev}
-          className="bg-gray-600 font-semibold"
+          className="bg-gray-600 font-semibold w-full"
           disabled={isSubmitting}
         >
           Previous
         </Button>
         <Button
           type="submit"
-          className="bg-[#6A5CA3] font-semibold hover:bg-[#6A5CA3]/60"
+          className="bg-[#6A5CA3] font-semibold hover:bg-[#6A5CA3]/60 w-full"
           disabled={isSubmitting}
         >
           {isSubmitting ? (

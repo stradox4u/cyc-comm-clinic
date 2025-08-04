@@ -76,13 +76,13 @@ const SignInPage = () => {
   };
 
   return (
-    <AuthLayout>
+    <AuthLayout size>
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="flex flex-col space-y-2 text-black/80"
       >
         <div className="text-start">
-          <h2 className="capitalize text-xl font-semibold tracking-tighter text-center">
+          <h2 className="capitalize text-lg font-semibold tracking-tight">
             {resolvedUserType} Portal Login
           </h2>
           <p className="text-sm">
@@ -149,17 +149,14 @@ const SignInPage = () => {
           </Link>
         </div>
 
-        <div className="flex items-center justify-center">
-          <Button
-            size="lg"
-            type="submit"
-            className="font-semibold bg-black/90 text-white text-lg w-1/2 my-4"
-          >
-            {isSubmitting ? "Signing In..." : "Sign In"}
-          </Button>
-        </div>
+        <Button
+          type="submit"
+          className="font-semibold bg-black/90 text-white text-lg w-full"
+        >
+          {isSubmitting ? "Signing In..." : "Sign In"}
+        </Button>
 
-        <div className="text-center text-sm font-semibold">
+        <div className="text-center text-sm font-semibold pt-2">
           <p>
             Don&apos;t have an account yet?{" "}
             <Link to="/signup" className="text-purple-400 hover:underline">

@@ -181,7 +181,7 @@ export default function Appointments() {
                   {filteredAppointments.map((appointment) => (
                     <div
                       key={appointment.id}
-                      className="flex items-center justify-between p-4 border rounded-lg"
+                      className="flex items-center justify-between p-4 border border-muted rounded-lg"
                     >
                       <div className="flex items-center space-x-4">
                         <div className="text-center">
