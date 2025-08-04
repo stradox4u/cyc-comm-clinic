@@ -1,6 +1,19 @@
+export type Patient = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  insurance_provider_id?: string;
+};
+
+export type AppointmentProvider = {
+  appointment_id?: string;
+  provider_id?: string;
+  provider: Provider;
+};
+
 export type Appointment = {
   id: string;
-  patient_id: string;
+  patient: Patient;
   purposes: string[];
   other_purpose: string;
   status: "SUBMITTED" | "CONFIRMED" | "CANCELLED" | "COMPLETED" | "SCHEDULED";
@@ -15,7 +28,7 @@ export type Appointment = {
   vitals_id: string | null;
   created_at: string;
   updated_at: string;
-  appointment_providers: string[];
+  appointment_providers: AppointmentProvider[];
   phone?: string | null;
   email?: string | null;
   notes?: string | null;

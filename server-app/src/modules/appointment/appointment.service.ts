@@ -65,7 +65,27 @@ async function searchAppointments(
     filter: AppointmentWhereInput
 ): Promise<Appointment[]> {
     return await prisma.appointment.findMany({
-        where: filter,
+      where: filter,
+      include: {
+        appointment_providers: {
+          include: {
+            provider: {
+              select: {
+                role_title: true,
+                first_name: true,
+                last_name: true,
+              }
+            }
+          }
+        },
+        patient: {
+          select: {
+            first_name: true,
+            last_name: true,
+            insurance_provider_id: true,
+          }
+        }
+      }
     })
 }
 
@@ -80,8 +100,25 @@ async function findAppointmentsByPatient(
       ...(filter || {})
     },
     include: {
-      appointment_providers: true,
-    },
+        appointment_providers: {
+          include: {
+            provider: {
+              select: {
+                role_title: true,
+                first_name: true,
+                last_name: true,
+              }
+            }
+          }
+        },
+        patient: {
+          select: {
+            first_name: true,
+            last_name: true,
+            insurance_provider_id: true,
+          }
+        }
+      }
   });
 }
 
@@ -98,8 +135,25 @@ async function findAppointmentsByProvider(
     include: {
       appointment: {
         include: {
-          appointment_providers: true,
-        },
+          appointment_providers: {
+            include: {
+              provider: {
+                select: {
+                  role_title: true,
+                  first_name: true,
+                  last_name: true,
+                }
+              }
+            }
+          },
+          patient: {
+          select: {
+            first_name: true,
+            last_name: true,
+            insurance_provider_id: true,
+          }
+        }
+        }
       },
     },
   });
@@ -335,6 +389,12 @@ async function assignProvider(
 ): Promise<Appointment | null> {
   await prisma.appointmentProviders.create({ data });
   const appointmentId = data.appointment?.connect?.id;
+  if (data.appointment?.connect?.id) {
+    await prisma.appointment.update({
+      where: { id: data.appointment.connect.id },
+      data: { status: "SCHEDULED" },
+    });
+  }
   return appointmentId
     ? prisma.appointment.findUnique({
         where: { id: appointmentId },
