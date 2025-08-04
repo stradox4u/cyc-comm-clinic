@@ -53,7 +53,20 @@ router.post(
 router.get(
   '/patient/profile',
   authenticate(UserType.PATIENT),
-  authController.patientProfile
+  authController.patientGetProfile
+)
+
+router.put(
+  '/patient/profile',
+  authenticate(UserType.PATIENT),
+  validate(authValidation.patientUpdateProfileSchema),
+  authController.patientUpdateProfile
+)
+
+router.get(
+  '/patient/generate-url',
+  authenticate(UserType.PATIENT),
+  authController.patientGenerateUploadUrl
 )
 
 router.post(

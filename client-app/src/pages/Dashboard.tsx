@@ -2,7 +2,7 @@ import { useAuthStore } from "../store/auth-store";
 import AdminDashboard from "./admin/admin-dashboard";
 import ReceptionistDashboard from "./admin/receptionist-dashboard";
 import PatientDashboard from "./patient/patient-dashboard";
-import ProviderDashboard from "./provider-dashboard";
+import ProviderDashboard from "./provider/provider-dashboard";
 
 const Dashboard = () => {
   const user = useAuthStore((state) => state.user);

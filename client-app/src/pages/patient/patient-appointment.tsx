@@ -1,10 +1,17 @@
-import { Search, Plus, ArrowLeft, CheckCircle, Eye } from "lucide-react";
-import { useState } from "react";
+import {
+  Search,
+  ArrowLeft,
+  CheckCircle,
+  Eye,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "../../components/ui/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  appointmentPurposes,
+  AppointmentPurpose,
   appointmentSchema,
   getWeekdays,
   timeSlots,
@@ -12,7 +19,6 @@ import {
 } from "../../lib/schema";
 import { useNavigate } from "react-router-dom";
 import { Label } from "../../components/ui/label";
-import { Input } from "../../components/ui/input";
 import {
   Card,
   CardContent,
@@ -33,27 +39,17 @@ import {
   TabsList,
   TabsTrigger,
 } from "../../components/ui/tabs";
-
-const upcomingAppointments = [
-  {
-    id: 1,
-    date: "2024-01-25",
-    time: "10:00 AM",
-    provider: "Dr. Smith",
-    type: "Annual Check-up",
-    location: "Main Clinic",
-    status: "confirmed",
-  },
-  {
-    id: 2,
-    date: "2024-02-10",
-    time: "2:30 PM",
-    provider: "Dr. Johnson",
-    type: "Follow-up",
-    location: "Cardiology Dept",
-    status: "pending",
-  },
-];
+import { toast } from "sonner";
+import { useAuthStore } from "../../store/auth-store";
+import { Input } from "../../components/ui/input";
+import { Skeleton } from "../../components/ui/skeleton";
+import { Alert } from "../../components/ui/alert";
+import {
+  formatDateParts,
+  formatPurposeText,
+  formatTimeToAmPm,
+  type Appointment,
+} from "../../lib/type";
 
 const recentVisits = [
   {
@@ -76,10 +72,14 @@ const recentVisits = [
 
 export default function PatientAppointments() {
   const [tab, setTab] = useState("all");
+  const user = useAuthStore((state) => state.user);
   const weekdays = getWeekdays();
+  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [appointments, setAppointments] = useState<Appointment[]>();
 
   const {
-    // register,
+    register,
     handleSubmit,
     setValue,
     watch,
@@ -88,19 +88,104 @@ export default function PatientAppointments() {
   } = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
-      date: "",
-      time: "",
-      purpose: "",
+      patient_id: {
+        id: user?.id,
+        insurance_provider_id: user?.insurance_provider_id,
+        name: `${user?.first_name} ${user?.last_name}`,
+      },
+      schedule: {
+        appointment_date: "",
+        appointment_time: "",
+      },
+      purposes: undefined as keyof typeof AppointmentPurpose | undefined,
+      has_insurance: true,
     },
   });
 
+  const selectedPurpose = watch("purposes");
   const navigate = useNavigate();
 
-  const onSubmit = (data: AppointmentFormData) => {
-    console.log("Form Data:", data);
-    setTab("all");
-    reset(); // Optional: reset form after submit
+  const onSubmit = async (data: AppointmentFormData) => {
+    setIsSubmitting(true);
+    const endpoint = `/api/appointment/create`;
+    const payload = {
+      ...data,
+      purposes: [watch("purposes")], // <-- array, not a string
+    };
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create appointment");
+      }
+      const result = await response.json();
+      toast.success(result?.message);
+      reset(); // Optional: reset form after submit
+    } catch (error) {
+      console.error("Sign in error:", error);
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Invalid email or password. Please try again.";
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      setLoading(true);
+      const res = await fetch(`/api/appointment/appointments/${user?.id}`);
+      const result = await res.json();
+      if (!result?.success) {
+        toast.error(result?.message || "Failed to fetch appointments");
+      }
+      setAppointments(result?.data ?? []);
+      setLoading(false);
+    };
+    fetchAppointments();
+  }, [user?.id, tab]);
+
+  const renderSkeleton = () => (
+    <div className="grid gap-6">
+      {[1, 2].map((_, i) => (
+        <Card key={i}>
+          <CardHeader>
+            <Skeleton className="h-6 w-1/3" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[1, 2].map((_, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between p-4 border border-muted rounded-lg"
+                >
+                  <div className="flex items-center space-x-4">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Skeleton className="h-8 w-20 rounded-md" />
+                    <Skeleton className="h-8 w-20 rounded-md" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
 
   const renderTable = () => (
     <div className="grid gap-6">
@@ -110,7 +195,7 @@ export default function PatientAppointments() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {upcomingAppointments.map((appointment) => (
+            {appointments?.map((appointment) => (
               <div
                 key={appointment.id}
                 className="flex items-center justify-between p-4 border border-muted rounded-lg"
@@ -118,28 +203,45 @@ export default function PatientAppointments() {
                 <div className="flex items-center space-x-4">
                   <div className="text-center">
                     <div className="text-lg font-bold">
-                      {new Date(appointment.date).getDate()}
+                      {
+                        formatDateParts(appointment.schedule.appointment_date)
+                          .day
+                      }
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {new Date(appointment.date).toLocaleDateString("en-US", {
-                        month: "short",
-                      })}
+                      {
+                        formatDateParts(appointment.schedule.appointment_date)
+                          .month
+                      }
                     </div>
                   </div>
                   <div>
-                    <div className="font-medium">{appointment.type}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {appointment.time} with {appointment.provider}
+                    <div className="font-medium">
+                      {appointment.purposes.includes("OTHERS")
+                        ? appointment.other_purpose
+                        : formatPurposeText(appointment.purposes)}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {appointment.location}
+                      {formatTimeToAmPm(appointment.schedule.appointment_time)}
+                      {appointment.appointment_providers.length > 0 && (
+                        <>
+                          with{" "}
+                          {appointment.appointment_providers
+                            .map((ap) => `${ap}`)
+                            .join(", ")}
+                        </>
+                      )}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Main Clinic
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Badge
+                    className="lowercase"
                     variant={
-                      appointment.status === "confirmed"
+                      appointment.status === "CONFIRMED"
                         ? "default"
                         : "secondary"
                     }
@@ -211,19 +313,14 @@ export default function PatientAppointments() {
 
       <TabsList className="mb-4 border-background">
         <TabsTrigger value="all">All</TabsTrigger>
-        <TabsTrigger value="completed">Completed</TabsTrigger>
         <TabsTrigger value="form" className="ml-auto">
           Schedule Appointment
         </TabsTrigger>
       </TabsList>
 
       {/* Tab content below */}
-      <TabsContent value="all">{renderTable()}</TabsContent>
-
-      <TabsContent value="completed">
-        <div className="text-gray-600 italic text-center">
-          No completed appointments yet.
-        </div>
+      <TabsContent value="all">
+        {loading ? renderSkeleton() : renderTable()}
       </TabsContent>
 
       <TabsContent value="form">
@@ -240,22 +337,26 @@ export default function PatientAppointments() {
             <div>
               <Label className="block mb-1 ">Date</Label>
               <Select
-                onValueChange={(value) => setValue("date", value)}
-                defaultValue={watch("date")}
+                onValueChange={(value) =>
+                  setValue("schedule.appointment_date", value)
+                }
+                defaultValue={watch("schedule.appointment_date")}
               >
                 <SelectTrigger className="w-full rounded-md p-2">
                   <SelectValue placeholder="Select Weekday" />
                 </SelectTrigger>
                 <SelectContent>
-                  {weekdays.map((day) => (
-                    <SelectItem key={day} value={day}>
-                      {day}
+                  {weekdays.map(({ label, value }) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {errors.date && (
-                <p className="text-red-500 text-xs">{errors.date.message}</p>
+              {errors.schedule?.appointment_date && (
+                <p className="text-red-500 text-xs">
+                  {errors.schedule?.appointment_date.message}
+                </p>
               )}
             </div>
 
@@ -263,22 +364,26 @@ export default function PatientAppointments() {
             <div>
               <Label className="block mb-1 ">Time</Label>
               <Select
-                onValueChange={(value) => setValue("time", value)}
-                defaultValue={watch("time")}
+                onValueChange={(value) =>
+                  setValue("schedule.appointment_time", value)
+                }
+                defaultValue={watch("schedule.appointment_time")}
               >
                 <SelectTrigger className="w-full rounded-md p-2">
                   <SelectValue placeholder="Select Time" />
                 </SelectTrigger>
                 <SelectContent>
-                  {timeSlots.map((time) => (
-                    <SelectItem key={time} value={time}>
-                      {time}
+                  {timeSlots().map((slot) => (
+                    <SelectItem key={slot.id} value={slot.id}>
+                      {slot.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {errors.time && (
-                <p className="text-red-500 text-xs">{errors.time.message}</p>
+              {errors.schedule?.appointment_time && (
+                <p className="text-red-500 text-xs">
+                  {errors.schedule?.appointment_time.message}
+                </p>
               )}
             </div>
 
@@ -286,35 +391,76 @@ export default function PatientAppointments() {
             <div>
               <Label className="block mb-1 ">Purpose</Label>
               <Select
-                onValueChange={(value) => setValue("purpose", value)}
-                defaultValue={watch("purpose")}
+                onValueChange={(value) =>
+                  setValue("purposes", value as keyof typeof AppointmentPurpose)
+                } // value is key
+                defaultValue={watch("purposes")?.[0]}
               >
                 <SelectTrigger className="w-full rounded-md p-2">
                   <SelectValue placeholder="Select purpose" />
                 </SelectTrigger>
                 <SelectContent>
-                  {appointmentPurposes.map((purpose) => (
-                    <SelectItem key={purpose} value={purpose}>
-                      {purpose}
+                  {Object.entries(AppointmentPurpose).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {errors.purpose && (
-                <p className="text-red-500 text-xs">{errors.purpose.message}</p>
+
+              {errors.purposes && (
+                <p className="text-red-500 text-xs">
+                  {errors.purposes.message}
+                </p>
+              )}
+
+              {selectedPurpose === "OTHERS" && (
+                <div className="mt-4">
+                  <Label htmlFor="other_purpose" className="block mb-1">
+                    Please specify
+                  </Label>
+                  <Input
+                    id="other_purpose"
+                    {...register("other_purpose", { required: true })}
+                    placeholder="Specify other purpose"
+                  />
+                  {errors.other_purpose && (
+                    <p className="text-red-600 text-sm mt-1">
+                      This field is required
+                    </p>
+                  )}
+                </div>
               )}
             </div>
 
             <div className="flex gap-2 mt-4 justify-center">
               <Button
                 type="submit"
-                className="dark:bg-[#2a2348] text-white py-2 rounded-md w-1/2"
+                className="dark:bg-[#2a2348] text-white py-2 rounded-md w-1/2 disabled:bg-[#2a2348]/30"
+                disabled={isSubmitting}
               >
-                Save
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="size-6 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save"
+                )}
               </Button>
             </div>
           </form>
         </Card>
+        <Alert
+          variant="destructive"
+          className="text-sm text-yellow-800 bg-yellow-100 border-l-4 border-yellow-400 p-3 rounded-md flex gap-2 items-center max-w-lg w-full mx-auto mt-8"
+        >
+          <AlertCircle className="size-4" />
+          <p>
+            Appointments are subject to review by a healthcare administrator.
+            You will be notified once it is confirmed.
+          </p>
+        </Alert>
       </TabsContent>
     </Tabs>
   );

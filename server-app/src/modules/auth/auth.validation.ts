@@ -64,6 +64,33 @@ const changePasswordSchema = z.object({
 
 export type ChangePasswordSchema = z.infer<typeof changePasswordSchema>
 
+const patientUpdateProfileSchema = z
+  .object({
+    first_name: z.string('First name is invalid').min(2),
+    last_name: z.string('Last name is invalid').min(2),
+    phone: z.string('Phone number is invalid').min(11).max(11),
+    date_of_birth: z.iso.datetime('Date of birth is invalid'),
+    image_url: z.string('Invalid url'),
+    address: z.string().min(2, 'Address is invalid'),
+    gender: z.enum(PatientGender, 'Gender is invalid'),
+    emergency_contact_name: z
+      .string('Emergency contact name is invalid')
+      .min(2),
+    emergency_contact_phone: z
+      .string('Emergency contact number is invalid')
+      .min(11)
+      .max(11),
+    blood_group: z.string('Blood group is invalid'),
+    allergies: z.array(z.string('Allergies is invalid')),
+    insurance_coverage: z.string().nullable(),
+    insurance_provider_id: z.uuid().nullable(),
+  })
+  .partial()
+
+export type PatientUpdateProfileSchema = z.infer<
+  typeof patientUpdateProfileSchema
+>
+
 export default {
   patientRegisterSchema,
   loginSchema,
@@ -72,4 +99,5 @@ export default {
   forgotPasswordSchema,
   resetPasswordSchema,
   changePasswordSchema,
+  patientUpdateProfileSchema,
 }

@@ -1,120 +1,120 @@
-import { useState } from "react";
-import { useForm, FormProvider } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { fullSchema, type FormData } from "../../../lib/schema";
-import AuthLayout from "../../../layout/AuthLayout";
-import ProgressIndicator from "../progress-indicator";
-import WelcomeStep from "./welcome-step";
-import PersonalDetailsStep from "./personal-details";
-import PasswordStep from "./password-step";
-import RegistrationCompleteStep from "./registration-complete";
-import { useAuthStore } from "../../../store/auth-store";
+import { useState } from 'react'
+import { useForm, FormProvider } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { fullSchema, type FormData } from '../../../lib/schema'
+import AuthLayout from '../../../layout/AuthLayout'
+import ProgressIndicator from '../progress-indicator'
+import WelcomeStep from './welcome-step'
+import PersonalDetailsStep from './personal-details'
+import PasswordStep from './password-step'
+import RegistrationCompleteStep from './registration-complete'
 
 const getProgressPercentage = (step: number) => {
   switch (step) {
     case 2:
-      return 33;
+      return 33
     case 3:
-      return 66;
+      return 66
     case 4:
-      return 100;
+      return 100
     default:
-      return 0;
+      return 0
   }
-};
+}
 
 interface SignUpFormProps {
-  onSignupComplete?: (data: FormData) => void;
+  onSignupComplete?: (data: FormData) => void
 }
 
 const SignUpForm = ({ onSignupComplete }: SignUpFormProps) => {
-  const [step, setStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const setUser = useAuthStore((state) => state.setUser);
+  const [step, setStep] = useState(1)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const methods = useForm<FormData>({
     resolver: zodResolver(fullSchema),
-    mode: "onTouched",
-  });
+    mode: 'onTouched',
+  })
 
-  const { handleSubmit, trigger } = methods;
+  const { handleSubmit, trigger } = methods
 
   const nextStep = async () => {
-    let valid = true;
+    let valid = true
 
     if (step === 2) {
       valid = await trigger([
-        "first_name",
-        "last_name",
-        "email",
-        "phone",
-        "date_of_birth",
-        "gender",
-        "address",
-        "occupation",
-        "emergency_contact_name",
-        "emergency_contact_phone",
-        "blood_group",
-        "allergies",
-        "insurance_coverage",
-        "insurance_provider_id",
-      ]);
+        'first_name',
+        'last_name',
+        'email',
+        'phone',
+        'date_of_birth',
+        'gender',
+        'address',
+        'occupation',
+        'emergency_contact_name',
+        'emergency_contact_phone',
+        'blood_group',
+        'allergies',
+        'insurance_coverage',
+        'insurance_provider_id',
+      ])
     } else if (step === 3) {
-      valid = await trigger(["password", "confirmPassword"]);
+      valid = await trigger(['password', 'confirmPassword'])
     }
 
-    if (valid) setStep((prev) => prev + 1);
-  };
+    if (valid) setStep((prev) => prev + 1)
+  }
 
-  const prevStep = () => setStep((prev) => prev - 1);
+  const prevStep = () => setStep((prev) => prev - 1)
 
   const onSubmit = async (data: FormData) => {
-    setIsSubmitting(true);
+    setIsSubmitting(true)
 
     try {
       // Destructure and exclude confirmPassword
-      const { confirmPassword: _, ...payload } = data;
+      const { confirmPassword: _, ...payload } = data
 
       // Normalize allergies to always be an array
       payload.allergies = Array.isArray(payload.allergies)
         ? payload.allergies
-        : [payload.allergies];
+        : [payload.allergies]
 
       // Format date_of_birth to ISO string
-      payload.date_of_birth = new Date(payload.date_of_birth).toISOString();
+      payload.date_of_birth = new Date(payload.date_of_birth).toISOString()
 
-      console.log("Submitting registration data:", payload);
+      console.log('Submitting registration data:', payload)
 
-      const response = await fetch("/api/auth/patient/register", {
-        method: "POST",
+      const response = await fetch('/api/auth/patient/register', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
-      });
+      })
 
       if (!response.ok) {
-        const errorText = await response.text();
+        const errorText = await response.text()
         throw new Error(
           `Registration failed: ${response.status} - ${errorText}`
-        );
+        )
       }
 
+      const result = await response.json()
+      if (!result.success) {
+        throw new Error(`Registration failed: ${result.message}`)
+      }
       // Notify parent
-      onSignupComplete?.(data);
-      const result = await response.json();
-      setUser(result?.data);
-      setStep(4);
+      onSignupComplete?.(data)
+      setStep(4)
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : "An unexpected error occurred during signup.";
-      console.error("Signup error:", message);
+          : 'An unexpected error occurred during signup.'
+      console.error('Signup error:', message)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <AuthLayout>
@@ -150,7 +150,7 @@ const SignUpForm = ({ onSignupComplete }: SignUpFormProps) => {
         </form>
       </FormProvider>
     </AuthLayout>
-  );
-};
+  )
+}
 
-export default SignUpForm;
+export default SignUpForm
