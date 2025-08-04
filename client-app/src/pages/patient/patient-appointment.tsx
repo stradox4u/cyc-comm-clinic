@@ -14,7 +14,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AppointmentPurpose,
   appointmentSchema,
-  getWeekdays,
   timeSlots,
   type AppointmentFormData,
 } from "../../lib/schema";
@@ -53,6 +52,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "../../components/ui/popover";
+import { formatDateParts, formatPurposeText, formatTimeToAmPm, type Appointment } from "../../lib/type";
 
 const recentVisits = [
   {
