@@ -1,6 +1,5 @@
 import {
   Search,
-  Plus,
   ArrowLeft,
   CheckCircle,
   Eye,
@@ -74,26 +73,6 @@ const recentVisits = [
   },
 ];
 
-export type Appointment = {
-  id: string;
-  patient_id: string;
-  purposes: string[]; // enum-based array
-  other_purpose: string;
-  status: "SUBMITTED" | "CONFIRMED" | "CANCELLED" | "COMPLETED"; // extend as needed
-  has_insurance: boolean;
-  is_follow_up_required: boolean;
-  follow_up_id: string | null;
-  schedule: {
-    schedule_count: number;
-    appointment_date: string;
-    appointment_time: string;
-  };
-  vitals_id: string | null;
-  created_at: string;
-  updated_at: string;
-  appointment_providers: string[]; // define separately
-};
-
 export default function PatientAppointments() {
   const [tab, setTab] = useState("all");
   const user = useAuthStore((state) => state.user);
@@ -149,8 +128,6 @@ export default function PatientAppointments() {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to create appointment");
       }
-
-      console.log("Submitting", data);
       const result = await response.json();
       toast.success(result?.message);
       reset(); // Optional: reset form after submit
@@ -179,27 +156,6 @@ export default function PatientAppointments() {
     };
     fetchAppointments();
   }, [user?.id, tab]);
-
-  const formatPurposeText = (purposes: string[]): string => {
-    return purposes
-      .map((purpose) =>
-        purpose
-          .toLowerCase()
-          .split("_")
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(" ")
-      )
-      .join(", ");
-  };
-
-  function formatTimeToAmPm(time24: string): string {
-    const [hourStr, minute] = time24.split(":");
-    let hour = parseInt(hourStr, 10);
-    const ampm = hour >= 12 ? "PM" : "AM";
-
-    hour = hour % 12 || 12; // convert 0 -> 12 and 13..23 -> 1..11
-    return `${hour}:${minute} ${ampm}`;
-  }
 
   const renderSkeleton = () => (
     <div className="grid gap-6">
@@ -357,15 +313,6 @@ export default function PatientAppointments() {
       </Card>
     </div>
   );
-
-  const formatDateParts = (isoDate: string) => {
-    const date = new Date(isoDate);
-
-    const day = date.getDate(); // e.g., 1
-    const month = date.toLocaleString("en-US", { month: "short" }); // e.g., "Aug"
-
-    return { day, month };
-  };
 
   return (
     <Tabs value={tab} onValueChange={setTab} className="w-full">

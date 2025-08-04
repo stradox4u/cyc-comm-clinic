@@ -1,8 +1,5 @@
-"use client";
-
 import type React from "react";
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -30,67 +27,79 @@ import {
 import { Clock, Phone, Mail, User, Search } from "lucide-react";
 import { Textarea } from "../../components/ui/textarea";
 import { toast } from "sonner";
+import {
+  formatDateParts,
+  formatPurposeText,
+  type Provider,
+  type Appointment,
+} from "../../lib/type";
+import { Skeleton } from "../../components/ui/skeleton";
 
 export default function Appointments() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingProviders, setLoadingProviders] = useState(false);
+  const [appointments, setAppointments] = useState<Appointment[]>();
+  const [toggle, setToggle] = useState(false);
+  const [providers, setProviders] = useState<Provider[]>();
 
-  const appointments = [
-    {
-      id: 1,
-      time: "9:00 AM",
-      patient: "Sarah Johnson",
-      phone: "(555) 123-4567",
-      email: "sarah.j@email.com",
-      type: "Annual Check-up",
-      provider: "Dr. Smith",
-      status: "confirmed",
-      notes: "First visit, new patient",
-    },
-    {
-      id: 2,
-      time: "9:30 AM",
-      patient: "Michael Chen",
-      phone: "(555) 234-5678",
-      email: "m.chen@email.com",
-      type: "Follow-up",
-      provider: "Dr. Davis",
-      status: "confirmed",
-      notes: "Blood pressure follow-up",
-    },
-    {
-      id: 3,
-      time: "10:00 AM",
-      patient: "Emma Davis",
-      phone: "(555) 345-6789",
-      email: "emma.d@email.com",
-      type: "Vaccination",
-      provider: "Nurse Johnson",
-      status: "pending",
-      notes: "COVID-19 booster",
-    },
-    {
-      id: 4,
-      time: "10:30 AM",
-      patient: "Robert Wilson",
-      phone: "(555) 456-7890",
-      email: "r.wilson@email.com",
-      type: "Consultation",
-      provider: "Dr. Smith",
-      status: "confirmed",
-      notes: "Diabetes consultation",
-    },
-    {
-      id: 5,
-      time: "11:00 AM",
-      patient: "Lisa Anderson",
-      phone: "(555) 567-8901",
-      email: "lisa.a@email.com",
-      type: "Screening",
-      provider: "Dr. Davis",
-      status: "no-show",
-      notes: "Mammography screening",
-    },
-  ];
+  // const appointments = [
+  //   {
+  //     id: 1,
+  //     time: "9:00 AM",
+  //     patient: "Sarah Johnson",
+  //     phone: "(555) 123-4567",
+  //     email: "sarah.j@email.com",
+  //     type: "Annual Check-up",
+  //     provider: "Dr. Smith",
+  //     status: "confirmed",
+  //     notes: "First visit, new patient",
+  //   },
+  //   {
+  //     id: 2,
+  //     time: "9:30 AM",
+  //     patient: "Michael Chen",
+  //     phone: "(555) 234-5678",
+  //     email: "m.chen@email.com",
+  //     type: "Follow-up",
+  //     provider: "Dr. Davis",
+  //     status: "confirmed",
+  //     notes: "Blood pressure follow-up",
+  //   },
+  //   {
+  //     id: 3,
+  //     time: "10:00 AM",
+  //     patient: "Emma Davis",
+  //     phone: "(555) 345-6789",
+  //     email: "emma.d@email.com",
+  //     type: "Vaccination",
+  //     provider: "Nurse Johnson",
+  //     status: "pending",
+  //     notes: "COVID-19 booster",
+  //   },
+  //   {
+  //     id: 4,
+  //     time: "10:30 AM",
+  //     patient: "Robert Wilson",
+  //     phone: "(555) 456-7890",
+  //     email: "r.wilson@email.com",
+  //     type: "Consultation",
+  //     provider: "Dr. Smith",
+  //     status: "confirmed",
+  //     notes: "Diabetes consultation",
+  //   },
+  //   {
+  //     id: 5,
+  //     time: "11:00 AM",
+  //     patient: "Lisa Anderson",
+  //     phone: "(555) 567-8901",
+  //     email: "lisa.a@email.com",
+  //     type: "Screening",
+  //     provider: "Dr. Davis",
+  //     status: "no-show",
+  //     notes: "Mammography screening",
+  //   },
+  // ];
 
   const [newAppointment, setNewAppointment] = useState({
     patientName: "",
@@ -120,17 +129,85 @@ export default function Appointments() {
     });
   };
 
-  const sendReminder = (appointmentId: number, method: "sms" | "email") => {
-    const appointment = appointments.find((apt) => apt.id === appointmentId);
-    toast(`${method.toUpperCase()} reminder sent to ${appointment?.patient}`);
+  const sendReminder = (appointmentId: string, method: "sms" | "email") => {
+    const appointment = appointments?.find((apt) => apt.id === appointmentId);
+    toast(
+      `${method.toUpperCase()} reminder sent to ${appointment?.patient_id}`
+    );
   };
 
-  const filteredAppointments = appointments.filter(
+  const filteredAppointments = appointments?.filter(
     (apt) =>
-      apt.patient.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      apt.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      apt.provider.toLowerCase().includes(searchTerm.toLowerCase())
+      apt.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      apt.patient_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      apt.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      setIsLoading(true);
+      const res = await fetch(
+        `/api/appointment/appointments/68f514cf-35f1-4e0e-921d-b78f552b468b`
+      );
+      const result = await res.json();
+      if (!result?.success) {
+        toast.error(result?.message || "Failed to fetch appointments");
+      }
+      setAppointments(result?.data ?? []);
+      setIsLoading(false);
+    };
+    fetchAppointments();
+  }, []);
+
+  useEffect(() => {
+    const fetchProviderss = async () => {
+      setLoadingProviders(true);
+      const res = await fetch(`/api/providers`);
+      const result = await res.json();
+      if (!result?.success) {
+        toast.error(result?.message || "Failed to fetch appointments");
+      }
+      setProviders(result?.data ?? []);
+      setLoadingProviders(false);
+    };
+    fetchProviderss();
+  }, [toggle]);
+
+  if (isLoading) {
+    return (
+      <div className="grid gap-6">
+        {[1, 2].map((_, i) => (
+          <Card key={i}>
+            <CardHeader>
+              <Skeleton className="h-6 w-1/3" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {[1, 2].map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between p-4 border border-muted rounded-lg"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <Skeleton className="h-10 w-10 rounded-full" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Skeleton className="h-8 w-20 rounded-md" />
+                      <Skeleton className="h-8 w-20 rounded-md" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -178,7 +255,7 @@ export default function Appointments() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {filteredAppointments.map((appointment) => (
+                  {filteredAppointments?.map((appointment) => (
                     <div
                       key={appointment.id}
                       className="flex items-center justify-between p-4 border border-muted rounded-lg"
@@ -186,7 +263,11 @@ export default function Appointments() {
                       <div className="flex items-center space-x-4">
                         <div className="text-center">
                           <div className="text-lg font-semibold">
-                            {appointment.time}
+                            {
+                              formatDateParts(
+                                appointment.schedule.appointment_date
+                              ).day
+                            }
                           </div>
                           <div className="text-xs text-muted-foreground">
                             <Clock className="h-3 w-3 inline mr-1" />
@@ -197,13 +278,13 @@ export default function Appointments() {
                           <div className="flex items-center space-x-2 mb-1">
                             <User className="h-4 w-4 text-muted-foreground" />
                             <span className="font-medium">
-                              {appointment.patient}
+                              {appointment?.patient_id}
                             </span>
                             <Badge
                               variant={
-                                appointment.status === "confirmed"
+                                appointment.status === "CONFIRMED"
                                   ? "default"
-                                  : appointment.status === "pending"
+                                  : appointment.status === "SCHEDULED"
                                   ? "secondary"
                                   : "destructive"
                               }
@@ -213,16 +294,26 @@ export default function Appointments() {
                           </div>
                           <div className="text-sm text-muted-foreground space-y-1">
                             <div>
-                              {appointment.type} with {appointment.provider}
+                              {appointment.purposes.includes("OTHERS")
+                                ? appointment.other_purpose
+                                : formatPurposeText(appointment.purposes)}{" "}
+                              {appointment.appointment_providers.length > 0 && (
+                                <>
+                                  with{" "}
+                                  {appointment.appointment_providers
+                                    .map((ap) => `${ap}`)
+                                    .join(", ")}
+                                </>
+                              )}
                             </div>
                             <div className="flex items-center space-x-4">
                               <span className="flex items-center">
                                 <Phone className="h-3 w-3 mr-1" />
-                                {appointment.phone}
+                                {appointment?.phone ?? "09034348483"}
                               </span>
                               <span className="flex items-center">
                                 <Mail className="h-3 w-3 mr-1" />
-                                {appointment.email}
+                                {appointment?.email ?? "test@gmail.com"}
                               </span>
                             </div>
                             {appointment.notes && (
@@ -248,7 +339,44 @@ export default function Appointments() {
                         >
                           Email
                         </Button>
-                        <Button size="sm">Check In</Button>
+                        {appointment.appointment_providers.length === 0 &&
+                          (toggle ? (
+                            <Select
+                              onValueChange={(value) => {
+                                console.log("Selected provider ID:", value);
+                                // Optionally set provider here
+                              }}
+                              disabled={loadingProviders}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue
+                                  placeholder={
+                                    loadingProviders
+                                      ? "Loading..."
+                                      : "Select Provider"
+                                  }
+                                />
+                              </SelectTrigger>
+
+                              <SelectContent>
+                                {loadingProviders ? (
+                                  <div className="space-y-2">
+                                    <Skeleton className="h-10 w-full" />
+                                  </div>
+                                ) : (
+                                  providers?.map((pro) => (
+                                    <SelectItem key={pro.id} value={pro.id}>
+                                      {pro.first_name} {pro.last_name}
+                                    </SelectItem>
+                                  ))
+                                )}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Button onClick={() => setToggle(true)} size="sm">
+                              Schedule Provider
+                            </Button>
+                          ))}
                       </div>
                     </div>
                   ))}
