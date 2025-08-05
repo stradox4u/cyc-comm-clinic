@@ -17,21 +17,26 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig*.json ./
 COPY prisma ./prisma/
+COPY . .
 
 RUN npm ci --quiet
-
-COPY . .
 RUN npm run build
 RUN test -d dist || (echo "dist directory was not created during build" && exit 1)
 
+FROM build AS migrate
+ARG DATABASE_URL
+RUN npx prisma migrate deploy
+RUN npm run db:seed
+
 FROM node:22.17 AS production
+ARG DATABASE_URL
 WORKDIR /app
 COPY --from=build /app/package*.json ./
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma ./prisma/
-RUN npm ci --quiet --omit=dev
-RUN npx prisma generate
-RUN npx prisma migrate deploy
+
+RUN npm ci --quiet --omit=dev && \
+  npx prisma generate
 
 EXPOSE 80
 
