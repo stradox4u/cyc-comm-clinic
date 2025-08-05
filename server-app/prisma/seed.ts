@@ -193,10 +193,12 @@ const seed = async () => {
 
     logger.info('Database seeded successfully!')
     await prisma.$disconnect()
-    process.exit(1)
+    process.exit(0)
   } catch (err) {
     console.error(err)
+    logger.info('Database seeding failed.')
     await prisma.$disconnect()
+    process.exit(1)
   }
 }
 
