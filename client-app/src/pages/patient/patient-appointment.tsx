@@ -52,7 +52,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "../../components/ui/popover";
-import { formatDateParts, formatPurposeText, formatTimeToAmPm, type Appointment } from "../../lib/type";
+import {
+  formatDateParts,
+  formatPurposeText,
+  formatTimeToAmPm,
+  type Appointment,
+} from "../../lib/type";
 
 const recentVisits = [
   {
@@ -93,7 +98,8 @@ export default function PatientAppointments() {
       patient_id: {
         id: user?.id,
         insurance_provider_id: user?.insurance_provider_id,
-        name: `${user?.first_name} ${user?.last_name}`,
+        first_name: user?.first_name,
+        last_name: user?.last_name,
       },
       schedule: {
         appointment_date: "",
@@ -146,7 +152,7 @@ export default function PatientAppointments() {
   useEffect(() => {
     const fetchAppointments = async () => {
       setLoading(true);
-      const res = await fetch(`/api/appointment/appointments/${user?.id}`);
+      const res = await fetch(`/api/appointment/appointments`);
       const result = await res.json();
       if (!result?.success) {
         toast.error(result?.message || "Failed to fetch appointments");
@@ -155,7 +161,7 @@ export default function PatientAppointments() {
       setLoading(false);
     };
     fetchAppointments();
-  }, [user?.id, tab]);
+  }, [tab]);
 
   const renderSkeleton = () => (
     <div className="grid gap-6">
@@ -242,9 +248,13 @@ export default function PatientAppointments() {
                         )}
                         {appointment.appointment_providers.length > 0 && (
                           <>
+                            {" "}
                             with{" "}
                             {appointment.appointment_providers
-                              .map((ap) => `${ap}`)
+                              .map((ap) => {
+                                const p = ap.provider;
+                                return `${p.role_title} ${p.first_name} ${p.last_name}`;
+                              })
                               .join(", ")}
                           </>
                         )}

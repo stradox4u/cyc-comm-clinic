@@ -74,3 +74,12 @@ export const formatDateParts = (isoDate: string) => {
 
   return { day, month };
 };
+
+export const providerRoles = new Set([
+  "GENERAL_PRACTIONER",
+  "NURSE",
+  "PHARMACIST",
+  "LAB_TECHNICIAN",
+  "PAEDIATRICIAN",
+  "GYNAECOLOGIST",
+]);
