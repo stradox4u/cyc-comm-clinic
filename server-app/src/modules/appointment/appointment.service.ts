@@ -183,20 +183,20 @@ async function updateAppointment(
   })
 
   const statusChangeToNoShow =
-    existing?.status !== "NO_SHOW" &&
-      ((typeof rest.status === "string" && rest.status === "NO_SHOW") ||
-       (typeof rest.status === "object" &&
+    existing?.status !== 'NO_SHOW' &&
+    ((typeof rest.status === 'string' && rest.status === 'NO_SHOW') ||
+      (typeof rest.status === 'object' &&
         rest.status !== null &&
-        "set" in rest.status &&
-        rest.status.set === "NO_SHOW"));
+        'set' in rest.status &&
+        rest.status.set === 'NO_SHOW'))
 
   const statusChangeToAttending =
-    existing?.status === "CHECKED_IN" &&
-    ((typeof rest.status === "string" && rest.status === "ATTENDING") ||
-      (typeof rest.status === "object" &&
+    existing?.status === 'CHECKED_IN' &&
+    ((typeof rest.status === 'string' && rest.status === 'ATTENDING') ||
+      (typeof rest.status === 'object' &&
         rest.status !== null &&
-        "set" in rest.status &&
-        rest.status.set === "ATTENDING"));
+        'set' in rest.status &&
+        rest.status.set === 'ATTENDING'))
 
   const statusChangeToCheckedIn =
     existing?.status !== "CHECKED_IN" &&
@@ -245,7 +245,7 @@ async function updateAppointment(
           },
         }
       : {}),
-  };
+  }
 
   const newEvents = [];
   if (statusChangeToCheckedIn) {
