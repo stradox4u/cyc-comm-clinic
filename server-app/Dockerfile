@@ -13,7 +13,8 @@ COPY . .
 CMD [ "npm", "run", "start:dev" ]
 
 FROM node:22.17 AS build
-ARG DATABASE_URL
+ARG DATABASE_URL_BUILD
+ENV DATABASE_URL=${DATABASE_URL_BUILD}
 WORKDIR /app
 COPY package*.json ./
 COPY tsconfig*.json ./
