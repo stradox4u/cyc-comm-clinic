@@ -290,27 +290,17 @@ const updateAppointment = catchAsync(async (req, res) => {
 
   const updatedAppointment = await appointmentService.updateAppointment(
     { id: appointmentId },
-    updateData
+    updateData,
+    userId
   );
 
   const statusChanged = newStatus !== undefined && newStatus !== previousStatus;
-  const soapNoteChanged = updateData.soap_note !== undefined;
-
-
-  const soapNotes = updatedAppointment.soap_note ?? [];
-  const latestSoapNote = soapNotes.length > 0 ? soapNotes[soapNotes.length - 1] : null;
-  const soapNoteId = latestSoapNote?.id ?? null;
-
-  const soapNoteUpdated = soapNoteChanged && (appointment.soap_note?.length ?? 0) > 0;
 
   if (loggedInUser.role === "PROVIDER") {
     await logAppointmentEvents({
       userId,
       appointmentId,
       statusChanged,
-      vitalsId: updatedAppointment.vitals?.id ?? null,
-      soapNoteId,
-      soapNoteUpdated,
     });
   }
 
@@ -388,6 +378,46 @@ const assignAppointmentProvider = catchAsync(async (req, res) => {
   });
 });
 
+const waitTimeTracking = catchAsync(async (req, res) => {
+  const loggedInUser = getLoggedInUser(req);
+
+  if (!loggedInUser) {
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized: User not found",
+    });
+  }
+
+  let averageWaitTime;
+
+  if (
+    loggedInUser.role_title === "ADMIN" ||
+    loggedInUser.role_title === "RECEPTIONIST"
+  ) {
+    averageWaitTime = await appointmentService.getAverageWaitTimeForAllProviders();
+  } else {
+    averageWaitTime = await appointmentService.getAverageWaitTimeForProvider(
+      loggedInUser.id
+    );
+  }
+
+  if (!averageWaitTime || (Array.isArray(averageWaitTime) && averageWaitTime.length === 0)) {
+    return res.status(404).json({
+      success: false,
+      message: "No wait time data available",
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    message:
+      loggedInUser.role_title === "ADMIN" || loggedInUser.role_title === "RECEPTIONIST"
+        ? "Wait times for all providers"
+        : "Wait time for this provider",
+    data: averageWaitTime,
+  });
+});
+
 
 export default {
     appointmentCreate,
@@ -395,5 +425,6 @@ export default {
     getAppointments,
     updateAppointment,
     appointmentDelete,
-    assignAppointmentProvider
+    assignAppointmentProvider,
+    waitTimeTracking
 }

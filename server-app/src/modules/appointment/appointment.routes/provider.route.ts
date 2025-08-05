@@ -14,7 +14,7 @@ router.use(authenticate(UserType.PROVIDER))
 
 //Assign Provider
 router.patch(
-    '/assignprovider',
+    '/assign-provider',
     authorize([ProviderRoleTitle.ADMIN, ProviderRoleTitle.RECEPTIONIST]),
     validate(appointmentValidation.appointmentProvidersSchema),
     appointmentController.assignAppointmentProvider
@@ -25,6 +25,13 @@ router.delete(
     '/delete/:appointmentId',
     authorize([ProviderRoleTitle.ADMIN, ProviderRoleTitle.RECEPTIONIST]),
     appointmentController.appointmentDelete
+)
+
+// Wait time tracking
+router.get(
+    '/waittime',
+    authorize(Object.values(ProviderRoleTitle)),
+    appointmentController.waitTimeTracking
 )
 
 export default router
