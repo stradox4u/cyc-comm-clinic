@@ -17,7 +17,7 @@ WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma/
 
-RUN npm ci --quiet --omit=dev
+RUN npm ci --quiet
 
 COPY . .
 RUN npm run build
@@ -26,6 +26,7 @@ FROM node:22.17 AS production
 WORKDIR /app
 COPY --from=build /app/package*.json ./
 COPY --from=build /app/dist ./dist
+RUN npm ci --quiet --omit=dev
 RUN npx prisma generate
 
 EXPOSE 80
