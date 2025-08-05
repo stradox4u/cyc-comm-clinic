@@ -102,7 +102,8 @@ export const appointmentPurposeKeys = Object.keys(AppointmentPurpose) as Array<
 export const appointmentSchema = z.object({
   patient_id: z.object({
     id: z.string().min(1, "Patient ID is required"),
-    name: z.string().min(1, "Patient name is required"),
+    first_name: z.string().min(1, "Patient first name is required"),
+    last_name: z.string().min(1, "Patient last name is required"),
     insurance_provider_id: z.string().optional(),
   }),
   schedule: z.object({
