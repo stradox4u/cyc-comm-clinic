@@ -26,6 +26,7 @@ FROM node:22.17 AS production
 WORKDIR /app
 COPY --from=build /app/package*.json ./
 COPY --from=build /app/dist ./dist
+COPY prisma ./prisma/
 RUN npm ci --quiet --omit=dev
 RUN npx prisma generate
 
