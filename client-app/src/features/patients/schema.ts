@@ -6,7 +6,7 @@ const createPatientSchema = z.object({
   first_name: z.string('First name is invalid').min(2),
   last_name: z.string('Last name is invalid').min(2),
   phone: z.string('Phone number is invalid').min(11).max(11),
-  date_of_birth: z.iso.datetime('Date of birth is invalid'),
+  date_of_birth: z.iso.date('Date of birth is invalid'),
   address: z.string().min(2, 'Address is invalid'),
   gender: z.enum(['MALE', 'FEMALE'], 'Gender is invalid'),
   emergency_contact_name: z.string('Emergency contact name is invalid').min(2),

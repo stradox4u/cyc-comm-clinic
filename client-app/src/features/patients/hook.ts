@@ -8,10 +8,10 @@ import {
 import type { CreatePatientSchema } from './schema'
 import { useNavigate } from 'react-router'
 import type { AxiosError } from 'axios'
-import type { APIResponse, Pagination } from './types'
+import type { APIResponse, IPagination } from './types'
 import { toast } from 'sonner'
 
-const usePatients = (query: Pagination) => {
+const usePatients = (query: IPagination) => {
   return useQuery({
     queryFn: () => getPatients(query),
     queryKey: ['patients', query.page],
@@ -20,7 +20,7 @@ const usePatients = (query: Pagination) => {
 
 const useSearchPatientsByName = () => {
   return useMutation({
-    mutationFn: ({ name, query }: { name: string; query: Pagination }) =>
+    mutationFn: ({ name, query }: { name: string; query: IPagination }) =>
       searchPatientsByName(name, query),
     mutationKey: ['searchPatients'],
   })
@@ -43,7 +43,7 @@ const useCreatePatient = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient'] })
       toast.success(data.message)
-      navigate(`/patients/${data.data.id}`)
+      navigate(`/provider/patients/${data.data.id}`)
     },
     onError: (data: AxiosError<APIResponse>) => {
       toast.error(data.response?.data?.message)

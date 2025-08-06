@@ -7,6 +7,7 @@ import { useAuthStore } from '../store/auth-store'
 import { Badge } from '../components/ui/badge'
 import GoogleModal from '../components/auth/google-modal'
 import { useState } from 'react'
+import API from '../lib/api'
 
 const Settings = () => {
   const { user, setUser } = useAuthStore()
@@ -17,13 +18,16 @@ const Settings = () => {
 
   const calendarAuth = searchParams.get('calendar-auth')
 
-  if (calendarAuth && calendarAuth === 'success') {
-    setUser({ ...user!, has_calendar_acccess: true })
+  useEffect(() => {
+    if (calendarAuth && calendarAuth === 'success') {
+      const { data } = API.get('/api/auth/patient/profile')
+      setUser(data.data)
 
-    toast.success('Google calendar authorization confirmed')
-  } else if (calendarAuth && calendarAuth === 'failed') {
-    toast.error('Authorization failed. Try again')
-  }
+      toast.success('Google calendar authorization confirmed')
+    } else if (calendarAuth && calendarAuth === 'failed') {
+      toast.error('Authorization failed. Try again')
+    }
+  }, [])
 
   const handleLogout = async () => {
     try {
@@ -74,7 +78,7 @@ const Settings = () => {
                 </div>
               </div>
             </div>
-            {user?.has_calendar_acccess ? (
+            {user?.has_calendar_access ? (
               <Badge className="bg-success">CONFIRMED</Badge>
             ) : (
               <Button onClick={() => setShowGoogleModal(true)}>

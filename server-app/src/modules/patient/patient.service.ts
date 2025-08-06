@@ -13,17 +13,21 @@ const findPatients = async (
     page?: number
     limit?: number
   }
-): Promise<Omit<Patient, 'password'>[]> => {
+): Promise<[Omit<Patient, 'password'>[], total: number]> => {
   if (options?.page && options?.limit) {
     options.skip = (options?.page - 1) * options?.limit
   }
 
-  return await prisma.patient.findMany({
-    where: filter,
-    skip: options?.skip || 0,
-    take: options?.limit || 20,
-    omit: { password: true },
-  })
+  return await prisma.$transaction([
+    prisma.patient.findMany({
+      where: filter,
+      skip: options?.skip || 0,
+      take: options?.limit || 20,
+      omit: { password: true },
+      orderBy: { updated_at: 'desc' },
+    }),
+    prisma.patient.count(),
+  ])
 }
 
 const findPatient = async (

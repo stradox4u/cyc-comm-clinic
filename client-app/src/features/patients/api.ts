@@ -1,15 +1,15 @@
-import API from '../../lib/API'
+import API from '../../lib/api'
 import type { CreatePatientSchema, UpdatePatientSchema } from './schema'
-import type { Pagination } from './types'
+import type { IPagination } from './types'
 
-const getPatients = async ({ page, limit }: Pagination) => {
+const getPatients = async ({ page, limit }: IPagination) => {
   const { data } = await API.get(`/api/patients?page=${page}&limit=${limit}`)
   return data
 }
 
 const searchPatientsByName = async (
   name: string,
-  { page, limit }: Pagination
+  { page, limit }: IPagination
 ) => {
   const { data } = await API.get(
     `/api/patients/search?search=${name}&page=${page}&limit=${limit}`

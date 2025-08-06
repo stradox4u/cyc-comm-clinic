@@ -2,7 +2,10 @@ import express from 'express'
 import validate from '../../middlewares/validate.js'
 import authController from './auth.controller.js'
 import authValidation from './auth.validation.js'
-import { authenticate } from '../../middlewares/auth.js'
+import {
+  authenticate,
+  authenticateMultipleUser,
+} from '../../middlewares/auth.js'
 import { UserType } from '../../types/index.js'
 
 const router = express.Router()
@@ -63,12 +66,6 @@ router.put(
   authController.patientUpdateProfile
 )
 
-router.get(
-  '/patient/generate-url',
-  authenticate(UserType.PATIENT),
-  authController.patientGenerateUploadUrl
-)
-
 router.post(
   '/provider/login',
   validate(authValidation.loginSchema),
@@ -98,6 +95,12 @@ router.get(
   '/provider/profile',
   authenticate(UserType.PROVIDER),
   authController.providerProfile
+)
+
+router.get(
+  '/generate-url',
+  authenticateMultipleUser([UserType.PATIENT, UserType.PROVIDER]),
+  authController.generateUploadUrl
 )
 
 router.post('/logout', authController.logout)

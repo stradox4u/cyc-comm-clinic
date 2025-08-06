@@ -6,11 +6,12 @@ import { useAuthStore } from '../store/auth-store'
 
 type ProfilePhotoProps = {
   photo: string | undefined
+  patientId?: string
 }
 
 const ProfilePhoto: React.FC<ProfilePhotoProps> = ({ photo }) => {
   const [userPhoto, setUserPhoto] = useState<string>()
-  const { setUser } = useAuthStore()
+  const { user, setUser } = useAuthStore()
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const fileInput = useRef<HTMLInputElement | null>(null)
 
@@ -32,7 +33,7 @@ const ProfilePhoto: React.FC<ProfilePhotoProps> = ({ photo }) => {
       setUserPhoto(URL.createObjectURL(file))
 
       const { data } = await axios.get(
-        `/api/auth/patient/generate-url?fileType=${file.type}&fileName=${file.name}`
+        `/api/auth/generate-url?fileType=${file.type}&fileName=${file.name}`
       )
       if (!data.success) toast.error('Error uploading photo')
 
@@ -43,7 +44,11 @@ const ProfilePhoto: React.FC<ProfilePhotoProps> = ({ photo }) => {
         },
       })
 
-      const savedRes = await axios.put(`/api/auth/patient/profile`, {
+      const url = user?.role_title
+        ? `/api/patients/${patientId}`
+        : `/api/auth/patient/profile`
+
+      const savedRes = await axios.put(url, {
         image_url: data.data.key,
       })
       if (!savedRes.data?.success) toast.error('Error uploading photo')

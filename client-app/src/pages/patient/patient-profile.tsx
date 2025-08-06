@@ -98,7 +98,7 @@ const PatientProfile = () => {
 
       <div className="grid gap-6 lg:grid-cols-">
         <Card>
-          <div className="md:flex md:justify-between">
+          <div className="md:grid md:grid-cols-2">
             <ProfilePhoto photo={patientData?.image_url} />
             <div>
               <CardHeader>

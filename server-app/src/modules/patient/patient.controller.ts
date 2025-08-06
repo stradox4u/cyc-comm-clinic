@@ -15,11 +15,12 @@ const getPatients = catchAsync(async (req, res) => {
   const { page, limit } = req.query
   const options = { page: Number(page), limit: Number(limit) }
 
-  const patients = await patientService.findPatients({}, options)
+  const [patients, total] = await patientService.findPatients({}, options)
 
   res.status(200).json({
     success: true,
     data: patients,
+    total: total,
   })
 })
 
@@ -28,17 +29,18 @@ const searchPatientsByName = catchAsync(async (req, res) => {
 
   const filter: PatientWhereInput = {
     OR: [
-      { first_name: { contains: query.search } },
+      { first_name: { contains: query.search, mode: 'insensitive' } },
       { last_name: { contains: query.search } },
     ],
   }
   const options = { page: Number(query.page), limit: Number(query.limit) }
 
-  const patients = await patientService.findPatients(filter, options)
+  const [patients, total] = await patientService.findPatients(filter, options)
 
   res.status(200).json({
     success: true,
     data: patients,
+    total: total,
   })
 })
 
