@@ -235,6 +235,7 @@ model Events {
   appointment     Appointment?      @relation(fields: [appointment_id], references: [id])
   created_at    DateTime    @default(now())
   updated_at    DateTime?   @updatedAt
+  status                   String?
 
   @@map("events")
 }
