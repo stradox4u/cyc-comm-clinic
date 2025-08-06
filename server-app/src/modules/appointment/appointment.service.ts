@@ -9,7 +9,10 @@ import {
 import prisma from "../../config/prisma.js";
 import { startOfDay, endOfDay } from 'date-fns';
 import { includes } from "zod";
-import { calculateWaitTimeMinutes } from "./appointment.utils.js";
+import { 
+  calculateWaitTimeMinutes,
+  calculateNoShowRate 
+} from "./appointment.utils.js";
 
 export type AppointmentWhereUniqueInput = Prisma.AppointmentWhereUniqueInput
 export type AppointmentWhereInput = Prisma.AppointmentWhereInput
@@ -448,6 +451,67 @@ export async function findAppointmentByPatientAndDate(
   })
 }
 
+export async function getNoShowRatesPerProviderPatient(providerId?: string): Promise<{
+  providerId: string;
+  patients: {
+    patientId: string;
+    noShowRate: number;
+  }[];
+}[]> {
+  const providers = providerId
+    ? [{ provider_id: providerId }]
+    : await prisma.appointmentProviders.findMany({
+        distinct: ['provider_id'],
+        select: {
+          provider_id: true,
+        },
+      });
+
+  const result = [];
+
+  for (const { provider_id } of providers) {
+    const patients = await prisma.appointment.findMany({
+      where: { 
+        appointment_providers: {
+          some: { provider_id }
+        }
+      },
+      distinct: ['patient_id'],
+      select: { patient_id: true },
+    });
+
+    const patientsWithRates = [];
+
+    for (const { patient_id } of patients) {
+      const appointments = await prisma.appointment.findMany({
+        where: {
+          patient_id,
+          appointment_providers: {
+            some: { provider_id }
+          }
+        },
+        select: {
+          status: true,
+        },
+      });
+
+      const noShowRate = calculateNoShowRate(appointments);
+
+      patientsWithRates.push({
+        patientId: patient_id,
+        noShowRate,
+      });
+    }
+
+    result.push({
+      providerId: provider_id,
+      patients: patientsWithRates,
+    });
+  }
+  return result;
+}
+
+
 export default {
     createAppointment,
     findAppointment,
@@ -460,5 +524,6 @@ export default {
     buildProvidersCreate,
     searchAppointments,
     getAverageWaitTimeForProvider,
-    getAverageWaitTimeForAllProviders
+    getAverageWaitTimeForAllProviders,
+    getNoShowRatesPerProviderPatient
 }

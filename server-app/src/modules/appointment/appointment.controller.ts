@@ -497,6 +497,36 @@ const patchAppointment = catchAsync(async (req, res) => {
   res.status(200).json({ success: true, message: 'Appointment updated', data: updated });
 });
 
+const getNoShowRates = catchAsync(async (req, res) => {
+  const user = req.user;
+
+  if (!user) {
+    return res.status(401).json({ success: false, message: "Unauthorized" });
+  }
+
+  let data;
+
+  if (user.roleTitle === "ADMIN" || user.roleTitle === "RECEPTIONIST") {
+    data = await appointmentService.getNoShowRatesPerProviderPatient();
+  } else if (user.type === UserType.PROVIDER) {
+    data = await appointmentService.getNoShowRatesPerProviderPatient(user.id);
+  } else {
+    return res.status(403).json({ success: false, message: "Access denied" });
+  }
+
+  if (!data || data.length === 0) {
+    return res.status(404).json({
+      success: false,
+      message: 'No data found for no-show rates',
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'No-show rates fetched successfully',
+    data,
+  });
+});
 
 export default {
     appointmentCreate,
@@ -506,5 +536,6 @@ export default {
     appointmentDelete,
     assignAppointmentProvider,
     waitTimeTracking,
-    patchAppointment
+    patchAppointment,
+    getNoShowRates
 }

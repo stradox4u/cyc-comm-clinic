@@ -34,4 +34,11 @@ router.get(
     appointmentController.waitTimeTracking
 )
 
+// No show rate
+router.get(
+    '/no-show-rates',
+    authorize(Object.values(ProviderRoleTitle)),
+    appointmentController.getNoShowRates
+)
+
 export default router

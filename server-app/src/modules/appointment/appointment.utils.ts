@@ -186,8 +186,10 @@ export function calculateWaitTimeMinutes(
 
 // Appointment no show rates
 export function calculateNoShowRate(
-  status: string | undefined,
-  patients: object
-) {
-  return Number(patients)
+  appointments: { status: string }[]
+): number {
+  if (appointments.length === 0) return 0;
+  const noShowCount = appointments.filter(app => app.status === "NO_SHOW").length;
+  const rate = (noShowCount / appointments.length) * 100;
+  return parseFloat(rate.toFixed(2));
 }
