@@ -37,7 +37,7 @@ export const prescriptionSchema = z.object({
     frequency: z.string(),
     duration: z.string(),
     instructions: z.string(),
-    start_date: z.date()
+    start_date: z.coerce.date()
 })
 
 export const planSchema = z.object({
@@ -50,7 +50,6 @@ export const planSchema = z.object({
 }).partial()
 
 export const SoapNoteRecordSchema = z.object({
-    id: z.uuid(),
     appointment_id: z.uuid(),
     subjective: subjectiveSchema,
     objective: objectiveSchema,
