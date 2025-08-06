@@ -1,7 +1,7 @@
 import express from 'express';
 import vitalsController from './vitals.controller.js';
 import { authorize, authenticate, authenticateMultipleUser } from '../../middlewares/auth.js';
-import { PROVIDER_ROLES } from '../../types/index.js';
+import { ProviderRoleTitle } from '@prisma/client';
 import vitalsValidation from './vitals.validation.js';
 import validate from '../../middlewares/validate.js';
 import { UserType } from '../../types/index.js';
@@ -12,22 +12,15 @@ const router = express.Router()
 router.post(
     '/record',
     authenticate(UserType.PROVIDER),
-    authorize(PROVIDER_ROLES),
+    authorize(Object.values(ProviderRoleTitle)),
     validate(vitalsValidation.VitalsRecordSchema),
     vitalsController.recordVitals
 );
 
 router.get(
-    '/:patientId',
+    '/:appointmentId',
     authenticateMultipleUser([UserType.PROVIDER, UserType.PATIENT]),
-    vitalsController.getVitalsByPatientId
-);
-
-router.get(
-    '/:providerId',
-    authenticate(UserType.PROVIDER),
-    authorize(PROVIDER_ROLES),
-    vitalsController.getVitalsByProviderId
+    vitalsController.getVitalsByAppointmentId
 );
 
 export default router

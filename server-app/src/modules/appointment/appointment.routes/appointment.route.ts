@@ -33,8 +33,10 @@ router.put(
     appointmentController.updateAppointment
 )
 
-{/*router.patch(
-    '/:appointment/Id'
+router.patch(
+    '/:appointmentId',
+    authenticateMultipleUser([UserType.PATIENT, UserType.PROVIDER]),
+    appointmentController.patchAppointment
 )
-*/}
+
 export default router

@@ -20,7 +20,6 @@ function deepClone<T>(obj: T): T {
 
 async function createSoapNote(
   payload: unknown,
-  createdById: string
 ) {
   const parsed = SoapNoteRecordSchema.safeParse(payload);
 
@@ -59,7 +58,7 @@ async function createSoapNote(
   const vitalsData = {
     ...appointment.vitals,
     events: vitalsWithEvents.events ?? [],
-    created_by_id: appointment.vitals.created_by_id ?? createdById,
+    created_by_id: appointment.vitals.created_by_id,
     appointment_id: soapNote.appointment_id,
   };
   
@@ -72,6 +71,8 @@ async function createSoapNote(
   soapNote.assessment = soapNote.assessment ?? {};
   soapNote.plan = { ...soapNote.plan, prescription: soapNote.plan?.prescription ?? [] };
 
+  const { appointment_id, created_by_id, ...rest } = soapNote;
+
   const serialized: Pick<SoapNoteCreateInput, 'subjective' | 'objective' | 'assessment' | 'plan'> = {
     subjective: deepClone(soapNote.subjective),
     objective: deepClone(soapNote.objective),
@@ -80,7 +81,7 @@ async function createSoapNote(
   };
 
   const SoapNoteToCreate: Prisma.SoapNoteCreateInput = {
-    ...soapNote,
+    ...rest,
     ...serialized,
     appointment: {
       connect: { id: soapNote.appointment_id }
@@ -89,7 +90,7 @@ async function createSoapNote(
       create: [
         {
           type: EventType.SOAP_NOTE_RECORDED,
-          created_by_id: createdById,
+          created_by_id: created_by_id,
           appointment_id: soapNote.appointment_id
         }
       ]
@@ -100,18 +101,22 @@ async function createSoapNote(
 }
 
 async function updateSoapNote(
-  payload: unknown,
-  createdById: string
+  id: string,
+  payload: unknown
 ): Promise<{ data: any }> {
   if (!payload) {
     throw new Error('No payload provided');
   }
+
+  console.dir(payload, { depth: null });
 
   const parsed = SoapNoteRecordSchema.safeParse(payload);
   if (!parsed.success) {
     throw new Error('Invalid soap note payload');
   }
   const soapNote = parsed.data;
+
+  const { appointment_id, created_by_id, ...rest } = soapNote;
 
   const serialized: Pick<SoapNoteCreateInput, 'subjective' | 'objective' | 'assessment' | 'plan'> = {
     subjective: deepClone(soapNote.subjective),
@@ -121,23 +126,23 @@ async function updateSoapNote(
   };
 
   const updateData: any = {
-    ...soapNote,
+    ...rest,
     ...serialized,
     events: {
       create: [{
         type: EventType.SOAP_NOTE_UPDATED,
-        created_by_id: createdById,
+        created_by_id: created_by_id,
         appointment_id: soapNote.appointment_id
       }]
     }
   };
 
   const updatedSoapNote = await prisma.soapNote.update({
-    where: { id: soapNote.id },
+    where: { id: id},
     data: updateData,
   })
 
-  return { data: updateData };
+  return { data: updatedSoapNote };
 }
 
 async function findSoapNote(Id: string) {
@@ -165,24 +170,70 @@ async function findSoapNote(Id: string) {
   return soapNote;
 }
 
-async function findSoapNotes(
-  userId: string,
-  role: UserType | ProviderRoleTitle
-) {
+async function findSoapNotes(userId: string, role: UserType | ProviderRoleTitle) {
   let whereClause: any = {};
 
   if (role === UserType.PATIENT) {
-    whereClause.patient_id = userId;
+    whereClause = {
+      appointment: {
+        patient_id: userId,
+      },
+    };
   } else if (
     Object.values(ProviderRoleTitle).includes(role as ProviderRoleTitle)
   ) {
     if (role === ProviderRoleTitle.ADMIN || role === ProviderRoleTitle.RECEPTIONIST) {
       whereClause = {};
     } else {
-      whereClause.provider_id = userId;
+      whereClause = {
+        appointment: {
+          appointmentProviders: {
+            some: {
+              provider_id: userId,
+            },
+          },
+        },
+      };
     }
   } else {
     throw new Error("Invalid user role");
+  }
+
+  const soapNotes = await prisma.soapNote.findMany({
+    where: whereClause,
+    include: {
+      events: {
+        orderBy: { created_at: 'desc' },
+        select: {
+          id: true,
+          type: true,
+          created_by_id: true,
+          appointment_id: true,
+          created_at: true,
+          updated_at: true,
+        },
+      },
+      appointment: true,
+    },
+  });
+
+  return soapNotes;
+}
+
+async function findSoapNotesByAppointment(
+  appointmentId: string,
+  userId: string,
+  role: UserType | ProviderRoleTitle
+) {
+  const whereClause: any = {
+    appointment: { id: appointmentId }
+  };
+
+  if (role === UserType.PATIENT) {
+    whereClause.appointment = {
+      id: appointmentId,
+      patient_id: userId,
+    };
   }
 
   const soapNotes = await prisma.soapNote.findMany({
@@ -273,6 +324,7 @@ export default {
   findSoapNote,
   findSoapNotes,
   deleteSoapNote,
-  buildSoapNoteNestedCreateInput
+  buildSoapNoteNestedCreateInput,
+  findSoapNotesByAppointment
 };
 

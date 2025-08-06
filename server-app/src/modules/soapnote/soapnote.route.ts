@@ -1,7 +1,7 @@
 import express from 'express';
 import soapnoteController from './soapnote.controller.js';
 import { authorize, authenticate, authenticateMultipleUser } from '../../middlewares/auth.js';
-import { PROVIDER_ROLES } from '../../types/index.js';
+import { ProviderRoleTitle } from '@prisma/client';
 import soapnoteValidation from './soapnote.validation.js';
 import validate from '../../middlewares/validate.js';
 import { UserType } from '../../types/index.js';
@@ -11,15 +11,15 @@ const router = express.Router()
 router.post(
     '/record',
     authenticate(UserType.PROVIDER),
-    authorize(PROVIDER_ROLES),
+    authorize(Object.values(ProviderRoleTitle)),
     validate(soapnoteValidation.SoapNoteRecordSchema),
     soapnoteController.createSoapNote
 )
 
 router.put(
-    '/update',
+    '/update/:id',
     authenticate(UserType.PROVIDER),
-    authorize(PROVIDER_ROLES),
+    authorize(Object.values(ProviderRoleTitle)),
     soapnoteController.updateSoapNote
 )
 

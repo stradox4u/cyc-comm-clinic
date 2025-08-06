@@ -63,6 +63,7 @@ export default function Appointments() {
   const [loadingProviders, setLoadingProviders] = useState(false);
   const [appointments, setAppointments] = useState<Appointment[]>();
   const [vitals, setVitals] = useState({
+    appointment_id: "",
     temperature: "",
     bloodPressure: "",
     heartRate: "",
@@ -163,7 +164,7 @@ export default function Appointments() {
     appointmentId: string
   ) => {
     try {
-      const res = await fetch(`/api/provider/appointment/assign-provider`, {
+      const res = await fetch('/api/provider/appointment/assign-provider', {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -229,17 +230,17 @@ export default function Appointments() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/appointment/${appointmentId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const response = await fetch('/api/provider/vitals/record', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          vitals: {
-            ...vitals,
-            created_by: user?.id,
-          },
-          status: "ATTENDING",
+          appointment_id: appointmentId,
+          blood_pressure: vitals.bloodPressure,
+          heart_rate: vitals.heartRate,
+          temperature: vitals.temperature,
+          height: vitals.height,
+          weight: vitals.weight,
+          created_by_id: user?.id,
         }),
       });
 
@@ -250,7 +251,20 @@ export default function Appointments() {
         console.error("Server error:", result?.error);
         return;
       }
-      toast.success("Patient vitals updated successfully");
+      
+      const updateStatusRes = await fetch(`/api/appointment/${appointmentId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "ATTENDING" }),
+      });
+      
+      const updateStatusResult = await updateStatusRes.json();
+      
+      if (!updateStatusRes.ok || !updateStatusResult.success) {
+        toast.error("Vitals saved, but failed to update appointment status.");
+        return;
+      }
+      toast.success("Patient vitals updated, status set to ATTENDING");
     } catch (error) {
       console.error("Error updating patient appointment:", error);
       toast.error("An unexpected error occurred");
@@ -260,6 +274,7 @@ export default function Appointments() {
 
     // ✅ Reset vitals form
     setVitals({
+      appointment_id: "",
       temperature: "",
       bloodPressure: "",
       heartRate: "",
