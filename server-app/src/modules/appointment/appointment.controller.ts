@@ -15,6 +15,7 @@ import {
   canScheduleAppointment,
   isWithinClinicHours,
 } from './appointment.utils.js'
+import prisma from '../../config/prisma.js'
 
 const appointmentCreate = catchAsync(async (req, res) => {
   const newAppointment: AppointmentRegisterSchema = req.body
@@ -459,6 +460,43 @@ const waitTimeTracking = catchAsync(async (req, res) => {
   });
 });
 
+const patchAppointment = catchAsync(async (req, res) => {
+  const { appointmentId } = req.params;
+  const updates = req.body;
+  const loggedInUser = getLoggedInUser(req);
+
+  const appointment = await appointmentService.findAppointment({ id: appointmentId });
+
+  if (!appointment) {
+    return res.status(404).json({ success: false, message: "Appointment not found" });
+  }
+
+  try {
+    authorizeUserForViewingAppointment(appointment, loggedInUser);
+    authorizeSensitiveAppointmentFields(req, updates);
+  } catch (err: any) {
+    return res.status(err.statusCode || 403).json({ success: false, message: err.message });
+  }
+
+  const previousStatus = appointment.status;
+  const updated = await prisma.appointment.update({
+    where: { id: appointmentId },
+    data: updates,
+  });
+
+  const statusChanged = updates.status && updates.status !== previousStatus;
+
+  if (loggedInUser.role === "PROVIDER" && statusChanged) {
+    await logAppointmentEvents({
+      userId: loggedInUser.id,
+      appointmentId,
+      statusChanged,
+    });
+  }
+
+  res.status(200).json({ success: true, message: 'Appointment updated', data: updated });
+});
+
 
 export default {
     appointmentCreate,
@@ -467,5 +505,6 @@ export default {
     updateAppointment,
     appointmentDelete,
     assignAppointmentProvider,
-    waitTimeTracking
+    waitTimeTracking,
+    patchAppointment
 }

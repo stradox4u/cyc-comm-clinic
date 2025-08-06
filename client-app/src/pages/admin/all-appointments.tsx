@@ -251,7 +251,20 @@ export default function Appointments() {
         console.error("Server error:", result?.error);
         return;
       }
-      toast.success("Patient vitals updated successfully");
+      
+      const updateStatusRes = await fetch(`/api/appointment/${appointmentId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "ATTENDING" }),
+      });
+      
+      const updateStatusResult = await updateStatusRes.json();
+      
+      if (!updateStatusRes.ok || !updateStatusResult.success) {
+        toast.error("Vitals saved, but failed to update appointment status.");
+        return;
+      }
+      toast.success("Patient vitals updated, status set to ATTENDING");
     } catch (error) {
       console.error("Error updating patient appointment:", error);
       toast.error("An unexpected error occurred");
