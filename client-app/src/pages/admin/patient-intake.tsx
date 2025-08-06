@@ -340,7 +340,7 @@ export default function PatientIntake() {
                 <div>
                   <h3 className="text-lg font-medium mb-4">Medical History</h3>
                   <div className="space-y-4">
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                       <Label htmlFor="primaryCare">
                         Primary Care Physician
                       </Label>
@@ -351,7 +351,7 @@ export default function PatientIntake() {
                           handleInputChange("primaryCare", e.target.value)
                         }
                       />
-                    </div>
+                    </div> */}
                     <div className="space-y-2">
                       <Label htmlFor="allergies">Allergies</Label>
                       <Textarea
@@ -363,7 +363,7 @@ export default function PatientIntake() {
                         placeholder="List any known allergies..."
                       />
                     </div>
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                       <Label htmlFor="medications">Current Medications</Label>
                       <Textarea
                         id="medications"
@@ -384,14 +384,14 @@ export default function PatientIntake() {
                         }
                         placeholder="Previous surgeries, chronic conditions, etc..."
                       />
-                    </div>
+                    </div> */}
                   </div>
                 </div>
 
-                <Separator />
+                {/* <Separator /> */}
 
                 {/* Lifestyle */}
-                <div>
+                {/* <div>
                   <h3 className="text-lg font-medium mb-4">
                     Lifestyle Information
                   </h3>
@@ -457,12 +457,12 @@ export default function PatientIntake() {
                       </Select>
                     </div>
                   </div>
-                </div>
+                </div> */}
 
-                <Separator />
+                {/* <Separator className="text-muted" /> */}
 
                 {/* Current Visit */}
-                <div>
+                {/* <div>
                   <h3 className="text-lg font-medium mb-4">Current Visit</h3>
                   <div className="space-y-4">
                     <div className="space-y-2">
@@ -516,7 +516,7 @@ export default function PatientIntake() {
                       </Select>
                     </div>
                   </div>
-                </div>
+                </div> */}
 
                 <Separator />
 

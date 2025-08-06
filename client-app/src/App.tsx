@@ -34,6 +34,7 @@ import Settings from './pages/Settings'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import CreatePatient from './pages/admin/patients/create-patient'
 import ViewPatient from './pages/admin/patients/view-patient'
+import VitalsSoapPage from './pages/vitals-soap'
 
 const queryClient = new QueryClient()
 
@@ -107,6 +108,7 @@ function App() {
             <Route path="/provider/appointments" element={<Appointments />} />
             <Route path="/provider/insurance" element={<InsuranceCheck />} />
             <Route path="/provider/intake" element={<PatientIntake />} />
+            <Route path="/provider/vitals" element={<VitalsSoapPage />} />
             <Route
               path="/provider/providers-dashboard"
               element={<ProvidersDashboard />}

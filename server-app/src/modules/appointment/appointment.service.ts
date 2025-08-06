@@ -3,43 +3,43 @@ import type {
   AppointmentProviders,
   Prisma,
   Vitals,
-  SoapNote
-} from "@prisma/client";
-import prisma from "../../config/prisma.js";
-import { startOfDay, endOfDay } from 'date-fns';
-import { includes } from "zod";
+  SoapNote,
+} from '@prisma/client'
+import prisma from '../../config/prisma.js'
+import { startOfDay, endOfDay } from 'date-fns'
+import { includes } from 'zod'
 
 export type AppointmentWhereUniqueInput = Prisma.AppointmentWhereUniqueInput
 export type AppointmentWhereInput = Prisma.AppointmentWhereInput
 export type AppointmentCreateInput = Prisma.AppointmentCreateInput
 export type AppointmentUpdateInput = Prisma.AppointmentUpdateInput
-export type AppointmentUncheckedUpdateInput = Prisma.AppointmentUncheckedUpdateInput
+export type AppointmentUncheckedUpdateInput =
+  Prisma.AppointmentUncheckedUpdateInput
 
-export type AppointmentProvidersCreateInput = Prisma.AppointmentProvidersCreateInput
-export type AppointmentProvidersWhereInput = Prisma.AppointmentProvidersWhereInput
-
+export type AppointmentProvidersCreateInput =
+  Prisma.AppointmentProvidersCreateInput
+export type AppointmentProvidersWhereInput =
+  Prisma.AppointmentProvidersWhereInput
 
 // Create Appointment
 async function createAppointment(
-    payload: AppointmentCreateInput
+  payload: AppointmentCreateInput
 ): Promise<Appointment> {
-    return prisma.appointment.create({
-        data: payload,
-        include: {
-            vitals: true,
-            soap_note: true,
-        }
-    })
-  }
+  return prisma.appointment.create({
+    data: payload,
+    include: {
+      vitals: true,
+      soap_note: true,
+    },
+  })
+}
 
 // Get single Appointment
-async function findAppointment(
-  filter: AppointmentWhereUniqueInput
-): Promise<
+async function findAppointment(filter: AppointmentWhereUniqueInput): Promise<
   | (Appointment & {
-      appointment_providers: AppointmentProviders[];
-      vitals?: Vitals | null;
-      soap_note: SoapNote[];
+      appointment_providers: AppointmentProviders[]
+      vitals?: Vitals | null
+      soap_note: SoapNote[]
     })
   | null
 > {
@@ -50,21 +50,41 @@ async function findAppointment(
       vitals: true,
       soap_note: true,
     },
-  });
+  })
 
   if (appointment && !appointment.appointment_providers) {
-    appointment.appointment_providers = [];
+    appointment.appointment_providers = []
   }
-  return appointment;
+  return appointment
 }
 
 // Get by status(search)
 async function searchAppointments(
-    filter: AppointmentWhereInput
+  filter: AppointmentWhereInput
 ): Promise<Appointment[]> {
-    return await prisma.appointment.findMany({
-        where: filter,
-    })
+  return await prisma.appointment.findMany({
+    where: filter,
+    include: {
+      appointment_providers: {
+        include: {
+          provider: {
+            select: {
+              role_title: true,
+              first_name: true,
+              last_name: true,
+            },
+          },
+        },
+      },
+      patient: {
+        select: {
+          first_name: true,
+          last_name: true,
+          insurance_provider_id: true,
+        },
+      },
+    },
+  })
 }
 
 // Find appointments by patient
@@ -75,12 +95,29 @@ async function findAppointmentsByPatient(
   return prisma.appointment.findMany({
     where: {
       patient_id,
-      ...(filter || {})
+      ...(filter || {}),
     },
     include: {
-      appointment_providers: true,
+      appointment_providers: {
+        include: {
+          provider: {
+            select: {
+              role_title: true,
+              first_name: true,
+              last_name: true,
+            },
+          },
+        },
+      },
+      patient: {
+        select: {
+          first_name: true,
+          last_name: true,
+          insurance_provider_id: true,
+        },
+      },
     },
-  });
+  })
 }
 
 // Find appointments by provider
@@ -96,68 +133,87 @@ async function findAppointmentsByProvider(
     include: {
       appointment: {
         include: {
-          appointment_providers: true,
+          appointment_providers: {
+            include: {
+              provider: {
+                select: {
+                  role_title: true,
+                  first_name: true,
+                  last_name: true,
+                },
+              },
+            },
+          },
+          patient: {
+            select: {
+              first_name: true,
+              last_name: true,
+              insurance_provider_id: true,
+            },
+          },
         },
       },
     },
-  });
-  return appointmentProviders.map((entry) => entry.appointment);
+  })
+  return appointmentProviders.map((entry) => entry.appointment)
 }
 
-{/*Update Appointment
+{
+  /*Update Appointment
 (vitals and soap_note intragration handled too)
 rescheduled count handled
-  */}
+  */
+}
 async function updateAppointment(
   filter: AppointmentWhereUniqueInput,
   payload: AppointmentUpdateInput & { vitals?: any; soap_note?: any[] }
 ): Promise<
   Appointment & {
-    vitals?: any;
-    soap_note?: any[];
+    vitals?: any
+    soap_note?: any[]
   }
 > {
-  const { vitals, soap_note, ...rest } = payload;
+  const { vitals, soap_note, ...rest } = payload
   const existing = await prisma.appointment.findUnique({
     where: filter,
     select: { status: true, schedule: true },
-  });
+  })
 
   const statusChangeToNoShow =
-    existing?.status !== "NO_SHOW" &&
-      ((typeof rest.status === "string" && rest.status === "NO_SHOW") ||
-       (typeof rest.status === "object" &&
+    existing?.status !== 'NO_SHOW' &&
+    ((typeof rest.status === 'string' && rest.status === 'NO_SHOW') ||
+      (typeof rest.status === 'object' &&
         rest.status !== null &&
-        "set" in rest.status &&
-        rest.status.set === "NO_SHOW"));
+        'set' in rest.status &&
+        rest.status.set === 'NO_SHOW'))
 
   const statusChangeToAttending =
-    existing?.status === "CHECKED_IN" &&
-    ((typeof rest.status === "string" && rest.status === "ATTENDING") ||
-      (typeof rest.status === "object" &&
+    existing?.status === 'CHECKED_IN' &&
+    ((typeof rest.status === 'string' && rest.status === 'ATTENDING') ||
+      (typeof rest.status === 'object' &&
         rest.status !== null &&
-        "set" in rest.status &&
-        rest.status.set === "ATTENDING"));
+        'set' in rest.status &&
+        rest.status.set === 'ATTENDING'))
 
   const isRescheduled =
-    (typeof rest.status === "string" && rest.status === "RESCHEDULED") ||
-    (typeof rest.status === "object" &&
+    (typeof rest.status === 'string' && rest.status === 'RESCHEDULED') ||
+    (typeof rest.status === 'object' &&
       rest.status !== null &&
-      "set" in rest.status &&
-      rest.status.set === "RESCHEDULED");
+      'set' in rest.status &&
+      rest.status.set === 'RESCHEDULED')
 
-  let updatedSchedule = rest.schedule;
+  let updatedSchedule = rest.schedule
   if (isRescheduled) {
     const currentSchedule =
-      typeof existing?.schedule === "string"
+      typeof existing?.schedule === 'string'
         ? JSON.parse(existing.schedule)
-        : existing?.schedule ?? {};
+        : existing?.schedule ?? {}
 
     updatedSchedule = {
       ...currentSchedule,
-      ...(typeof updatedSchedule === "object" ? updatedSchedule : {}),
+      ...(typeof updatedSchedule === 'object' ? updatedSchedule : {}),
       schedule_count: (currentSchedule.schedule_count ?? 0) + 1,
-    };
+    }
   }
 
   const prismaData: Prisma.AppointmentUpdateInput = {
@@ -180,52 +236,58 @@ async function updateAppointment(
           },
         }
       : {}),
-  };
+  }
 
   return prisma.appointment.update({
     where: filter,
     data: prismaData,
-    include: {
-      vitals: true,
-      soap_note: true,
-      appointment_providers: true,
-    },
-  });
+    // include: {
+    //   vitals: true,
+    //   soap_note: true,
+    //   appointment_providers: true,
+    // },
+  })
 }
 
 //Cancel or Delete Appointment
 async function deleteAppointment(
-    filter: AppointmentWhereUniqueInput
+  filter: AppointmentWhereUniqueInput
 ): Promise<Appointment> {
-    await prisma.appointmentProviders.deleteMany({
-      where: {
-        appointment_id: filter.id
-      }
-    })
+  await prisma.appointmentProviders.deleteMany({
+    where: {
+      appointment_id: filter.id,
+    },
+  })
 
-    await prisma.vitals.deleteMany({
-      where: {
-        appointment_id: filter.id
-      }
-    })
+  await prisma.vitals.deleteMany({
+    where: {
+      appointment_id: filter.id,
+    },
+  })
 
-    await prisma.soapNote.deleteMany({
-      where: {
-        appointment_id: filter.id
-      }
-    })
+  await prisma.soapNote.deleteMany({
+    where: {
+      appointment_id: filter.id,
+    },
+  })
 
-    return prisma.appointment.delete({
-        where: filter,
-    });
+  return prisma.appointment.delete({
+    where: filter,
+  })
 }
 
 //Assign Provider (AppointmentProviders)
 async function assignProvider(
   data: AppointmentProvidersCreateInput
 ): Promise<Appointment | null> {
-  await prisma.appointmentProviders.create({ data });
-  const appointmentId = data.appointment?.connect?.id;
+  await prisma.appointmentProviders.create({ data })
+  const appointmentId = data.appointment?.connect?.id
+  if (data.appointment?.connect?.id) {
+    await prisma.appointment.update({
+      where: { id: data.appointment.connect.id },
+      data: { status: 'SCHEDULED' },
+    })
+  }
   return appointmentId
     ? prisma.appointment.findUnique({
         where: { id: appointmentId },
@@ -236,52 +298,56 @@ async function assignProvider(
                 select: {
                   first_name: true,
                   last_name: true,
-                }
-              }
-            }
-          }
+                },
+              },
+            },
+          },
         },
       })
-    : null;
+    : null
 }
 
 function isProviderArray(arr: any): arr is { provider_id: string }[] {
-  return Array.isArray(arr) && arr.every(p => typeof p.provider_id === "string");
+  return (
+    Array.isArray(arr) && arr.every((p) => typeof p.provider_id === 'string')
+  )
 }
 
 //Assign Providers while creating appointment
 function buildProvidersCreate(
   providers: any
 ): { create: { provider_id: string }[] } | undefined {
-  if (!isProviderArray(providers)) return undefined;
+  if (!isProviderArray(providers)) return undefined
 
   return {
     create: providers.map(({ provider_id }) => ({ provider_id })),
-  };
+  }
 }
 
-export async function findAppointmentByPatientAndDate(patientId: string, date: Date) {
+export async function findAppointmentByPatientAndDate(
+  patientId: string,
+  date: Date
+) {
   return prisma.appointment.findFirst({
     where: {
       patient_id: patientId,
       schedule: {
         gte: startOfDay(date),
-        lte: endOfDay(date)
-      }
-    }
-  });
+        lte: endOfDay(date),
+      },
+    },
+  })
 }
 
-
 export default {
-    createAppointment,
-    findAppointment,
-    findAppointmentsByPatient,
-    findAppointmentsByProvider,
-    updateAppointment,
-    deleteAppointment,
-    assignProvider,
-    findAppointmentByPatientAndDate,
-    buildProvidersCreate,
-    searchAppointments
+  createAppointment,
+  findAppointment,
+  findAppointmentsByPatient,
+  findAppointmentsByProvider,
+  updateAppointment,
+  deleteAppointment,
+  assignProvider,
+  findAppointmentByPatientAndDate,
+  buildProvidersCreate,
+  searchAppointments,
 }

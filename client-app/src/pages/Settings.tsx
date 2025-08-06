@@ -6,7 +6,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../store/auth-store'
 import { Badge } from '../components/ui/badge'
 import GoogleModal from '../components/auth/google-modal'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import API from '../lib/api'
 
 const Settings = () => {
@@ -20,10 +20,13 @@ const Settings = () => {
 
   useEffect(() => {
     if (calendarAuth && calendarAuth === 'success') {
-      const { data } = API.get('/api/auth/patient/profile')
-      setUser(data.data)
+      const getProfile = async () => {
+        const { data } = await API.get('/api/auth/patient/profile')
+        setUser(data.data)
 
-      toast.success('Google calendar authorization confirmed')
+        toast.success('Google calendar authorization confirmed')
+      }
+      getProfile()
     } else if (calendarAuth && calendarAuth === 'failed') {
       toast.error('Authorization failed. Try again')
     }

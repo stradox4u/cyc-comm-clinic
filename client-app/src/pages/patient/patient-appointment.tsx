@@ -5,6 +5,7 @@ import {
   Eye,
   Loader2,
   AlertCircle,
+  CalendarIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "../../components/ui/button";
@@ -13,7 +14,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AppointmentPurpose,
   appointmentSchema,
-  getWeekdays,
   timeSlots,
   type AppointmentFormData,
 } from "../../lib/schema";
@@ -44,6 +44,14 @@ import { useAuthStore } from "../../store/auth-store";
 import { Input } from "../../components/ui/input";
 import { Skeleton } from "../../components/ui/skeleton";
 import { Alert } from "../../components/ui/alert";
+import { Calendar } from "../../components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "../../lib/utils";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../../components/ui/popover";
 import {
   formatDateParts,
   formatPurposeText,
@@ -73,7 +81,6 @@ const recentVisits = [
 export default function PatientAppointments() {
   const [tab, setTab] = useState("all");
   const user = useAuthStore((state) => state.user);
-  const weekdays = getWeekdays();
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [appointments, setAppointments] = useState<Appointment[]>();
@@ -91,7 +98,8 @@ export default function PatientAppointments() {
       patient_id: {
         id: user?.id,
         insurance_provider_id: user?.insurance_provider_id,
-        name: `${user?.first_name} ${user?.last_name}`,
+        first_name: user?.first_name,
+        last_name: user?.last_name,
       },
       schedule: {
         appointment_date: "",
@@ -112,6 +120,8 @@ export default function PatientAppointments() {
       ...data,
       purposes: [watch("purposes")], // <-- array, not a string
     };
+
+    console.log(payload);
 
     try {
       const response = await fetch(endpoint, {
@@ -142,7 +152,7 @@ export default function PatientAppointments() {
   useEffect(() => {
     const fetchAppointments = async () => {
       setLoading(true);
-      const res = await fetch(`/api/appointment/appointments/${user?.id}`);
+      const res = await fetch(`/api/appointment/appointments`);
       const result = await res.json();
       if (!result?.success) {
         toast.error(result?.message || "Failed to fetch appointments");
@@ -151,7 +161,7 @@ export default function PatientAppointments() {
       setLoading(false);
     };
     fetchAppointments();
-  }, [user?.id, tab]);
+  }, [tab]);
 
   const renderSkeleton = () => (
     <div className="grid gap-6">
@@ -195,68 +205,86 @@ export default function PatientAppointments() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {appointments?.map((appointment) => (
-              <div
-                key={appointment.id}
-                className="flex items-center justify-between p-4 border border-muted rounded-lg"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="text-center">
-                    <div className="text-lg font-bold">
-                      {
-                        formatDateParts(appointment.schedule.appointment_date)
-                          .day
-                      }
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {
-                        formatDateParts(appointment.schedule.appointment_date)
-                          .month
-                      }
-                    </div>
-                  </div>
-                  <div>
-                    <div className="font-medium">
-                      {appointment.purposes.includes("OTHERS")
-                        ? appointment.other_purpose
-                        : formatPurposeText(appointment.purposes)}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {formatTimeToAmPm(appointment.schedule.appointment_time)}
-                      {appointment.appointment_providers.length > 0 && (
-                        <>
-                          with{" "}
-                          {appointment.appointment_providers
-                            .map((ap) => `${ap}`)
-                            .join(", ")}
-                        </>
-                      )}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Main Clinic
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Badge
-                    className="lowercase"
-                    variant={
-                      appointment.status === "CONFIRMED"
-                        ? "default"
-                        : "secondary"
-                    }
-                  >
-                    {appointment.status}
-                  </Badge>
-                  <Button variant="outline" size="sm">
-                    Reschedule
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    Cancel
-                  </Button>
-                </div>
+            {appointments?.length === 0 ? (
+              <div className="text-center space-y-1">
+                <h1 className="text-lg font-semibold text-muted-foreground">
+                  No Scheduled Appointments
+                </h1>
+                <p className="text-sm text-gray-500">
+                  You don't have any appointments yet. Schedule one to get
+                  started.
+                </p>
               </div>
-            ))}
+            ) : (
+              appointments?.map((appointment) => (
+                <div
+                  key={appointment.id}
+                  className="flex items-center justify-between p-4 border border-muted rounded-lg"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="text-center">
+                      <div className="text-lg font-bold">
+                        {
+                          formatDateParts(appointment.schedule.appointment_date)
+                            .day
+                        }
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {
+                          formatDateParts(appointment.schedule.appointment_date)
+                            .month
+                        }
+                      </div>
+                    </div>
+                    <div>
+                      <div className="font-medium">
+                        {appointment.purposes.includes("OTHERS")
+                          ? appointment.other_purpose
+                          : formatPurposeText(appointment.purposes)}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {formatTimeToAmPm(
+                          appointment.schedule.appointment_time
+                        )}
+                        {appointment.appointment_providers.length > 0 && (
+                          <>
+                            {" "}
+                            with{" "}
+                            {appointment.appointment_providers
+                              .map((ap) => {
+                                const p = ap.provider;
+                                return `${p.role_title} ${p.first_name} ${p.last_name}`;
+                              })
+                              .join(", ")}
+                          </>
+                        )}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Main Clinic
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge
+                      className="lowercase"
+                      variant={
+                        appointment.status === "CONFIRMED"
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {appointment.status}
+                    </Badge>
+                    <Button variant="outline" size="sm">
+                      Reschedule
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
@@ -334,9 +362,8 @@ export default function PatientAppointments() {
             </h2>
 
             {/* Date */}
-            <div>
-              <Label className="block mb-1 ">Date</Label>
-              <Select
+            <div className="">
+              {/* <Select
                 onValueChange={(value) =>
                   setValue("schedule.appointment_date", value)
                 }
@@ -352,7 +379,52 @@ export default function PatientAppointments() {
                     </SelectItem>
                   ))}
                 </SelectContent>
-              </Select>
+              </Select> */}
+              <Label className="mb-1 block">Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    className={cn(
+                      "w-full rounded-md border border-muted bg-transparent p-2 text-left text-sm hover:bg-transparent text-white",
+                      !watch("schedule.appointment_date") &&
+                        "text-muted-foreground"
+                    )}
+                  >
+                    {watch("schedule.appointment_date") ? (
+                      format(
+                        new Date(watch("schedule.appointment_date")),
+                        "PPP"
+                      )
+                    ) : (
+                      <span>Select a date</span>
+                    )}
+                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={
+                      watch("schedule.appointment_date")
+                        ? new Date(watch("schedule.appointment_date"))
+                        : undefined
+                    }
+                    onSelect={(date) =>
+                      date &&
+                      setValue(
+                        "schedule.appointment_date",
+                        date.toISOString(),
+                        {
+                          shouldValidate: true,
+                        }
+                      )
+                    }
+                    disabled={(date) => date < new Date()}
+                  />
+                </PopoverContent>
+              </Popover>
+
               {errors.schedule?.appointment_date && (
                 <p className="text-red-500 text-xs">
                   {errors.schedule?.appointment_date.message}
@@ -410,7 +482,7 @@ export default function PatientAppointments() {
 
               {errors.purposes && (
                 <p className="text-red-500 text-xs">
-                  {errors.purposes.message}
+                  {"Please select a purpose"}
                 </p>
               )}
 
