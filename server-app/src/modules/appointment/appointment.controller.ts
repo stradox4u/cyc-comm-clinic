@@ -335,7 +335,7 @@ const updateAppointment = catchAsync(async (req, res) => {
     await logAppointmentEvents({
       userId,
       appointmentId,
-      statusChanged,
+      statusChanged
     });
   }
 

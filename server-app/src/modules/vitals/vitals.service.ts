@@ -30,17 +30,28 @@ function buildVitals(
 }
 
 async function recordVitals(
-  payload: VitalsCreateInput,
-  createdById: string
+  payload: Prisma.VitalsCreateInput,
 ): Promise<Vitals> {
+  const { appointment, ...rest } = payload;
+
+  const { created_by_id, events, ...vitalsData } = rest as any;
+
   return prisma.vitals.create({
     data: {
-      ...payload,
+      ...vitalsData,
+      created_by: {
+        connect: { id: created_by_id }
+      },
+      appointment,
       events: {
-        create: [{
-          type: EventType.VITALS_RECORDED,
-          created_by_id: createdById,
-        }]
+        create: [
+          {
+            type: EventType.VITALS_RECORDED,
+            created_by: {
+              connect: { id: created_by_id }
+            }
+          }
+        ]
       }
     }
   });
@@ -50,43 +61,6 @@ async function getVitalsByAppointmentId(appointmentId: string) {
   return prisma.vitals.findMany({
     where: {
       appointment_id: appointmentId
-    },
-    include: {
-      appointment: true,
-    }
-  });
-}
-
-async function getVitalsByPatientId(patientId: string) {
-  return prisma.vitals.findMany({
-    where: {
-      appointment: {
-        patient_id: patientId,
-      }
-    },
-    include: {
-      appointment: true,
-    }
-  });
-}
-
-async function getVitalsByProviderId(providerId: string) {
-  return prisma.vitals.findMany({
-    where: {
-      appointment: {
-        appointment_providers: {
-          some: {
-            provider_id: providerId,
-          }
-        }
-      }
-    },
-    include: {
-      appointment: {
-        include: {
-          appointment_providers: true,
-        }
-      }
     }
   });
 }
@@ -95,7 +69,5 @@ async function getVitalsByProviderId(providerId: string) {
 export default {
   buildVitals,
   recordVitals,
-  getVitalsByAppointmentId,
-  getVitalsByPatientId,
-  getVitalsByProviderId,
+  getVitalsByAppointmentId
 }
