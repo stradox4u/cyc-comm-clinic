@@ -16,7 +16,13 @@ export type Appointment = {
   patient: Patient;
   purposes: string[];
   other_purpose: string;
-  status: "SUBMITTED" | "CONFIRMED" | "CANCELLED" | "COMPLETED" | "SCHEDULED";
+  status:
+    | "SUBMITTED"
+    | "CONFIRMED"
+    | "CANCELLED"
+    | "COMPLETED"
+    | "SCHEDULED"
+    | "ATTENDING";
   has_insurance: boolean;
   is_follow_up_required: boolean;
   follow_up_id: string | null;
