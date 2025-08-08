@@ -29,6 +29,7 @@ import {
   type Vitals,
 } from '../../lib/type'
 import { formatDate } from '../../lib/utils'
+import { useNavigate } from 'react-router-dom'
 
 const medications = [
   {
@@ -49,6 +50,7 @@ const medications = [
   },
 ]
 function PatientDashboard() {
+  const navigate = useNavigate()
   const { user, loading } = useCheckPatientProfile()
   const [stats, setStats] = useState<{
     nextAppointment: Appointment
@@ -109,7 +111,7 @@ function PatientDashboard() {
               <Calendar className="h-4 w-4" />
             </CardHeader>
             <CardContent>
-              {stats?.nextAppointment && (
+              {stats?.nextAppointment ? (
                 <>
                   <div className="text-2xl font-bold">
                     {formatDate(
@@ -126,6 +128,11 @@ function PatientDashboard() {
                       stats?.nextAppointment?.schedule?.appointment_time
                     )}
                   </p>
+                </>
+              ) : (
+                <>
+                  <div className="text-2xl font-bold">--</div>
+                  <p className="text-xs">No record yet</p>
                 </>
               )}
             </CardContent>
@@ -231,7 +238,11 @@ function PatientDashboard() {
                   </Badge>
                 </div>
               ))}
-              <Button className="w-full bg-transparent" variant="outline">
+              <Button
+                onClick={() => navigate('/appointments')}
+                className="w-full bg-transparent"
+                variant="outline"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Schedule New Appointment
               </Button>
