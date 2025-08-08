@@ -1,11 +1,19 @@
-import type { Patient, Prisma } from '@prisma/client'
+import {
+  EventType,
+  type Appointment,
+  type InsuranceProvider,
+  type Patient,
+  type Prisma,
+} from '@prisma/client'
 import prisma from '../../config/prisma.js'
+import { subMonths } from 'date-fns'
 
 export type PatientWhereInput = Prisma.PatientWhereInput
 export type PatientFindManyArgs = Prisma.PatientFindManyArgs
 export type PatientWhereUniqueInput = Prisma.PatientWhereUniqueInput
 export type PatientCreateInput = Prisma.PatientCreateInput
 export type PatientUpdateInput = Prisma.PatientUpdateInput
+export type AppointmentWhereInput = Prisma.AppointmentWhereInput
 
 const findPatients = async (
   filter?: PatientWhereInput,
@@ -13,17 +21,71 @@ const findPatients = async (
     page?: number
     limit?: number
   }
-): Promise<Omit<Patient, 'password'>[]> => {
+): Promise<
+  [
+    (Omit<Patient, 'password'> & {
+      insurance_provider: InsuranceProvider | null
+    })[],
+    total: number
+  ]
+> => {
   if (options?.page && options?.limit) {
     options.skip = (options?.page - 1) * options?.limit
   }
 
-  return await prisma.patient.findMany({
-    where: filter,
-    skip: options?.skip || 0,
-    take: options?.limit || 20,
-    omit: { password: true },
-  })
+  return await prisma.$transaction([
+    prisma.patient.findMany({
+      where: filter,
+      skip: options?.skip || 0,
+      take: options?.limit || 20,
+      omit: { password: true },
+      orderBy: { updated_at: 'desc' },
+      include: { insurance_provider: true },
+    }),
+    prisma.patient.count(),
+  ])
+}
+
+const findPatientsStats = async (): Promise<[number, number, number]> => {
+  return await prisma.$transaction([
+    // total patients
+    prisma.patient.count(),
+    // active patient in last month
+    prisma.patient.count({
+      where: {
+        appointments: {
+          some: { updated_at: { gte: subMonths(new Date(), 1) } },
+        },
+      },
+    }),
+    // new patient registration this month
+    prisma.patient.count({
+      where: { created_at: { gte: subMonths(new Date(), 1) } },
+    }),
+  ])
+}
+
+const findPatientStats = async (
+  filter: AppointmentWhereInput
+): Promise<[Appointment | null, Appointment | null]> => {
+  return await prisma.$transaction([
+    // last visit date
+    prisma.appointment.findFirst({
+      where: {
+        patient_id: filter.patient_id,
+        events: { some: { type: EventType.VITALS_RECORDED } },
+      },
+      orderBy: { updated_at: 'desc' },
+    }),
+    // next appointment
+    prisma.appointment.findFirst({
+      where: {
+        patient_id: filter.patient_id,
+        schedule: { path: ['appointment_date'], gte: new Date() },
+      },
+      orderBy: { created_at: 'desc' },
+    }),
+  ])
 }
 
 const findPatient = async (
@@ -60,6 +122,8 @@ const deletePatient = async (
 
 export default {
   findPatients,
+  findPatientsStats,
+  findPatientStats,
   findPatient,
   createPatient,
   updatePatient,

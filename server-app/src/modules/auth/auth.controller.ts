@@ -291,18 +291,6 @@ const patientChangePassword = catchAsync(async (req, res) => {
   })
 })
 
-const patientGenerateUploadUrl = catchAsync(async (req, res) => {
-  const { fileType, fileName } = req.query as any
-  const key = `profile-images/${Date.now()}-${fileName}`
-
-  const signedUrl = await awsS3.getPresignedUploadUrl({ fileType, key })
-
-  res.status(200).json({
-    success: true,
-    data: { signedUrl, key },
-  })
-})
-
 const providerLogin = catchAsync(async (req, res) => {
   let newProvider: LoginSchema = req.body
 
@@ -422,6 +410,18 @@ const providerChangePassword = catchAsync(async (req, res) => {
   })
 })
 
+const generateUploadUrl = catchAsync(async (req, res) => {
+  const { fileType, fileName } = req.query as any
+  const key = `profile-images/${Date.now()}-${fileName}`
+
+  const signedUrl = await awsS3.getPresignedUploadUrl({ fileType, key })
+
+  res.status(200).json({
+    success: true,
+    data: { signedUrl, key },
+  })
+})
+
 const logout = catchAsync((req, res, next) => {
   req.session.destroy((err) => {
     if (err) next(err)
@@ -444,11 +444,11 @@ export default {
   patientForgotPassword,
   patientResetPassword,
   patientChangePassword,
-  patientGenerateUploadUrl,
   providerLogin,
   providerProfile,
   providerForgotPassword,
   providerResetPassword,
   providerChangePassword,
+  generateUploadUrl,
   logout,
 }
