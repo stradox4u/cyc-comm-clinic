@@ -19,27 +19,16 @@ import {
 } from '../../components/ui/card'
 import { Badge } from '../../components/ui/badge'
 import GoogleModal from '../../components/auth/google-modal'
-
-const upcomingAppointments = [
-  {
-    id: 1,
-    date: '2024-01-25',
-    time: '10:00 AM',
-    provider: 'Dr. Smith',
-    type: 'Annual Check-up',
-    location: 'Main Clinic',
-    status: 'confirmed',
-  },
-  {
-    id: 2,
-    date: '2024-02-10',
-    time: '2:30 PM',
-    provider: 'Dr. Johnson',
-    type: 'Follow-up',
-    location: 'Cardiology Dept',
-    status: 'pending',
-  },
-]
+import API from '../../lib/api'
+import { useEffect, useState } from 'react'
+import {
+  formatPurposeText,
+  formatTimeToAmPm,
+  type Appointment,
+  type SoapNote,
+  type Vitals,
+} from '../../lib/type'
+import { formatDate } from '../../lib/utils'
 
 const medications = [
   {
@@ -61,7 +50,21 @@ const medications = [
 ]
 function PatientDashboard() {
   const { user, loading } = useCheckPatientProfile()
-  console.log(user)
+  const [stats, setStats] = useState<{
+    nextAppointment: Appointment
+    lastVitals: Vitals
+    lastSoapNote: SoapNote
+    upcomingAppointments: Appointment[]
+  } | null>(null)
+
+  const fetchStats = async () => {
+    const { data } = await API.get('/api/user/dashboard')
+    setStats(data.data)
+  }
+
+  useEffect(() => {
+    fetchStats()
+  }, [])
 
   if (loading) return <p>Loading profile...</p>
   return (
@@ -106,8 +109,25 @@ function PatientDashboard() {
               <Calendar className="h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">Jan 25</div>
-              <p className="text-xs">10:00 AM with Dr. Smith</p>
+              {stats?.nextAppointment && (
+                <>
+                  <div className="text-2xl font-bold">
+                    {formatDate(
+                      `${stats?.nextAppointment.schedule.appointment_date.substring(
+                        0,
+                        10
+                      )}T${
+                        stats?.nextAppointment?.schedule?.appointment_time
+                      }:00.000Z`
+                    )}
+                  </div>
+                  <p className="text-xs">
+                    {formatTimeToAmPm(
+                      stats?.nextAppointment?.schedule?.appointment_time
+                    )}
+                  </p>
+                </>
+              )}
             </CardContent>
           </Card>
 
@@ -181,7 +201,7 @@ function PatientDashboard() {
               <CardDescription>Your scheduled visits</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {upcomingAppointments.map((appointment) => (
+              {stats?.upcomingAppointments?.slice(0, 5).map((appointment) => (
                 <div
                   key={appointment.id}
                   className="flex items-center justify-between p-3 border border-muted rounded-lg"
@@ -190,18 +210,21 @@ function PatientDashboard() {
                     <Calendar className="h-5 w-5 text-blue-500" />
                     <div>
                       <div className="font-medium">
-                        {appointment.date} at {appointment.time}
+                        {formatDate(appointment?.schedule?.appointment_date)} at{' '}
+                        {formatTimeToAmPm(
+                          appointment?.schedule?.appointment_time
+                        )}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {appointment.type} with {appointment.provider}
+                        {formatPurposeText(appointment?.purposes)}
                       </div>
                     </div>
                   </div>
                   <Badge
                     variant={
-                      appointment.status === 'confirmed'
-                        ? 'default'
-                        : 'secondary'
+                      appointment.status === 'SUBMITTED'
+                        ? 'secondary'
+                        : 'default'
                     }
                   >
                     {appointment.status}

@@ -14,6 +14,7 @@ import { insuranceProviderRoute } from './modules/insuranceProvider/index.js'
 import { providerRoute } from './modules/provider/index.js'
 import { patientRoute } from './modules/patient/index.js'
 import { soapNoteRoute } from './modules/soapnote/index.js'
+import { userRoute } from './modules/user/index.js'
 
 const app = express()
 
@@ -62,6 +63,7 @@ app.use('/api/appointment', appointmentRoute, vitalsRoute, soapNoteRoute)
 app.use('/api/provider/appointment', appointmentProviderRoute)
 app.use('/api/provider/vitals', vitalsRoute)
 app.use('/api/provider/soapnotes', soapNoteRoute)
+app.use('/api/user', userRoute)
 
 app.use(notFoundHandler)
 app.use(errorHandler)
