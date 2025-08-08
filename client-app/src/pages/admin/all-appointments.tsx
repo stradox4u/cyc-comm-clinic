@@ -42,11 +42,8 @@ export default function Appointments() {
 
   const [appointments, setAppointments] = useState<Appointment[]>();
 
-  const [viewVitals, setViewVitals] = useState(false);
   const [toggle, setToggle] = useState(false);
   const user = useAuthStore((state) => state.user);
-  const userId = user?.id;
-  const [appointmentId, setAppointmentId] = useState("");
   const [providers, setProviders] = useState<Provider[]>();
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(
     null
@@ -230,20 +227,15 @@ export default function Appointments() {
           <TabsContent value="today" className="space-y-4">
             <AppointmentList
               filteredAppointments={filteredAppointments}
-              viewVitals={viewVitals}
               providers={providers}
-              appointmentId={appointmentId}
               adminRole={adminRole}
               handleAssignProvider={handleAssignProvider}
               loadingProviders={loadingProviders}
               selectedProviderId={selectedProviderId}
               sendReminder={sendReminder}
-              setAppointmentId={setAppointmentId}
               setSelectedProviderId={setSelectedProviderId}
               setToggle={setToggle}
-              setViewVitals={setViewVitals}
               toggle={toggle}
-              userId={userId}
             />
           </TabsContent>
 

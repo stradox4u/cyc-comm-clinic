@@ -1,4 +1,6 @@
-import { User, Phone, Mail, Clock } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
+import { User, Phone, Mail, Clock, FileText, Activity } from "lucide-react";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import {
@@ -6,6 +8,7 @@ import {
   formatPurposeText,
   type Appointment,
   type Provider,
+  type AppointmentStatus
 } from "../lib/type";
 import {
   Select,
@@ -16,8 +19,8 @@ import {
 } from "./ui/select";
 import { Skeleton } from "./ui/skeleton";
 import VitalsFormDialog from "./vitals-form";
-import { VitalsCard, type VitalsCardProps } from "./vitals-card";
 import SoapNoteDialog from "./soap-note-dialog";
+import { useAuthStore } from "../store/auth-store";
 
 interface AppointmentCardProps {
   appointment: Appointment;
@@ -31,20 +34,13 @@ interface AppointmentCardProps {
   handleAssignProvider: (providerId: string, appointmentId: string) => void;
   sendReminder: (appointmentId: string, method: "sms" | "email") => void;
   setAppointmentId: React.Dispatch<React.SetStateAction<string | null>>;
-  viewVitals: boolean;
-  loadingVitals: boolean;
-  setViewVitals: (val: boolean) => void;
-  fetchPatientVitals: (appointmentId: string) => void;
-  patientVitals: VitalsCardProps | undefined;
 }
 
 export default function AppointmentCard({
   appointment,
   adminRole,
   providers,
-  loadingVitals,
   loadingProviders,
-  patientVitals,
   toggle,
   setToggle,
   selectedProviderId,
@@ -52,11 +48,27 @@ export default function AppointmentCard({
   handleAssignProvider,
   sendReminder,
   setAppointmentId,
-  setViewVitals,
-  viewVitals,
-  fetchPatientVitals,
 }: AppointmentCardProps) {
-  const isScheduled = appointment.status === "SCHEDULED";
+  const [appointmentStatus, setAppointmentStatus] = useState<AppointmentStatus>("SCHEDULED");
+  const [hasVitals, setHasVitals] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setAppointmentStatus(appointment.status);
+  }, [appointment.status]);
+
+  useEffect(() => {
+    if (appointment.vitals) {
+      setHasVitals(true);
+    }
+  }, [appointment.vitals]);
+
+  const isScheduled = appointmentStatus === "SCHEDULED";
+  const user = useAuthStore((state) => state.user)
+
+  const handleNavigateToVitals = () => {
+    navigate(`/provider/vitals/${appointment.id}`);
+  };
 
   return (
     <div className="flex items-center justify-between p-4 border border-muted rounded-lg">
@@ -91,14 +103,14 @@ export default function AppointmentCard({
             </span>
             <Badge
               variant={
-                appointment.status === "CONFIRMED"
+                appointmentStatus === "CONFIRMED"
                   ? "default"
-                  : appointment.status === "SCHEDULED"
+                  : appointmentStatus === "SCHEDULED"
                   ? "secondary"
                   : "destructive"
               }
             >
-              {appointment.status}
+              {appointmentStatus}
             </Badge>
           </div>
 
@@ -133,12 +145,6 @@ export default function AppointmentCard({
               <div className="text-xs italic">{appointment.notes}</div>
             )}
           </div>
-          {viewVitals &&
-            (loadingVitals ? (
-              <Skeleton className="h-16 w-full rounded-md" />
-            ) : (
-              patientVitals && <VitalsCard {...patientVitals} />
-            ))}
         </div>
       </div>
 
@@ -209,23 +215,55 @@ export default function AppointmentCard({
             ))}
         </div>
       ) : isScheduled ? (
-        <>
+        <div className="flex items-center space-x-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleNavigateToVitals}
+            className="bg-transparent"
+          >
+            <Activity className="mr-1 h-3 w-3" />
+            Vitals & SOAP
+          </Button>
           <VitalsFormDialog
             appointmentId={appointment.id}
             setAppointmentId={setAppointmentId}
+            userId={user?.id ?? ""}
+            setHasVitals={setHasVitals}
+            setAppointmentStatus={setAppointmentStatus}
           />
-          <SoapNoteDialog appointmentId={appointment.id} />
-        </>
+          <SoapNoteDialog 
+            appointmentId={appointment.id}
+            vitals={appointment.vitals}
+            purposes={appointment.purposes || appointment.other_purpose}
+            setAppointmentId={setAppointmentId}
+          />
+        </div>
       ) : (
-        <Button
-          onClick={() => {
-            setAppointmentId(appointment.id);
-            setViewVitals(true);
-            fetchPatientVitals(appointment.id);
-          }}
-        >
-          View Vitals
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleNavigateToVitals}
+            className="bg-transparent"
+          >
+            <FileText className="mr-1 h-3 w-3" />
+            Vitals & SOAP
+          </Button>
+          <VitalsFormDialog
+            appointmentId={appointment.id}
+            setAppointmentId={setAppointmentId}
+            userId={user?.id ?? ""}
+            setHasVitals={setHasVitals}
+            setAppointmentStatus={setAppointmentStatus}
+          />
+          <SoapNoteDialog 
+            appointmentId={appointment.id}
+            vitals={appointment.vitals}
+            purposes={appointment.purposes || appointment.other_purpose}
+            setAppointmentId={setAppointmentId}
+          />
+        </div>
       )}
     </div>
   );

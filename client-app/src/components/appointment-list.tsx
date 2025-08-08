@@ -8,8 +8,6 @@ import {
 } from "../components/ui/card";
 import type { Appointment, Provider } from "../lib/type";
 import AppointmentCard from "./appointment-card";
-import { type VitalsCardProps } from "./vitals-card";
-import { toast } from "sonner";
 
 export default function AppointmentList({
   filteredAppointments,
@@ -24,47 +22,17 @@ export default function AppointmentList({
   sendReminder,
 }: {
   filteredAppointments: Appointment[] | undefined;
-  viewVitals: boolean;
-  userId: string | undefined;
-  adminRole: boolean; // or appropriate type
-  providers: Provider[] | undefined; // define ProviderType
+  adminRole: boolean;
+  providers: Provider[] | undefined;
   loadingProviders: boolean;
   toggle: boolean;
-  appointmentId?: string;
   setToggle: React.Dispatch<React.SetStateAction<boolean>>;
   selectedProviderId: string | null;
   setSelectedProviderId: React.Dispatch<React.SetStateAction<string | null>>;
   handleAssignProvider: (providerId: string, appointmentId: string) => void;
   sendReminder: (appointmentId: string, method: "sms" | "email") => void;
-  setAppointmentId: React.Dispatch<React.SetStateAction<string>>;
-  setViewVitals: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const [viewVitalsAppointmentId, setViewVitalsAppointmentId] = useState<
-    string | null
-  >(null);
-  const [loadingVitals, setLoadingVitals] = useState(false);
-  const [patientVitals, setPatientVitals] = useState<VitalsCardProps>();
-  
-  const fetchPatientVitals = async (appointmentId: string) => {
-    setLoadingVitals(true);
-    try {
-      const response = await fetch(`/api/provider/vitals/${appointmentId}`);
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        toast.error(result?.message || "Failed to update vitals");
-        console.error("Server error:", result?.error);
-        return;
-      }
-      setPatientVitals(result?.data?.[0]);
-      setViewVitalsAppointmentId(appointmentId);
-    } catch (error) {
-      toast.error("Something went wrong");
-      console.error(error);
-    } finally {
-      setLoadingVitals(false);
-    }
-  };
+  const [appointmentId, setAppointmentId] = useState<string | null>(null);
   return (
     <Card>
       <CardHeader>
@@ -88,23 +56,12 @@ export default function AppointmentList({
               providers={providers}
               loadingProviders={loadingProviders}
               toggle={toggle}
-              loadingVitals={loadingVitals}
               setToggle={setToggle}
               selectedProviderId={selectedProviderId}
               setSelectedProviderId={setSelectedProviderId}
               handleAssignProvider={handleAssignProvider}
               sendReminder={sendReminder}
-              viewVitals={viewVitalsAppointmentId === appointment.id}
-              patientVitals={
-                viewVitalsAppointmentId === appointment.id
-                  ? patientVitals
-                  : undefined
-              }
-              setAppointmentId={setViewVitalsAppointmentId}
-              setViewVitals={(val: boolean) =>
-                !val && setViewVitalsAppointmentId(null)
-              }
-              fetchPatientVitals={fetchPatientVitals}
+              setAppointmentId={setAppointmentId}
             />
           ))}
         </div>

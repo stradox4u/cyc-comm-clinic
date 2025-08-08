@@ -159,3 +159,84 @@ export function timeSlots(
   }
   return slots;
 }
+
+export const VitalsRecordSchema = z.object({
+    blood_pressure: z.string().optional(),
+    heart_rate: z.string().optional(),
+    temperature: z.string().optional(), 
+    height: z.string().optional(),
+    weight: z.string().optional(),
+    respiratory_rate: z.string().optional(),
+    oxygen_saturation: z.string().optional(),
+    bmi: z.string().optional(),
+    others: z.string().optional(),
+    created_by_id: z.uuid().optional(),
+    appointment_id: z.uuid().optional(),
+    created_at: z.string().optional(),
+    created_by: z.object({
+        id: z.string(),
+        first_name: z.string(),
+        last_name: z.string(),
+        role_title: z.string(),
+    }).optional(),
+})
+
+export type Vitals = z.infer<typeof VitalsRecordSchema>
+
+const jsonValue: z.ZodType<any> = z.lazy(() =>
+  z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    z.array(jsonValue),
+    z.record(z.string(), jsonValue),
+  ])
+);
+
+export const subjectiveSchema = z.object({
+    symptoms: z.array(z.string()),
+    purpose_of_appointment: z.array(z.string()).optional(),
+    others: z.string()
+}).partial()
+
+export const objectiveSchema = z.object({
+    physical_exam_report: z.array(z.string()).optional(),
+    vitals_summary: VitalsRecordSchema.optional(),
+    labs: z.record(z.string(), jsonValue).optional(),
+    others: z.string()
+}).partial()
+
+export const assessmentSchema = z.object({
+    diagnosis: z.array(z.string()),
+    differential: z.array(z.string()),
+}).partial()
+
+export const prescriptionSchema = z.object({
+    medication_name: z.string(),
+    dosage: z.string(),
+    frequency: z.string(),
+    duration: z.string(),
+    instructions: z.string(),
+    start_date: z.coerce.date()
+})
+
+export const planSchema = z.object({
+    prescription: z.array(prescriptionSchema).optional(),
+    test_requests: z.record(z.string(), jsonValue).optional(),
+    recommendation: z.record(z.string(), jsonValue).optional(),
+    has_referral : z.boolean(),
+    referred_provider_name: z.string().optional(),
+    others: z.string()
+}).partial()
+
+export const SoapNoteRecordSchema = z.object({
+    appointment_id: z.uuid(),
+    subjective: subjectiveSchema.optional(),
+    objective: objectiveSchema.optional(),
+    assessment: assessmentSchema.optional(),
+    plan: planSchema.optional()
+})
+
+export type SoapNote = z.infer<typeof SoapNoteRecordSchema>
+

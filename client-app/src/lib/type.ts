@@ -31,7 +31,7 @@ export type Appointment = {
     appointment_date: string;
     appointment_time: string;
   };
-  vitals_id: string | null;
+  vitals: object;
   created_at: string;
   updated_at: string;
   appointment_providers: AppointmentProvider[];
@@ -89,3 +89,11 @@ export const providerRoles = new Set([
   "PAEDIATRICIAN",
   "GYNAECOLOGIST",
 ]);
+
+export type AppointmentStatus =
+  | "SUBMITTED"
+  | "CONFIRMED"
+  | "CANCELLED"
+  | "COMPLETED"
+  | "SCHEDULED"
+  | "ATTENDING";

@@ -61,6 +61,19 @@ async function getVitalsByAppointmentId(appointmentId: string) {
   return prisma.vitals.findMany({
     where: {
       appointment_id: appointmentId
+    },
+    include: {
+      created_by: { 
+        select: {
+          id: true,
+          first_name: true,
+          last_name: true,
+          role_title: true
+        }
+      }
+    },
+    orderBy: {
+      created_at: "desc"
     }
   });
 }

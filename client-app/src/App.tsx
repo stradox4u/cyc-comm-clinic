@@ -103,6 +103,7 @@ function App() {
           <Route path="/provider/insurance" element={<InsuranceCheck />} />
           <Route path="/provider/intake" element={<PatientIntake />} />
           <Route path="/provider/vitals" element={<VitalsSoapPage />} />
+          <Route path="/provider/vitals/:appointmentId" element={<VitalsSoapPage />} />
           <Route
             path="/provider/providers-dashboard"
             element={<ProvidersDashboard />}
