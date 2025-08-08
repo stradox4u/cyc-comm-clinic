@@ -3,6 +3,7 @@ import {
   createPatient,
   getPatient,
   getPatients,
+  getPatientsStats,
   searchPatientsByName,
 } from './api'
 import type { CreatePatientSchema } from './schema'
@@ -15,6 +16,13 @@ const usePatients = (query: IPagination) => {
   return useQuery({
     queryFn: () => getPatients(query),
     queryKey: ['patients', query.page],
+  })
+}
+
+const usePatientsStats = () => {
+  return useQuery({
+    queryFn: () => getPatientsStats(),
+    queryKey: ['patients-stats'],
   })
 }
 
@@ -50,4 +58,10 @@ const useCreatePatient = () => {
     },
   })
 }
-export { usePatients, useSearchPatientsByName, usePatient, useCreatePatient }
+export {
+  usePatients,
+  usePatientsStats,
+  useSearchPatientsByName,
+  usePatient,
+  useCreatePatient,
+}

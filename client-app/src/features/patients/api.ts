@@ -7,6 +7,11 @@ const getPatients = async ({ page, limit }: IPagination) => {
   return data
 }
 
+const getPatientsStats = async () => {
+  const { data } = await API.get(`/api/patients/stats`)
+  return data
+}
+
 const searchPatientsByName = async (
   name: string,
   { page, limit }: IPagination
@@ -39,6 +44,7 @@ const deletePatient = async (id: string) => {
 
 export {
   getPatients,
+  getPatientsStats,
   searchPatientsByName,
   getPatient,
   createPatient,

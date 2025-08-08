@@ -17,10 +17,39 @@ const getPatients = catchAsync(async (req, res) => {
 
   const [patients, total] = await patientService.findPatients({}, options)
 
+  const data = await Promise.all(
+    patients.map(async (patient) => {
+      const [lastVisit, nextAppointment] =
+        await patientService.findPatientStats({
+          patient_id: patient.id,
+        })
+      return { ...patient, lastVisit, nextAppointment }
+    })
+  )
+
   res.status(200).json({
     success: true,
-    data: patients,
+    data: data,
     total: total,
+  })
+})
+
+const getPatientsStats = catchAsync(async (req, res) => {
+  const [
+    totalPatients,
+    totalActivePatientsInLastMonth,
+    totalRegistrationsInLastMonth,
+  ] = await patientService.findPatientsStats()
+
+  const data = {
+    totalPatients,
+    totalActivePatientsInLastMonth,
+    totalRegistrationsInLastMonth,
+  }
+
+  res.status(200).json({
+    success: true,
+    data: data,
   })
 })
 
@@ -30,16 +59,26 @@ const searchPatientsByName = catchAsync(async (req, res) => {
   const filter: PatientWhereInput = {
     OR: [
       { first_name: { contains: query.search, mode: 'insensitive' } },
-      { last_name: { contains: query.search } },
+      { last_name: { contains: query.search, mode: 'insensitive' } },
     ],
   }
   const options = { page: Number(query.page), limit: Number(query.limit) }
 
   const [patients, total] = await patientService.findPatients(filter, options)
 
+  const data = await Promise.all(
+    patients.map(async (patient) => {
+      const [lastVisit, nextAppointment] =
+        await patientService.findPatientStats({
+          patient_id: patient.id,
+        })
+      return { ...patient, lastVisit, nextAppointment }
+    })
+  )
+
   res.status(200).json({
     success: true,
-    data: patients,
+    data: data,
     total: total,
   })
 })
@@ -122,6 +161,7 @@ const deletePatient = catchAsync(async (req, res) => {
 
 export default {
   getPatients,
+  getPatientsStats,
   searchPatientsByName,
   getPatient,
   createPatient,
