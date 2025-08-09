@@ -154,7 +154,7 @@ const sendAppointmentReminderMail = async (
 }
 
 const sendAppointmentResheduleRequestMail = async (
-  appointment: { id: string; schedule: object; purposes: AppointmentPurpose[] },
+  appointment: { schedule: unknown; purposes: AppointmentPurpose[] },
   patient: { email: string; first_name: string }
 ) => {
   return await sendEmail({
@@ -176,7 +176,7 @@ const sendAppointmentResheduleRequestMail = async (
 
         If you would like to reschedule this appointment, please feel free to reschedule here:
         <br/><br/>
-        <a href="${config.ORIGIN_URL}/appointments/${appointment.id}" 
+        <a href="${config.ORIGIN_URL}/appointments" 
           style="text-align:center;background:#4f5ddb;color:#fff;padding:6px 10px;font-size:16px;border-radius:3px;"
         >
           Reschedule appointment
