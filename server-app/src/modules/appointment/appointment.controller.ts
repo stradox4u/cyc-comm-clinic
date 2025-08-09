@@ -328,16 +328,16 @@ const updateAppointment = catchAsync(async (req, res) => {
     { id: appointmentId },
     updateData,
     userId
-  );
+  )
 
-  const statusChanged = newStatus !== undefined && newStatus !== previousStatus;
+  const statusChanged = newStatus !== undefined && newStatus !== previousStatus
 
-  if (loggedInUser.role === "PROVIDER") {
+  if (loggedInUser.role === 'PROVIDER') {
     await logAppointmentEvents({
       userId,
       appointmentId,
-      statusChanged
-    });
+      statusChanged,
+    })
   }
 
   return res.status(200).json({
@@ -416,126 +416,133 @@ const assignAppointmentProvider = catchAsync(async (req, res) => {
   return res.status(200).json({
     success: true,
     message: 'Appointment provider assigned successfully',
-    data: assignedProvider
-  });
-});
+    data: assignedProvider,
+  })
+})
 
 const waitTimeTracking = catchAsync(async (req, res) => {
-  const loggedInUser = getLoggedInUser(req);
+  const loggedInUser = getLoggedInUser(req)
 
   if (!loggedInUser) {
     return res.status(401).json({
       success: false,
-      message: "Unauthorized: User not found",
-    });
+      message: 'Unauthorized: User not found',
+    })
   }
 
-  let averageWaitTime;
+  let averageWaitTime
 
   if (
-    loggedInUser.role_title === "ADMIN" ||
-    loggedInUser.role_title === "RECEPTIONIST"
+    loggedInUser.role_title === 'ADMIN' ||
+    loggedInUser.role_title === 'RECEPTIONIST'
   ) {
-    averageWaitTime = await appointmentService.getAverageWaitTimeForAllProviders();
+    averageWaitTime =
+      await appointmentService.getAverageWaitTimeForAllProviders()
   } else {
     averageWaitTime = await appointmentService.getAverageWaitTimeForProvider(
       loggedInUser.id
-    );
+    )
   }
 
-  if (!averageWaitTime || (Array.isArray(averageWaitTime) && averageWaitTime.length === 0)) {
-    return res.status(404).json({
-      success: false,
-      message: "No wait time data available",
-    });
+  if (
+    !averageWaitTime ||
+    (Array.isArray(averageWaitTime) && averageWaitTime.length === 0)
+  ) {
+    averageWaitTime = 0 // Default to 0 if no data found
   }
 
   return res.status(200).json({
     success: true,
     message:
-      loggedInUser.role_title === "ADMIN" || loggedInUser.role_title === "RECEPTIONIST"
-        ? "Wait times for all providers"
-        : "Wait time for this provider",
+      loggedInUser.role_title === 'ADMIN' ||
+      loggedInUser.role_title === 'RECEPTIONIST'
+        ? 'Wait times for all providers'
+        : 'Wait time for this provider',
     data: averageWaitTime,
-  });
-});
+  })
+})
 
 const patchAppointment = catchAsync(async (req, res) => {
-  const { appointmentId } = req.params;
-  const updates = req.body;
-  const loggedInUser = getLoggedInUser(req);
+  const { appointmentId } = req.params
+  const updates = req.body
+  const loggedInUser = getLoggedInUser(req)
 
-  const appointment = await appointmentService.findAppointment({ id: appointmentId });
+  const appointment = await appointmentService.findAppointment({
+    id: appointmentId,
+  })
 
   if (!appointment) {
-    return res.status(404).json({ success: false, message: "Appointment not found" });
+    return res
+      .status(404)
+      .json({ success: false, message: 'Appointment not found' })
   }
 
   try {
-    authorizeUserForViewingAppointment(appointment, loggedInUser);
-    authorizeSensitiveAppointmentFields(req, updates);
+    authorizeUserForViewingAppointment(appointment, loggedInUser)
+    authorizeSensitiveAppointmentFields(req, updates)
   } catch (err: any) {
-    return res.status(err.statusCode || 403).json({ success: false, message: err.message });
+    return res
+      .status(err.statusCode || 403)
+      .json({ success: false, message: err.message })
   }
 
-  const previousStatus = appointment.status;
+  const previousStatus = appointment.status
   const updated = await prisma.appointment.update({
     where: { id: appointmentId },
     data: updates,
-  });
+  })
 
-  const statusChanged = updates.status && updates.status !== previousStatus;
+  const statusChanged = updates.status && updates.status !== previousStatus
 
-  if (loggedInUser.role === "PROVIDER" && statusChanged) {
+  if (loggedInUser.role === 'PROVIDER' && statusChanged) {
     await logAppointmentEvents({
       userId: loggedInUser.id,
       appointmentId,
       statusChanged,
-    });
+    })
   }
 
-  res.status(200).json({ success: true, message: 'Appointment updated', data: updated });
-});
+  res
+    .status(200)
+    .json({ success: true, message: 'Appointment updated', data: updated })
+})
 
 const getNoShowRates = catchAsync(async (req, res) => {
-  const user = req.user;
+  const user = req.user
 
   if (!user) {
-    return res.status(401).json({ success: false, message: "Unauthorized" });
+    return res.status(401).json({ success: false, message: 'Unauthorized' })
   }
 
-  let data;
+  let data
 
-  if (user.roleTitle === "ADMIN" || user.roleTitle === "RECEPTIONIST") {
-    data = await appointmentService.getNoShowRatesPerProviderPatient();
+  if (user.roleTitle === 'ADMIN' || user.roleTitle === 'RECEPTIONIST') {
+    data = await appointmentService.getNoShowRatesPerProviderPatient()
   } else if (user.type === UserType.PROVIDER) {
-    data = await appointmentService.getNoShowRatesPerProviderPatient(user.id);
+    data = await appointmentService.getNoShowRatesPerProviderPatient(user.id)
   } else {
-    return res.status(403).json({ success: false, message: "Access denied" });
+    return res.status(403).json({ success: false, message: 'Access denied' })
   }
 
   if (!data || data.length === 0) {
-    return res.status(404).json({
-      success: false,
-      message: 'No data found for no-show rates',
-    });
+   data = 0
   }
 
   res.status(200).json({
     success: true,
     message: 'No-show rates fetched successfully',
     data,
-  });
-});
+  })
+})
 
 export default {
-    appointmentCreate,
-    getAppointment,
-    getAppointments,
-    updateAppointment,
-    appointmentDelete,
-    assignAppointmentProvider,
-    waitTimeTracking,
-    patchAppointment,
-    getNoShowRates
+  appointmentCreate,
+  getAppointment,
+  getAppointments,
+  updateAppointment,
+  appointmentDelete,
+  assignAppointmentProvider,
+  waitTimeTracking,
+  patchAppointment,
+  getNoShowRates,
 }
