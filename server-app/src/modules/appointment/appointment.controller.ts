@@ -519,7 +519,7 @@ const getNoShowRates = catchAsync(async (req, res) => {
   if (user.roleTitle === 'ADMIN' || user.roleTitle === 'RECEPTIONIST') {
     data = await appointmentService.getNoShowRatesForAdmin()
   } else if (user.type === UserType.PROVIDER) {
-    data = await appointmentService.getNoShowRatesPerProviderPatient(user.id)
+    data = await appointmentService.getNoShowRatesPerProviderPatient(user.id, true)
   } else {
     return res.status(403).json({ success: false, message: 'Access denied' })
   }
