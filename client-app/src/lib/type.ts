@@ -16,7 +16,13 @@ export type Appointment = {
   patient: Patient;
   purposes: string[];
   other_purpose: string;
-  status: "SUBMITTED" | "CONFIRMED" | "CANCELLED" | "COMPLETED" | "SCHEDULED";
+  status:
+    | "SUBMITTED"
+    | "CONFIRMED"
+    | "CANCELLED"
+    | "COMPLETED"
+    | "SCHEDULED"
+    | "ATTENDING";
   has_insurance: boolean;
   is_follow_up_required: boolean;
   follow_up_id: string | null;
@@ -25,7 +31,7 @@ export type Appointment = {
     appointment_date: string;
     appointment_time: string;
   };
-  vitals_id: string | null;
+  vitals: object;
   created_at: string;
   updated_at: string;
   appointment_providers: AppointmentProvider[];
@@ -83,3 +89,11 @@ export const providerRoles = new Set([
   "PAEDIATRICIAN",
   "GYNAECOLOGIST",
 ]);
+
+export type AppointmentStatus =
+  | "SUBMITTED"
+  | "CONFIRMED"
+  | "CANCELLED"
+  | "COMPLETED"
+  | "SCHEDULED"
+  | "ATTENDING";

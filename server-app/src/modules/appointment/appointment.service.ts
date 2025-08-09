@@ -89,6 +89,9 @@ async function searchAppointments(
         },
       },
     },
+    orderBy: {
+      updated_at: "desc",
+    }
   })
 }
 
@@ -122,7 +125,10 @@ async function findAppointmentsByPatient(
         },
       },
     },
-  })
+    orderBy: {
+      updated_at: "desc"
+    },
+  });
 }
 
 // Find appointments by provider
@@ -159,6 +165,9 @@ async function findAppointmentsByProvider(
         },
       },
     },
+    orderBy: {
+      updated_at: "desc"
+    }
   })
   return appointmentProviders.map((entry) => entry.appointment)
 }

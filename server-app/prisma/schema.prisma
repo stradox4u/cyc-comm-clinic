@@ -205,19 +205,23 @@ model SoapNote {
 }
 
 model Vitals {
-  id             String      @id @default(uuid())
-  appointment    Appointment @relation(fields: [appointment_id], references: [id])
-  appointment_id String      @unique
-  blood_pressure String?
-  heart_rate     String?
-  temperature    String?
-  height         String?
-  weight         String?
-  created_by_id  String?
-  created_by     Provider?   @relation("VitalsUpdatedBy", fields: [created_by_id], references: [id])
-  created_at     DateTime    @default(now())
-  updated_at     DateTime?   @updatedAt
-  events         Events[]
+  id                      String      @id @default(uuid())
+  appointment             Appointment @relation(fields: [appointment_id], references: [id])
+  appointment_id          String      @unique
+  blood_pressure          String?
+  heart_rate              String?
+  temperature             String?
+  height                  String?
+  weight                  String?
+  respiratory_rate        String?
+  oxygen_saturation       String?
+  bmi                     String?
+  others                  String?
+  created_by_id           String?
+  created_by              Provider?   @relation("VitalsUpdatedBy", fields: [created_by_id], references: [id])
+  created_at              DateTime    @default(now())
+  updated_at              DateTime?   @updatedAt
+  events                  Events[]
 
   @@map("vitals")
 }
