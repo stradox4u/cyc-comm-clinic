@@ -1,8 +1,8 @@
-import { Calendar, GlobeIcon, LogOut } from 'lucide-react'
+import { Calendar, GlobeIcon } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { toast } from 'sonner'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../store/auth-store'
 import { Badge } from '../components/ui/badge'
 import GoogleModal from '../components/auth/google-modal'
@@ -11,8 +11,6 @@ import API from '../lib/api'
 
 const Settings = () => {
   const { user, setUser } = useAuthStore()
-  const navigate = useNavigate()
-  const logout = useAuthStore((state) => state.logout)
   const [showGoogleModal, setShowGoogleModal] = useState<boolean>(false)
   const [searchParams] = useSearchParams()
 
@@ -32,37 +30,10 @@ const Settings = () => {
     }
   }, [])
 
-  const handleLogout = async () => {
-    try {
-      const res = await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      })
-
-      if (!res.ok) throw new Error('Logout failed')
-
-      logout()
-    } catch (error) {
-      console.error('Logout error:', error)
-    } finally {
-      toast.success('Logged out successfully')
-      navigate('/login')
-    }
-  }
-
   return (
     <>
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-2xl font-bold">Settings</h2>
-        <Button
-          className="w-fit 2xl:w-1/5"
-          size={'sm'}
-          variant={'destructive'}
-          onClick={handleLogout}
-        >
-          <LogOut />
-          Logout
-        </Button>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-">
@@ -91,8 +62,8 @@ const Settings = () => {
             )}
           </CardContent>
         </Card>
-        {showGoogleModal && <GoogleModal open={true} />}
       </div>
+      {showGoogleModal && <GoogleModal open={showGoogleModal} />}
     </>
   )
 }

@@ -11,13 +11,15 @@ import { Button } from '../ui/button'
 import { Calendar } from 'lucide-react'
 import axios from 'axios'
 import { toast } from 'sonner'
+import { useAuthStore } from '../../store/auth-store'
 
-const GoogleModal = ({ open }: { open?: boolean }) => {
+const GoogleModal = ({ open = false }: { open?: boolean }) => {
   const [searchParams] = useSearchParams()
+  const { user } = useAuthStore()
+  const onboarding = searchParams.get('onboarding')
+  const isOnboarding = !!onboarding
 
-  const isOnboarding = !!searchParams.get('onboarding')
-
-  if (!isOnboarding) return
+  if (user?.has_calendar_access) return
 
   const handleClick = async () => {
     const res = await axios.get('/api/auth/google', { withCredentials: true })
@@ -29,7 +31,7 @@ const GoogleModal = ({ open }: { open?: boolean }) => {
   }
 
   return (
-    <Dialog defaultOpen={isOnboarding} open={open}>
+    <Dialog defaultOpen={onboarding ? isOnboarding : open}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="text-center">

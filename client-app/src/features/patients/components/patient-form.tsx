@@ -228,6 +228,7 @@ const PatientForm = ({ formData, setFormData, onSubmit, isLoading }: Props) => {
                 handleInputChange('insurance_coverage', e.target.value)
               }
               placeholder="e.g., Blue Cross Blue Shield"
+              required={false}
             />
           </div>
           <div className="space-y-2">

@@ -17,8 +17,8 @@ const createPatientSchema = z.object({
     .max(11),
   blood_group: z.string('Blood group is invalid'),
   allergies: z.array(z.string('Allergies is invalid')),
-  insurance_coverage: z.string().nullable(),
-  insurance_provider_id: z.uuid().nullable(),
+  insurance_coverage: z.string().optional(),
+  insurance_provider_id: z.uuid().optional(),
 })
 
 export type CreatePatientSchema = z.infer<typeof createPatientSchema>
