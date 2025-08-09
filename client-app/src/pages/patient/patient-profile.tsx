@@ -1,18 +1,18 @@
-import { Mail, MapPin, Phone, Settings, User } from "lucide-react";
-import { Button } from "../../components/ui/button";
+import { Mail, MapPin, Phone, Settings, User } from 'lucide-react'
+import { Button } from '../../components/ui/button'
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { useCheckPatientProfile } from "../../hooks/fetch-patient";
-import { Skeleton } from "../../components/ui/skeleton";
-import ProfilePhoto from "../../components/profile-photo";
+} from '../../components/ui/card'
+import { Badge } from '../../components/ui/badge'
+import { useCheckPatientProfile } from '../../hooks/fetch-patient'
+import { Skeleton } from '../../components/ui/skeleton'
+import ProfilePhoto from '../../components/profile-photo'
 
 const PatientProfile = () => {
-  const { user: patientData, loading } = useCheckPatientProfile();
+  const { user: patientData, loading } = useCheckPatientProfile()
 
   if (loading) {
     return (
@@ -60,7 +60,7 @@ const PatientProfile = () => {
           </Card>
         </div>
       </>
-    );
+    )
   }
 
   return (
@@ -75,7 +75,7 @@ const PatientProfile = () => {
 
       <div className="grid gap-6">
         <Card>
-          <div className="md:flex md:justify-between px-12">
+          <div className="md:flex md:justify-evenly px-12">
             <ProfilePhoto photo={patientData?.image_url} />
             <div>
               <CardHeader>
@@ -133,11 +133,11 @@ const PatientProfile = () => {
               <div className="text-sm text-muted-foreground">
                 {patientData?.date_of_birth
                   ? new Date(patientData.date_of_birth).toLocaleDateString(
-                      "en-GB",
+                      'en-GB',
                       {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
                       }
                     )
                   : null}
@@ -162,7 +162,7 @@ const PatientProfile = () => {
             <div>
               <div className="font-medium">Emergency Contact</div>
               <div className="text-sm text-muted-foreground">
-                {patientData?.emergency_contact_name}{" "}
+                {patientData?.emergency_contact_name}{' '}
               </div>
               <div className="text-sm text-muted-foreground">
                 {patientData?.emergency_contact_phone}
@@ -172,6 +172,6 @@ const PatientProfile = () => {
         </Card>
       </div>
     </>
-  );
-};
-export default PatientProfile;
+  )
+}
+export default PatientProfile
