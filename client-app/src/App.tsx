@@ -106,7 +106,10 @@ function App() {
           <Route element={<ProtectedLayout />}>
             <Route path="/provider/dashboard" element={<Dashboard />} />
             <Route path="/provider/appointments" element={<Appointments />} />
-            <Route path="/provider/insurance" element={<InsuranceCheck />} />
+            <Route
+              path="/provider/insurance-check"
+              element={<InsuranceCheck />}
+            />
             <Route path="/provider/intake" element={<PatientIntake />} />
             <Route path="/provider/vitals" element={<VitalsSoapPage />} />
             <Route

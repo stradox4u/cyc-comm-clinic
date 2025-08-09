@@ -4,9 +4,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { Button } from "../../components/ui/button";
+} from '../../components/ui/card'
+import { Badge } from '../../components/ui/badge'
+import { Button } from '../../components/ui/button'
 import {
   Users,
   Calendar,
@@ -16,8 +16,8 @@ import {
   TrendingUp,
   Phone,
   MapPin,
-} from "lucide-react";
-import { Link } from "react-router-dom";
+} from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 export default function AdminDashboard() {
   return (
@@ -104,34 +104,34 @@ export default function AdminDashboard() {
               <div className="space-y-4">
                 {[
                   {
-                    time: "9:00 AM",
-                    patient: "Sarah Johnson",
-                    type: "Check-up",
-                    status: "confirmed",
+                    time: '9:00 AM',
+                    patient: 'Sarah Johnson',
+                    type: 'Check-up',
+                    status: 'confirmed',
                   },
                   {
-                    time: "9:30 AM",
-                    patient: "Michael Chen",
-                    type: "Follow-up",
-                    status: "confirmed",
+                    time: '9:30 AM',
+                    patient: 'Michael Chen',
+                    type: 'Follow-up',
+                    status: 'confirmed',
                   },
                   {
-                    time: "10:00 AM",
-                    patient: "Emma Davis",
-                    type: "Vaccination",
-                    status: "pending",
+                    time: '10:00 AM',
+                    patient: 'Emma Davis',
+                    type: 'Vaccination',
+                    status: 'pending',
                   },
                   {
-                    time: "10:30 AM",
-                    patient: "Robert Wilson",
-                    type: "Consultation",
-                    status: "confirmed",
+                    time: '10:30 AM',
+                    patient: 'Robert Wilson',
+                    type: 'Consultation',
+                    status: 'confirmed',
                   },
                   {
-                    time: "11:00 AM",
-                    patient: "Lisa Anderson",
-                    type: "Screening",
-                    status: "no-show",
+                    time: '11:00 AM',
+                    patient: 'Lisa Anderson',
+                    type: 'Screening',
+                    status: 'no-show',
                   },
                 ].map((appointment, index) => (
                   <div
@@ -151,11 +151,11 @@ export default function AdminDashboard() {
                     </div>
                     <Badge
                       variant={
-                        appointment.status === "confirmed"
-                          ? "default"
-                          : appointment.status === "pending"
-                          ? "secondary"
-                          : "destructive"
+                        appointment.status === 'confirmed'
+                          ? 'default'
+                          : appointment.status === 'pending'
+                          ? 'secondary'
+                          : 'destructive'
                       }
                     >
                       {appointment.status}
@@ -194,7 +194,7 @@ export default function AdminDashboard() {
                 variant="outline"
                 className="w-full justify-start bg-transparent"
               >
-                <Link to="/insurance">
+                <Link to="/provider/insurance-check">
                   <CheckCircle className="mr-2 h-4 w-4" />
                   Check Insurance
                 </Link>
@@ -264,5 +264,5 @@ export default function AdminDashboard() {
         </Card>
       </div>
     </div>
-  );
+  )
 }
