@@ -132,76 +132,42 @@ export default function AdminDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {[
-                  {
-                    time: '9:00 AM',
-                    patient: 'Sarah Johnson',
-                    type: 'Check-up',
-                    status: 'confirmed',
-                  },
-                  {
-                    time: '9:30 AM',
-                    patient: 'Michael Chen',
-                    type: 'Follow-up',
-                    status: 'confirmed',
-                  },
-                  {
-                    time: '10:00 AM',
-                    patient: 'Emma Davis',
-                    type: 'Vaccination',
-                    status: 'pending',
-                  },
-                  {
-                    time: '10:30 AM',
-                    patient: 'Robert Wilson',
-                    type: 'Consultation',
-                    status: 'confirmed',
-                  },
-                  {
-                    time: '11:00 AM',
-                    patient: 'Lisa Anderson',
-                    type: 'Screening',
-                    status: 'no-show',
-                  },
-                ].map((appointment, index) => (
-                {todayAppointments?.map((appointment) => (
-                  <div
-                    key={appointment?.id}
-                    className="flex items-center justify-between p-3 border border-muted rounded-lg"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="text-sm font-medium">
-                        {formatTimeToAmPm(
-                          appointment?.schedule?.appointment_time
-                        )}
+              {todayAppointments?.map((appointment) => (
+                <div
+                  key={appointment?.id}
+                  className="flex items-center justify-between p-3 border border-muted rounded-lg"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="text-sm font-medium">
+                      {formatTimeToAmPm(
+                        appointment?.schedule?.appointment_time
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-medium">
+                        {appointment?.patient?.first_name}{' '}
+                        {appointment?.patient?.last_name}
                       </div>
-                      <div>
-                        <div className="font-medium">
-                          {appointment?.patient?.first_name}{' '}
-                          {appointment?.patient?.last_name}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {formatPurposeText(appointment?.purposes)}
-                        </div>
+                      <div className="text-sm text-muted-foreground">
+                        {formatPurposeText(appointment?.purposes)}
                       </div>
                     </div>
-                    <Badge
-                      variant={
-                        appointment?.status === 'SCHEDULED'
-                          ? 'default'
-                          : appointment?.status === 'SUBMITTED'
-                          ? 'secondary'
-                          : appointment?.status === 'CANCELLED'
-                          ? 'destructive'
-                          : 'outline'
-                      }
-                    >
-                      {appointment?.status}
-                    </Badge>
                   </div>
-                ))}
-              </div>
+                  <Badge
+                    variant={
+                      appointment?.status === 'SCHEDULED'
+                        ? 'default'
+                        : appointment?.status === 'SUBMITTED'
+                        ? 'secondary'
+                        : appointment?.status === 'CANCELLED'
+                        ? 'destructive'
+                        : 'outline'
+                    }
+                  >
+                    {appointment?.status}
+                  </Badge>
+                </div>
+              ))}
             </CardContent>
           </Card>
 
