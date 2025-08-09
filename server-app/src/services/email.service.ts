@@ -1,6 +1,6 @@
 import { sendEmail } from '../config/email.js'
 import config from '../config/config.js'
-import type { Appointment } from '@prisma/client'
+import type { Appointment, AppointmentPurpose } from '@prisma/client'
 import type { AppointmentSchedule } from '../cron-job.js'
 
 const sendWelcomeMail = async (email: string, firstName: string) => {
@@ -127,7 +127,7 @@ const sendAppointmentReminderMail = async (
       <h3>Dear ${patient.first_name},</h3>
       <div>
         This is a friendly reminder for your ${
-          config.ORIGIN_URL
+          appointment.purposes.length > 0 ? appointment.purposes.join() : ''
         } appointment coming up:
         <br/><br/>
         <li>
@@ -153,10 +153,48 @@ const sendAppointmentReminderMail = async (
   })
 }
 
+const sendAppointmentResheduleRequestMail = async (
+  appointment: { schedule: unknown; purposes: AppointmentPurpose[] },
+  patient: { email: string; first_name: string }
+) => {
+  return await sendEmail({
+    to: patient.email,
+    subject: 'Reschedule your missed appointment',
+    html: `
+      <h3>Dear ${patient.first_name},</h3>
+      <div>
+        You missed your ${
+          appointment.purposes.length > 0 ? appointment.purposes.join() : ''
+        } appointment today scheduled at:
+        <br/><br/>
+        <li>
+          ${(appointment.schedule as AppointmentSchedule).appointment_date}
+        </li>
+        <li>
+          ${(appointment.schedule as AppointmentSchedule).appointment_time}
+        </li>
+
+        If you would like to reschedule this appointment, please feel free to reschedule here:
+        <br/><br/>
+        <a href="${config.ORIGIN_URL}/appointments" 
+          style="text-align:center;background:#4f5ddb;color:#fff;padding:6px 10px;font-size:16px;border-radius:3px;"
+        >
+          Reschedule appointment
+        </a>
+      </div>
+      <br/>
+      Warm Regards, 
+      <br/>
+      ${config.APP_NAME} Team.
+    `,
+  })
+}
+
 export default {
   sendWelcomeMail,
   sendEmailVerificationRequestMail,
   sendForgotPasswordMail,
   sendPasswordChangedMail,
   sendAppointmentReminderMail,
+  sendAppointmentResheduleRequestMail,
 }
