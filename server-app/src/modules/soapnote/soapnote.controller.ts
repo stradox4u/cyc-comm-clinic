@@ -1,10 +1,12 @@
 import {
-  NotFoundError,
-  ValidationError,
+  NotFoundError
 } from '../../middlewares/errorHandler.js';
 import type { SoapNoteRecord } from './soapnote.validation.js'
 import soapnoteService from './soapnote.service.js';
 import catchAsync from '../../utils/catchAsync.js';
+import { UserType } from '../../types/index.js';
+import prisma from '../../config/prisma.js';
+import { ProviderRoleTitle } from '@prisma/client';
 
 const createSoapNote = catchAsync(async (req, res) => {
     const newSoapNote: SoapNoteRecord = req.body
@@ -15,7 +17,7 @@ const createSoapNote = catchAsync(async (req, res) => {
             message: "Provider ID is required to create a soap note"
         });
     }
-    const savedSoapNote = await soapnoteService.createSoapNote(newSoapNote, provider_id)
+    const savedSoapNote = await soapnoteService.createSoapNote(newSoapNote)
 
     res.status(201).json({
         success: true,
@@ -27,6 +29,7 @@ const createSoapNote = catchAsync(async (req, res) => {
 const updateSoapNote = catchAsync(async (req, res) => {
     const provider_id = req.user?.id;
     const soapNoteId = req.params.id;
+    const updateData = req.body;
 
     if (!provider_id) {
         return res.status(400).json({
@@ -41,7 +44,7 @@ const updateSoapNote = catchAsync(async (req, res) => {
         throw new NotFoundError('Soapnote not found');
     }
 
-    const savedSoapNote = await soapnoteService.updateSoapNote(soapNote, provider_id)
+    const savedSoapNote = await soapnoteService.updateSoapNote(soapNoteId, updateData)
 
     res.status(201).json({
         success: true,
@@ -76,31 +79,81 @@ const getSoapNote = catchAsync(async (req, res) => {
     })
 })
 
-const getSoapNotes = catchAsync(async (req, res) => {
-    const user_id = req.user?.id;
-    const role = req.user?.roleTitle;
+interface PaginationQuery {
+  page?: string;
+  limit?: string;
+  appointmentId?: string;
+}
 
-    if (!user_id || !role) {
-        return res.status(400).json({
-            success: false,
-            message: "User ID and role are required to get SOAP notes"
-        });
+
+const getSoapNotes = catchAsync(async (req, res) => {
+  const user = req.user;
+  const query = req.query as PaginationQuery;
+  const appointmentId = query.appointmentId;
+
+  if (!user?.id || !user.roleTitle) {
+    return res.status(400).json({
+      success: false,
+      message: "User ID and role are required to get SOAP notes",
+    });
+  }
+
+  if (appointmentId) {
+    const appointment = await prisma.appointment.findUnique({
+      where: { id: appointmentId },
+      select: { patient_id: true, appointment_providers: { select: { provider_id: true } } },
+    });
+
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: "Appointment not found" });
     }
 
-    const soapNotes = await soapnoteService.findSoapNotes(user_id, role);
+    if (user.type === UserType.PATIENT) {
+      if (appointment.patient_id !== user.id) {
+        return res.status(403).json({ success: false, message: "Access denied" });
+      }
+    } else if (user.type === UserType.PROVIDER) {
+      const isAdminOrReceptionist =
+        user.roleTitle === ProviderRoleTitle.ADMIN || user.roleTitle === ProviderRoleTitle.RECEPTIONIST;
+
+      if (!isAdminOrReceptionist) {
+        const assignedProviderIds = appointment.appointment_providers.map(p => p.provider_id);
+        if (!assignedProviderIds.includes(user.id)) {
+          return res.status(403).json({ success: false, message: "Access denied" });
+        }
+      }
+    }
+
+    const soapNotes = await soapnoteService.findSoapNotesByAppointment(appointmentId, user.id, user.roleTitle);
 
     if (!soapNotes || soapNotes.length === 0) {
-        return res.status(404).json({
-            success: false,
-            message: "No SOAP notes found"
-        });
+      return res.status(404).json({
+        success: false,
+        message: "No SOAP notes found for this appointment",
+      });
     }
 
-    res.status(200).json({
-        success: true,
-        data: soapNotes,
-        message: "SOAP notes fetched successfully"
+    return res.status(200).json({
+      success: true,
+      data: soapNotes,
+      message: "SOAP notes fetched successfully",
     });
+  } else {
+    const soapNotes = await soapnoteService.findSoapNotes(user.id, user.roleTitle);
+
+    if (!soapNotes || soapNotes.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No SOAP notes found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: soapNotes,
+      message: "SOAP notes fetched successfully",
+    });
+  }
 });
 
 

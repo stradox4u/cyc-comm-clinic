@@ -1,45 +1,50 @@
-import type {
-  Appointment,
-  AppointmentProviders,
-  Prisma,
-  Vitals,
-  SoapNote
+import {
+  type Appointment,
+  type AppointmentProviders,
+  type Prisma,
+  type Vitals,
+  type SoapNote,
+  EventType
 } from "@prisma/client";
 import prisma from "../../config/prisma.js";
 import { startOfDay, endOfDay } from 'date-fns';
 import { includes } from "zod";
+import { 
+  calculateWaitTimeMinutes,
+  calculateNoShowRate 
+} from "./appointment.utils.js";
 
 export type AppointmentWhereUniqueInput = Prisma.AppointmentWhereUniqueInput
 export type AppointmentWhereInput = Prisma.AppointmentWhereInput
 export type AppointmentCreateInput = Prisma.AppointmentCreateInput
 export type AppointmentUpdateInput = Prisma.AppointmentUpdateInput
-export type AppointmentUncheckedUpdateInput = Prisma.AppointmentUncheckedUpdateInput
+export type AppointmentUncheckedUpdateInput =
+  Prisma.AppointmentUncheckedUpdateInput
 
-export type AppointmentProvidersCreateInput = Prisma.AppointmentProvidersCreateInput
-export type AppointmentProvidersWhereInput = Prisma.AppointmentProvidersWhereInput
-
+export type AppointmentProvidersCreateInput =
+  Prisma.AppointmentProvidersCreateInput
+export type AppointmentProvidersWhereInput =
+  Prisma.AppointmentProvidersWhereInput
 
 // Create Appointment
 async function createAppointment(
-    payload: AppointmentCreateInput
+  payload: AppointmentCreateInput
 ): Promise<Appointment> {
-    return prisma.appointment.create({
-        data: payload,
-        include: {
-            vitals: true,
-            soap_note: true,
-        }
-    })
-  }
+  return prisma.appointment.create({
+    data: payload,
+    include: {
+      vitals: true,
+      soap_note: true,
+    },
+  })
+}
 
 // Get single Appointment
-async function findAppointment(
-  filter: AppointmentWhereUniqueInput
-): Promise<
+async function findAppointment(filter: AppointmentWhereUniqueInput): Promise<
   | (Appointment & {
-      appointment_providers: AppointmentProviders[];
-      vitals?: Vitals | null;
-      soap_note: SoapNote[];
+      appointment_providers: AppointmentProviders[]
+      vitals?: Vitals | null
+      soap_note: SoapNote[]
     })
   | null
 > {
@@ -50,21 +55,41 @@ async function findAppointment(
       vitals: true,
       soap_note: true,
     },
-  });
+  })
 
   if (appointment && !appointment.appointment_providers) {
-    appointment.appointment_providers = [];
+    appointment.appointment_providers = []
   }
-  return appointment;
+  return appointment
 }
 
 // Get by status(search)
 async function searchAppointments(
-    filter: AppointmentWhereInput
+  filter: AppointmentWhereInput
 ): Promise<Appointment[]> {
-    return await prisma.appointment.findMany({
-        where: filter,
-    })
+  return await prisma.appointment.findMany({
+    where: filter,
+    include: {
+      appointment_providers: {
+        include: {
+          provider: {
+            select: {
+              role_title: true,
+              first_name: true,
+              last_name: true,
+            },
+          },
+        },
+      },
+      patient: {
+        select: {
+          first_name: true,
+          last_name: true,
+          insurance_provider_id: true,
+        },
+      },
+    },
+  })
 }
 
 // Find appointments by patient
@@ -75,12 +100,29 @@ async function findAppointmentsByPatient(
   return prisma.appointment.findMany({
     where: {
       patient_id,
-      ...(filter || {})
+      ...(filter || {}),
     },
     include: {
-      appointment_providers: true,
+      appointment_providers: {
+        include: {
+          provider: {
+            select: {
+              role_title: true,
+              first_name: true,
+              last_name: true,
+            },
+          },
+        },
+      },
+      patient: {
+        select: {
+          first_name: true,
+          last_name: true,
+          insurance_provider_id: true,
+        },
+      },
     },
-  });
+  })
 }
 
 // Find appointments by provider
@@ -96,74 +138,100 @@ async function findAppointmentsByProvider(
     include: {
       appointment: {
         include: {
-          appointment_providers: true,
+          appointment_providers: {
+            include: {
+              provider: {
+                select: {
+                  role_title: true,
+                  first_name: true,
+                  last_name: true,
+                },
+              },
+            },
+          },
+          patient: {
+            select: {
+              first_name: true,
+              last_name: true,
+              insurance_provider_id: true,
+            },
+          },
         },
       },
     },
-  });
-  return appointmentProviders.map((entry) => entry.appointment);
+  })
+  return appointmentProviders.map((entry) => entry.appointment)
 }
 
-{/*Update Appointment
+{
+  /*Update Appointment
 (vitals and soap_note intragration handled too)
 rescheduled count handled
-  */}
+  */
+}
 async function updateAppointment(
   filter: AppointmentWhereUniqueInput,
-  payload: AppointmentUpdateInput & { vitals?: any; soap_note?: any[] }
+  payload: AppointmentUpdateInput & { vitals?: any; soap_note?: any[] },
+  userId: string
 ): Promise<
   Appointment & {
-    vitals?: any;
-    soap_note?: any[];
+    vitals?: any
+    soap_note?: any[]
   }
 > {
-  const { vitals, soap_note, ...rest } = payload;
+  const { vitals, soap_note, ...rest } = payload
   const existing = await prisma.appointment.findUnique({
     where: filter,
     select: { status: true, schedule: true },
-  });
+  })
 
   const statusChangeToNoShow =
-    existing?.status !== "NO_SHOW" &&
-      ((typeof rest.status === "string" && rest.status === "NO_SHOW") ||
-       (typeof rest.status === "object" &&
+    existing?.status !== 'NO_SHOW' &&
+    ((typeof rest.status === 'string' && rest.status === 'NO_SHOW') ||
+      (typeof rest.status === 'object' &&
         rest.status !== null &&
-        "set" in rest.status &&
-        rest.status.set === "NO_SHOW"));
+        'set' in rest.status &&
+        rest.status.set === 'NO_SHOW'))
 
   const statusChangeToAttending =
-    existing?.status === "CHECKED_IN" &&
-    ((typeof rest.status === "string" && rest.status === "ATTENDING") ||
+    existing?.status === 'CHECKED_IN' &&
+    ((typeof rest.status === 'string' && rest.status === 'ATTENDING') ||
+      (typeof rest.status === 'object' &&
+        rest.status !== null &&
+        'set' in rest.status &&
+        rest.status.set === 'ATTENDING'))
+
+  const statusChangeToCheckedIn =
+    existing?.status !== "CHECKED_IN" &&
+    ((typeof rest.status === "string" && rest.status === "CHECKED_IN") ||
       (typeof rest.status === "object" &&
         rest.status !== null &&
         "set" in rest.status &&
-        rest.status.set === "ATTENDING"));
+        rest.status.set === "CHECKED_IN"));
 
   const isRescheduled =
-    (typeof rest.status === "string" && rest.status === "RESCHEDULED") ||
-    (typeof rest.status === "object" &&
+    (typeof rest.status === 'string' && rest.status === 'RESCHEDULED') ||
+    (typeof rest.status === 'object' &&
       rest.status !== null &&
-      "set" in rest.status &&
-      rest.status.set === "RESCHEDULED");
+      'set' in rest.status &&
+      rest.status.set === 'RESCHEDULED')
 
-  let updatedSchedule = rest.schedule;
+  let updatedSchedule = rest.schedule
   if (isRescheduled) {
     const currentSchedule =
-      typeof existing?.schedule === "string"
+      typeof existing?.schedule === 'string'
         ? JSON.parse(existing.schedule)
-        : existing?.schedule ?? {};
+        : existing?.schedule ?? {}
 
     updatedSchedule = {
       ...currentSchedule,
-      ...(typeof updatedSchedule === "object" ? updatedSchedule : {}),
+      ...(typeof updatedSchedule === 'object' ? updatedSchedule : {}),
       schedule_count: (currentSchedule.schedule_count ?? 0) + 1,
-    };
+    }
   }
 
   const prismaData: Prisma.AppointmentUpdateInput = {
     ...rest,
-    ...(statusChangeToNoShow && { no_show_at: new Date() }),
-    ...(statusChangeToAttending && { attending_at: new Date() }),
     ...(updatedSchedule ? { schedule: updatedSchedule } : {}),
     ...(vitals
       ? 'id' in vitals && vitals.id
@@ -180,11 +248,41 @@ async function updateAppointment(
           },
         }
       : {}),
-  };
+  }
 
+  const newEvents = [];
+  if (statusChangeToCheckedIn) {
+    newEvents.push({
+      type: EventType.APPOINTMENT_STATUS_CHANGED,
+      status: "CHECKED_IN",
+      created_at: new Date(),
+      created_by_id: userId,
+    })
+  }
+
+  if (statusChangeToAttending) {
+    newEvents.push({
+      type: EventType.APPOINTMENT_STATUS_CHANGED,
+      status: "ATTENDING",
+      created_at: new Date(),
+      created_by_id: userId,
+    })
+  }
+
+  if (statusChangeToNoShow) {
+    newEvents.push({
+      type: EventType.APPOINTMENT_STATUS_CHANGED,
+      status: "NO_SHOW",
+      created_at: new Date(),
+      created_by_id: userId,
+    })
+  }
   return prisma.appointment.update({
     where: filter,
-    data: prismaData,
+    data: {
+      ...prismaData,
+      ...(newEvents.length > 0 ? { events: { create: newEvents } } : {}),
+    },
     include: {
       vitals: true,
       soap_note: true,
@@ -193,39 +291,115 @@ async function updateAppointment(
   });
 }
 
+// wait time service
+export async function getAverageWaitTimeForProvider(providerId: string): Promise<number | null> {
+  const appointmentProviders = await prisma.appointmentProviders.findMany({
+    where: { provider_id: providerId },
+    select: { appointment_id: true },
+  });
+
+  if (appointmentProviders.length === 0) return null;
+
+  const waitTimes = await Promise.all(
+    appointmentProviders.map(async ({ appointment_id }) => {
+      const events = await prisma.events.findMany({
+        where: {
+          appointment_id,
+          type: EventType.APPOINTMENT_STATUS_CHANGED,
+        },
+        orderBy: { created_at: 'desc' },
+      });
+
+      const checkedInEvent = events.find(e => e.status === 'CHECKED_IN');
+      const attendingEvent = events.find(e => e.status === 'ATTENDING');
+
+      if (!checkedInEvent || !attendingEvent) return null;
+
+      return calculateWaitTimeMinutes(
+        new Date(checkedInEvent.created_at),
+        new Date(attendingEvent.created_at)
+      );
+    })
+  );
+
+  const validWaitTimes = waitTimes.filter((wt): wt is number => wt !== null);
+
+  if (validWaitTimes.length === 0) return null;
+
+  const sum = validWaitTimes.reduce((a, b) => a + b, 0);
+  const average = sum / validWaitTimes.length;
+
+  return average;
+}
+
+// Admin wait time service for all Provider
+export async function getAverageWaitTimeForAllProviders(): Promise<
+  {
+    providerId: string,
+    providerName: string,
+    averageWaitTime: number | null
+  } []
+>{
+  const providers = await prisma.provider.findMany({
+    select: {
+      id: true,
+      role_title: true,
+      first_name: true,
+      last_name: true,
+    }
+  });
+  const results = await Promise.all(
+    providers.map(async (provider) => {
+      const avgWaitTime = await getAverageWaitTimeForProvider(provider.id)
+      return {
+        providerId: provider.id,
+        providerName: `${provider.role_title} ${provider.first_name} ${provider.last_name}`,
+        averageWaitTime: avgWaitTime,
+      }
+    })
+  );
+  return results;
+}
+
 //Cancel or Delete Appointment
 async function deleteAppointment(
-    filter: AppointmentWhereUniqueInput
+  filter: AppointmentWhereUniqueInput
 ): Promise<Appointment> {
-    await prisma.appointmentProviders.deleteMany({
-      where: {
-        appointment_id: filter.id
-      }
-    })
+  await prisma.appointmentProviders.deleteMany({
+    where: {
+      appointment_id: filter.id,
+    },
+  })
 
-    await prisma.vitals.deleteMany({
-      where: {
-        appointment_id: filter.id
-      }
-    })
+  await prisma.vitals.deleteMany({
+    where: {
+      appointment_id: filter.id,
+    },
+  })
 
-    await prisma.soapNote.deleteMany({
-      where: {
-        appointment_id: filter.id
-      }
-    })
+  await prisma.soapNote.deleteMany({
+    where: {
+      appointment_id: filter.id,
+    },
+  })
 
-    return prisma.appointment.delete({
-        where: filter,
-    });
+  return prisma.appointment.delete({
+    where: filter,
+  })
 }
 
 //Assign Provider (AppointmentProviders)
 async function assignProvider(
   data: AppointmentProvidersCreateInput
 ): Promise<Appointment | null> {
-  await prisma.appointmentProviders.create({ data });
-  const appointmentId = data.appointment?.connect?.id;
+  await prisma.appointmentProviders.create({ data })
+  const appointmentId = data.appointment?.connect?.id
+  if (data.appointment?.connect?.id) {
+    await prisma.appointment.update({
+      where: { id: data.appointment.connect.id },
+      data: { status: 'SCHEDULED' },
+    })
+  }
   return appointmentId
     ? prisma.appointment.findUnique({
         where: { id: appointmentId },
@@ -236,40 +410,105 @@ async function assignProvider(
                 select: {
                   first_name: true,
                   last_name: true,
-                }
-              }
-            }
-          }
+                },
+              },
+            },
+          },
         },
       })
-    : null;
+    : null
 }
 
 function isProviderArray(arr: any): arr is { provider_id: string }[] {
-  return Array.isArray(arr) && arr.every(p => typeof p.provider_id === "string");
+  return (
+    Array.isArray(arr) && arr.every((p) => typeof p.provider_id === 'string')
+  )
 }
 
 //Assign Providers while creating appointment
 function buildProvidersCreate(
   providers: any
 ): { create: { provider_id: string }[] } | undefined {
-  if (!isProviderArray(providers)) return undefined;
+  if (!isProviderArray(providers)) return undefined
 
   return {
     create: providers.map(({ provider_id }) => ({ provider_id })),
-  };
+  }
 }
 
-export async function findAppointmentByPatientAndDate(patientId: string, date: Date) {
+export async function findAppointmentByPatientAndDate(
+  patientId: string,
+  date: Date
+) {
   return prisma.appointment.findFirst({
     where: {
       patient_id: patientId,
       schedule: {
         gte: startOfDay(date),
-        lte: endOfDay(date)
-      }
+        lte: endOfDay(date),
+      },
+    },
+  })
+}
+
+export async function getNoShowRatesPerProviderPatient(providerId?: string): Promise<{
+  providerId: string;
+  patients: {
+    patientId: string;
+    noShowRate: number;
+  }[];
+}[]> {
+  const providers = providerId
+    ? [{ provider_id: providerId }]
+    : await prisma.appointmentProviders.findMany({
+        distinct: ['provider_id'],
+        select: {
+          provider_id: true,
+        },
+      });
+
+  const result = [];
+
+  for (const { provider_id } of providers) {
+    const patients = await prisma.appointment.findMany({
+      where: { 
+        appointment_providers: {
+          some: { provider_id }
+        }
+      },
+      distinct: ['patient_id'],
+      select: { patient_id: true },
+    });
+
+    const patientsWithRates = [];
+
+    for (const { patient_id } of patients) {
+      const appointments = await prisma.appointment.findMany({
+        where: {
+          patient_id,
+          appointment_providers: {
+            some: { provider_id }
+          }
+        },
+        select: {
+          status: true,
+        },
+      });
+
+      const noShowRate = calculateNoShowRate(appointments);
+
+      patientsWithRates.push({
+        patientId: patient_id,
+        noShowRate,
+      });
     }
-  });
+
+    result.push({
+      providerId: provider_id,
+      patients: patientsWithRates,
+    });
+  }
+  return result;
 }
 
 
@@ -283,5 +522,8 @@ export default {
     assignProvider,
     findAppointmentByPatientAndDate,
     buildProvidersCreate,
-    searchAppointments
+    searchAppointments,
+    getAverageWaitTimeForProvider,
+    getAverageWaitTimeForAllProviders,
+    getNoShowRatesPerProviderPatient
 }

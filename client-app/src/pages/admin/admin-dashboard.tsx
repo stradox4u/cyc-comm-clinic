@@ -136,7 +136,7 @@ export default function AdminDashboard() {
                 ].map((appointment, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-3 border rounded-lg"
+                    className="flex items-center justify-between p-3 border border-muted rounded-lg"
                   >
                     <div className="flex items-center space-x-3">
                       <div className="text-sm font-medium">
@@ -235,7 +235,9 @@ export default function AdminDashboard() {
             <div className="space-y-2">
               <div className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <div>
-                  <div className="font-medium">Flu vaccine inventory low</div>
+                  <div className="font-medium text-muted-foreground">
+                    Flu vaccine inventory low
+                  </div>
                   <div className="text-sm text-muted-foreground">
                     Only 15 doses remaining
                   </div>
@@ -246,7 +248,7 @@ export default function AdminDashboard() {
               </div>
               <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <div>
-                  <div className="font-medium">
+                  <div className="font-medium text-muted-foreground">
                     Mobile outreach event tomorrow
                   </div>
                   <div className="text-sm text-muted-foreground">

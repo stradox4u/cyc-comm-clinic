@@ -47,7 +47,7 @@ export const ProviderLayout: React.FC<ProviderLayoutProps> = ({ children }) => {
   }, [theme]);
 
   return (
-    <div className="bg-background text-foreground min-h-screen overflow-y-auto ">
+    <div className="bg-background text-foreground min-h-screen overflow-y-auto">
       <header className="w-full border-b bg-background/95 border-muted-foreground/20 fixed backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex justify-between h-20 px-4 sm:px-8 md:px-16 lg:px-24 items-center max-w-7xl mx-auto">
           <Link to={"/dashboard"}>

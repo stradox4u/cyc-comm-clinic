@@ -3,6 +3,13 @@ import { z } from 'zod';
 import { VitalsRecordSchema } from '../vitals/vitals.validation.js';
 import { SoapNoteRecordSchema } from '../soapnote/soapnote.validation.js';
 
+const appointmentProvidersSchema = z.object({
+    appointment_id: z.uuid(),
+    provider_id: z.uuid()
+}).optional()
+
+export type AppointmentProviderSchema = z.infer<typeof appointmentProvidersSchema>
+
 export const scheduleInfoSchema = z.object({
     schedule_count: z.number(),
     appointment_date: z.coerce.date(),
@@ -39,7 +46,8 @@ const nestedFollowUpAppointmentSchema = z.object({
 const appointmentRegisterSchema = z.object({
     patient_id: z.object({
         id: z.uuid(),
-        name: z.string().min(1),
+        first_name: z.string().min(1),
+        last_name: z.string().min(1),
         insurance_provider_id: z.string().optional()
     }),
     schedule: scheduleInfoSchema,
@@ -53,7 +61,7 @@ const appointmentRegisterSchema = z.object({
     follow_up_appointments: nestedFollowUpAppointmentsSchema,
     soap_note: SoapNoteRecordSchema.optional(),
     vitals: VitalsRecordSchema.optional(),
-    appointment_providers: z.array(z.object({})).optional()
+    appointment_providers: z.array(appointmentProvidersSchema).optional()
 }).refine(data => !data.has_insurance || Boolean(data.patient_id.insurance_provider_id), {
   message: 'Insurance provider is required when patient has insurance',
   path: ['patient_id', 'insurance_provider_id']
@@ -95,13 +103,6 @@ const appointmentRegisterSchema = z.object({
 });
 
 export type AppointmentRegisterSchema = z.infer<typeof appointmentRegisterSchema>
-
-const appointmentProvidersSchema = z.object({
-    appointment_id: z.uuid(),
-    provider_id: z.uuid()
-}).optional()
-
-export type AppointmentProviderSchema = z.infer<typeof appointmentProvidersSchema>
 
 export default {
   appointmentRegisterSchema,

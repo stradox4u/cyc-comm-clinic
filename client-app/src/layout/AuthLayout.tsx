@@ -1,11 +1,14 @@
 import { Hospital } from "lucide-react";
 import { Card, CardContent } from "../components/ui/card";
 import Header from "../pages/home/Header";
+import { Link } from "react-router-dom";
 
 export default function AuthLayout({
   children,
+  size,
 }: {
   children: React.ReactNode;
+  size?: boolean;
 }) {
   return (
     <>
@@ -32,17 +35,24 @@ export default function AuthLayout({
           </div>
           <div className="container mx-auto w-full flex flex-col items-center pt-24 text-black px-4 sm:px-8 md:px-8 xl:px-24 2xl:px-32 min-h-screen py-8 relative z-20">
             <div className="">
-              <h1 className="text-2xl font-semibold flex gap-2 items-center justify-center">
+              <Link
+                to={"/"}
+                className="text-2xl font-semibold flex gap-2 items-center justify-center "
+              >
                 <Hospital size={24} />
                 <div>
                   C<span className="text-pink-400">H</span>C
                 </div>
-              </h1>
+              </Link>
               <p className="text-sm font-semibold md:text-lg">
                 Community <span className="text-pink-400">Health</span> Clinic
               </p>
             </div>
-            <Card className="mt-24 px-1 py-4 md:py-8 bg-[#D4D6EB] border-gray-400/20 w-full max-w-4xl xl:max-w-xl shadow-md">
+            <Card
+              className={`mt-24 px-1 py-4 bg-[#D4D6EB] border-gray-400/20 w-full shadow-md ${
+                size ? "max-w-sm" : ""
+              }`}
+            >
               <CardContent>{children}</CardContent>
             </Card>
           </div>

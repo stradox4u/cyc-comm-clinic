@@ -1,4 +1,4 @@
-import { LogOut, Mail, MapPin, Phone, Settings, User } from 'lucide-react'
+import { Mail, MapPin, Phone, Settings, User } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import {
   Card,
@@ -9,15 +9,10 @@ import {
 import { Badge } from '../../components/ui/badge'
 import { useCheckPatientProfile } from '../../hooks/fetch-patient'
 import { Skeleton } from '../../components/ui/skeleton'
-import { toast } from 'sonner'
-import { useNavigate } from 'react-router-dom'
-import { useAuthStore } from '../../store/auth-store'
 import ProfilePhoto from '../../components/profile-photo'
 
 const PatientProfile = () => {
   const { user: patientData, loading } = useCheckPatientProfile()
-  const navigate = useNavigate()
-  const logout = useAuthStore((state) => state.logout)
 
   if (loading) {
     return (
@@ -68,24 +63,6 @@ const PatientProfile = () => {
     )
   }
 
-  const handleLogout = async () => {
-    try {
-      const res = await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      })
-
-      if (!res.ok) throw new Error('Logout failed')
-
-      logout()
-      toast.success('Logged out successfully')
-      navigate('/auth/patient/login')
-    } catch (error) {
-      console.error('Logout error:', error)
-      toast.error('Failed to logout. Please try again.')
-    }
-  }
-
   return (
     <>
       <div className="flex justify-between items-center mb-8">
@@ -96,9 +73,9 @@ const PatientProfile = () => {
         </Button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-">
+      <div className="grid gap-6">
         <Card>
-          <div className="md:flex md:justify-between">
+          <div className="md:flex md:justify-evenly px-12">
             <ProfilePhoto photo={patientData?.image_url} />
             <div>
               <CardHeader>
@@ -193,17 +170,6 @@ const PatientProfile = () => {
             </div>
           </CardContent>
         </Card>
-        <div className="flex justify-end">
-          <Button
-            className="w-fit 2xl:w-1/5"
-            size={'sm'}
-            variant={'destructive'}
-            onClick={handleLogout}
-          >
-            <LogOut />
-            Logout
-          </Button>
-        </div>
       </div>
     </>
   )

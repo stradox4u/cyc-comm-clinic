@@ -10,7 +10,7 @@ export type ProviderRoleCreateInput = Prisma.ProviderRoleCreateInput
 export type ProviderUncheckedCreateInput = Prisma.ProviderUncheckedCreateInput
 
 const createRandomPatient = (): PatientRegisterSchema => ({
-  email: faker.internet.email(),
+  email: faker.internet.email().toLowerCase(),
   password: faker.internet.password({ length: 8 }),
   first_name: faker.person.firstName(),
   last_name: faker.person.lastName(),
@@ -193,10 +193,12 @@ const seed = async () => {
 
     logger.info('Database seeded successfully!')
     await prisma.$disconnect()
-    process.exit(1)
+    process.exit(0)
   } catch (err) {
     console.error(err)
+    logger.info('Database seeding failed.')
     await prisma.$disconnect()
+    process.exit(1)
   }
 }
 

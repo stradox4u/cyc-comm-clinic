@@ -1,6 +1,6 @@
 import { useFormContext } from "react-hook-form";
 
-import type { FormData } from "../../../lib/schema";
+import { type FormData } from "../../../lib/schema";
 import { Label } from "../../ui/label";
 import { Input } from "../../ui/input";
 import { Button } from "../../ui/button";
@@ -49,19 +49,20 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
   >([]);
   const [loading, setLoading] = useState(false);
   const insuranceValue = watch("insurance_provider_id");
-  const bloodGroupValue = watch("blood_group");
+  const bloodGroupValue = watch("blood_group") || "";
   const gender = watch("gender");
 
   const personalFields = [
     ["First Name", "first_name", "text", "e.g. John"],
     ["Last Name", "last_name", "text", "e.g. Doe"],
+    ["Address", "address", "text", "e.g. 123 Main St, Springfield"],
     ["Email", "email", "email", "e.g. johndoe@gmail.com"],
     ["Phone", "phone", "text", "0903-322-827"],
     ["Date of Birth", "date_of_birth", "date"],
+    ["Allergies", "allergies", "text", "e.g. Peanuts, Penicillin"],
   ];
 
   const additionalFields = [
-    ["Address", "address", "e.g. 123 Main St, Springfield"],
     ["Occupation", "occupation", "e.g. Software Engineer"],
     ["Emergency Contact Name", "emergency_contact_name", "e.g. Jane Doe"],
     [
@@ -69,7 +70,6 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
       "emergency_contact_phone",
       "e.g. 0803-456-7890",
     ],
-    ["Allergies", "allergies", "e.g. Peanuts, Penicillin"],
     [
       "Insurance Coverage",
       "insurance_coverage",
@@ -116,25 +116,32 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
         <p className="text-xs text-muted-foreground">Tell us about yourself</p>
       </div>
 
-      <div className="space-y-4">
-        {personalFields.map(([label, name, type = "text", placeholder]) => (
-          <div key={name} className="space-y-2">
-            <Label className="font-semibold">{label}</Label>
-            <Input
-              type={type}
-              {...register(name as keyof FormData)}
-              className={`${
-                errors[name as keyof FormData] && "border-red-500"
-              } bg-background/20`}
-              placeholder={placeholder}
-            />
-            {errors[name as keyof FormData] && (
-              <p className="text-red-500 text-sm">
-                {errors[name as keyof FormData]?.message}
-              </p>
-            )}
-          </div>
-        ))}
+      <div className="md:grid lg:grid-cols-2 gap-4 space-y-2">
+        {personalFields.map(
+          ([label, name, type = "text", placeholder, width = "col-span-2"]) => (
+            <div
+              key={name}
+              className={`space-y-2 ${
+                (name as keyof FormData) === "address" && width
+              }`}
+            >
+              <Label className="font-semibold">{label}</Label>
+              <Input
+                type={type}
+                {...register(name as keyof FormData)}
+                className={`${
+                  errors[name as keyof FormData] && "border-red-500"
+                } bg-background/20`}
+                placeholder={placeholder}
+              />
+              {errors[name as keyof FormData] && (
+                <p className="text-red-500 text-sm">
+                  {errors[name as keyof FormData]?.message}
+                </p>
+              )}
+            </div>
+          )
+        )}
 
         <div className="space-y-2">
           <Label className="font-semibold">Gender</Label>
@@ -178,11 +185,11 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
             </SelectContent>
           </Select>
           {errors.blood_group && (
-            <p className="text-red-500 text-sm">{errors.blood_group.message}</p>
+            <p className="text-red-500 text-sm">{"Blood Group is required"}</p>
           )}
         </div>
 
-        <div className="mb-8 ">
+        <div className="mb-2 col-span-2">
           <h2 className="font-semibold tracking-tight text-lg">
             Contact Information
           </h2>

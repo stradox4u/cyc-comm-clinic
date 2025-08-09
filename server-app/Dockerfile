@@ -7,27 +7,35 @@ RUN apt-get update
 RUN apt-get -y install \
   cmake
 
-RUN --mount=type=cache,target=/root/.npm \
-    npm ci --quiet
+RUN npm ci --quiet
 
 COPY . .
 CMD [ "npm", "run", "start:dev" ]
 
 FROM node:22.17 AS build
+ARG DATABASE_URL_BUILD
+ENV DATABASE_URL=${DATABASE_URL_BUILD}
 WORKDIR /app
 COPY package*.json ./
+COPY tsconfig*.json ./
 COPY prisma ./prisma/
-
-RUN npm install
-
 COPY . .
+
+RUN npm ci --quiet
 RUN npm run build
+RUN test -d dist || (echo "dist directory was not created during build" && exit 1)
+
+RUN npx prisma migrate deploy
 
 FROM node:22.17 AS production
+ARG DATABASE_URL
 WORKDIR /app
 COPY --from=build /app/package*.json ./
-RUN npm install --omit=dev
-COPY --from=build /app/dist ./dist
+COPY --from=build /app/dist ./dist/
+COPY --from=build /app/prisma ./prisma/
+
+RUN npm ci --quiet --omit=dev && \
+  npx prisma generate
 
 EXPOSE 80
 

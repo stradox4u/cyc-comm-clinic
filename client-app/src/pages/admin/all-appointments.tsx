@@ -7,6 +7,14 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../../components/ui/dialog";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
@@ -24,7 +32,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
-import { Clock, Phone, Mail, User, Search } from "lucide-react";
+import {
+  Clock,
+  Phone,
+  Mail,
+  User,
+  Search,
+  Activity,
+  Thermometer,
+  Heart,
+  Scale,
+  Ruler,
+  Save,
+  Loader2,
+} from "lucide-react";
 import { Textarea } from "../../components/ui/textarea";
 import { toast } from "sonner";
 import {
@@ -34,73 +55,33 @@ import {
   type Appointment,
 } from "../../lib/type";
 import { Skeleton } from "../../components/ui/skeleton";
+import { useAuthStore } from "../../store/auth-store";
 
 export default function Appointments() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProviders, setLoadingProviders] = useState(false);
   const [appointments, setAppointments] = useState<Appointment[]>();
+  const [vitals, setVitals] = useState({
+    appointment_id: "",
+    temperature: "",
+    bloodPressure: "",
+    heartRate: "",
+    respiratoryRate: "",
+    oxygenSaturation: "",
+    weight: "",
+    height: "",
+    notes: "",
+  });
   const [toggle, setToggle] = useState(false);
+  const user = useAuthStore((state) => state.user);
+  const [appointmentId, setAppointmentId] = useState("");
   const [providers, setProviders] = useState<Provider[]>();
-
-  // const appointments = [
-  //   {
-  //     id: 1,
-  //     time: "9:00 AM",
-  //     patient: "Sarah Johnson",
-  //     phone: "(555) 123-4567",
-  //     email: "sarah.j@email.com",
-  //     type: "Annual Check-up",
-  //     provider: "Dr. Smith",
-  //     status: "confirmed",
-  //     notes: "First visit, new patient",
-  //   },
-  //   {
-  //     id: 2,
-  //     time: "9:30 AM",
-  //     patient: "Michael Chen",
-  //     phone: "(555) 234-5678",
-  //     email: "m.chen@email.com",
-  //     type: "Follow-up",
-  //     provider: "Dr. Davis",
-  //     status: "confirmed",
-  //     notes: "Blood pressure follow-up",
-  //   },
-  //   {
-  //     id: 3,
-  //     time: "10:00 AM",
-  //     patient: "Emma Davis",
-  //     phone: "(555) 345-6789",
-  //     email: "emma.d@email.com",
-  //     type: "Vaccination",
-  //     provider: "Nurse Johnson",
-  //     status: "pending",
-  //     notes: "COVID-19 booster",
-  //   },
-  //   {
-  //     id: 4,
-  //     time: "10:30 AM",
-  //     patient: "Robert Wilson",
-  //     phone: "(555) 456-7890",
-  //     email: "r.wilson@email.com",
-  //     type: "Consultation",
-  //     provider: "Dr. Smith",
-  //     status: "confirmed",
-  //     notes: "Diabetes consultation",
-  //   },
-  //   {
-  //     id: 5,
-  //     time: "11:00 AM",
-  //     patient: "Lisa Anderson",
-  //     phone: "(555) 567-8901",
-  //     email: "lisa.a@email.com",
-  //     type: "Screening",
-  //     provider: "Dr. Davis",
-  //     status: "no-show",
-  //     notes: "Mammography screening",
-  //   },
-  // ];
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedProviderId, setSelectedProviderId] = useState<string | null>(
+    null
+  );
+  const adminRole = user?.role_title === "ADMIN";
   const [newAppointment, setNewAppointment] = useState({
     patientName: "",
     phone: "",
@@ -131,36 +112,39 @@ export default function Appointments() {
 
   const sendReminder = (appointmentId: string, method: "sms" | "email") => {
     const appointment = appointments?.find((apt) => apt.id === appointmentId);
-    toast(
-      `${method.toUpperCase()} reminder sent to ${appointment?.patient_id}`
-    );
+    toast(`${method.toUpperCase()} reminder sent to ${appointment?.patient}`);
   };
 
-  const filteredAppointments = appointments?.filter(
-    (apt) =>
+  const filteredAppointments = appointments?.filter((apt) => {
+    const patientName =
+      `${apt.patient.first_name} ${apt.patient.last_name}`.toLowerCase();
+
+    return (
       apt.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      apt.patient_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patientName.includes(searchTerm.toLowerCase()) ||
       apt.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    );
+  });
+
+  const fetchAppointments = async () => {
+    setIsLoading(true);
+    const res = await fetch(`/api/appointment/appointments`);
+    const result = await res.json();
+    if (!result?.success) {
+      toast.error(result?.message || "Failed to fetch appointments");
+    }
+    console.log(result?.data);
+
+    setAppointments(result?.data ?? []);
+    setIsLoading(false);
+  };
 
   useEffect(() => {
-    const fetchAppointments = async () => {
-      setIsLoading(true);
-      const res = await fetch(
-        `/api/appointment/appointments/68f514cf-35f1-4e0e-921d-b78f552b468b`
-      );
-      const result = await res.json();
-      if (!result?.success) {
-        toast.error(result?.message || "Failed to fetch appointments");
-      }
-      setAppointments(result?.data ?? []);
-      setIsLoading(false);
-    };
     fetchAppointments();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
-    const fetchProviderss = async () => {
+    const fetchProviders = async () => {
       setLoadingProviders(true);
       const res = await fetch(`/api/providers`);
       const result = await res.json();
@@ -170,8 +154,41 @@ export default function Appointments() {
       setProviders(result?.data ?? []);
       setLoadingProviders(false);
     };
-    fetchProviderss();
-  }, [toggle]);
+    if (user?.role_title === "ADMIN") {
+      fetchProviders();
+    }
+  }, [toggle, user?.role_title]);
+
+  const handleAssignProvider = async (
+    providerId: string,
+    appointmentId: string
+  ) => {
+    try {
+      const res = await fetch('/api/provider/appointment/assign-provider', {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          appointment_id: appointmentId,
+          provider_id: providerId,
+        }),
+      });
+
+      const result = await res.json();
+
+      if (!result.success) {
+        toast.error(result.message || "Failed to assign provider");
+      } else {
+        toast.success("Provider assigned successfully");
+        setToggle(false);
+        await fetchAppointments();
+      }
+    } catch (error) {
+      toast.error("Something went wrong");
+      console.log(error);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -208,6 +225,77 @@ export default function Appointments() {
       </div>
     );
   }
+
+  const handleVitalsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/provider/vitals/record', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          appointment_id: appointmentId,
+          blood_pressure: vitals.bloodPressure,
+          heart_rate: vitals.heartRate,
+          temperature: vitals.temperature,
+          height: vitals.height,
+          weight: vitals.weight,
+          created_by_id: user?.id,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        toast.error(result?.message || "Failed to update vitals");
+        console.error("Server error:", result?.error);
+        return;
+      }
+      
+      const updateStatusRes = await fetch(`/api/appointment/${appointmentId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "ATTENDING" }),
+      });
+      
+      const updateStatusResult = await updateStatusRes.json();
+      
+      if (!updateStatusRes.ok || !updateStatusResult.success) {
+        toast.error("Vitals saved, but failed to update appointment status.");
+        return;
+      }
+      toast.success("Patient vitals updated, status set to ATTENDING");
+    } catch (error) {
+      console.error("Error updating patient appointment:", error);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsSubmitting(false);
+    }
+
+    // ✅ Reset vitals form
+    setVitals({
+      appointment_id: "",
+      temperature: "",
+      bloodPressure: "",
+      heartRate: "",
+      respiratoryRate: "",
+      oxygenSaturation: "",
+      weight: "",
+      height: "",
+      notes: "",
+    });
+  };
+
+  const calculateBMI = (weight: string, height: string) => {
+    // Simple BMI calculation (assuming weight in lbs, height in inches)
+    const weightNum = Number.parseFloat(weight);
+    const heightNum = Number.parseFloat(height);
+    if (weightNum && heightNum) {
+      const bmi = (weightNum / (heightNum * heightNum)) * 703;
+      return bmi.toFixed(1);
+    }
+    return "";
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -262,6 +350,13 @@ export default function Appointments() {
                     >
                       <div className="flex items-center space-x-4">
                         <div className="text-center">
+                          <div className="text-sm text-muted-foreground">
+                            {
+                              formatDateParts(
+                                appointment.schedule.appointment_date
+                              ).month
+                            }
+                          </div>
                           <div className="text-lg font-semibold">
                             {
                               formatDateParts(
@@ -278,7 +373,14 @@ export default function Appointments() {
                           <div className="flex items-center space-x-2 mb-1">
                             <User className="h-4 w-4 text-muted-foreground" />
                             <span className="font-medium">
-                              {appointment?.patient_id}
+                              {appointment?.patient ? (
+                                <>
+                                  {appointment.patient.first_name}{" "}
+                                  {appointment.patient.last_name}
+                                </>
+                              ) : (
+                                "No patient info"
+                              )}
                             </span>
                             <Badge
                               variant={
@@ -301,7 +403,10 @@ export default function Appointments() {
                                 <>
                                   with{" "}
                                   {appointment.appointment_providers
-                                    .map((ap) => `${ap}`)
+                                    .map((ap) => {
+                                      const p = ap.provider;
+                                      return `${p.role_title} ${p.first_name} ${p.last_name}`;
+                                    })
                                     .join(", ")}
                                 </>
                               )}
@@ -324,60 +429,290 @@ export default function Appointments() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => sendReminder(appointment.id, "sms")}
-                        >
-                          SMS
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => sendReminder(appointment.id, "email")}
-                        >
-                          Email
-                        </Button>
-                        {appointment.appointment_providers.length === 0 &&
-                          (toggle ? (
-                            <Select
-                              onValueChange={(value) => {
-                                console.log("Selected provider ID:", value);
-                                // Optionally set provider here
-                              }}
-                              disabled={loadingProviders}
+                      {adminRole ? (
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => sendReminder(appointment.id, "sms")}
+                          >
+                            SMS
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              sendReminder(appointment.id, "email")
+                            }
+                          >
+                            Email
+                          </Button>
+                          {appointment.appointment_providers.length === 0 &&
+                            (toggle ? (
+                              <div className="space-y-2">
+                                <Select
+                                  onValueChange={(value) => {
+                                    setSelectedProviderId(value);
+                                  }}
+                                  disabled={loadingProviders}
+                                >
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue
+                                      placeholder={
+                                        loadingProviders
+                                          ? "Loading..."
+                                          : "Select Provider"
+                                      }
+                                    />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {loadingProviders ? (
+                                      <div className="space-y-2">
+                                        <Skeleton className="h-10 w-full" />
+                                      </div>
+                                    ) : (
+                                      providers?.map((pro) => (
+                                        <SelectItem key={pro.id} value={pro.id}>
+                                          {pro.first_name} {pro.last_name}
+                                        </SelectItem>
+                                      ))
+                                    )}
+                                  </SelectContent>
+                                </Select>
+
+                                <Button
+                                  size="sm"
+                                  disabled={!selectedProviderId}
+                                  onClick={() =>
+                                    selectedProviderId &&
+                                    handleAssignProvider(
+                                      selectedProviderId,
+                                      appointment.id
+                                    )
+                                  }
+                                >
+                                  Assign Provider
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button onClick={() => setToggle(true)} size="sm">
+                                Schedule Provider
+                              </Button>
+                            ))}
+                        </div>
+                      ) : (
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              onClick={() => setAppointmentId(appointment.id)}
                             >
-                              <SelectTrigger className="w-full">
-                                <SelectValue
-                                  placeholder={
-                                    loadingProviders
-                                      ? "Loading..."
-                                      : "Select Provider"
+                              Take Vitals
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle className="flex items-center">
+                                <Activity className="mr-2 h-5 w-5" />
+                                Record Vital Signs
+                              </DialogTitle>
+                              <DialogDescription>
+                                Enter patient vital signs and measurements
+                              </DialogDescription>
+                            </DialogHeader>
+
+                            <form
+                              onSubmit={(e) => handleVitalsSubmit(e)}
+                              className="space-y-4"
+                            >
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label
+                                    htmlFor="temperature"
+                                    className="flex items-center"
+                                  >
+                                    <Thermometer className="mr-1 h-4 w-4" />
+                                    Temperature (°C)
+                                  </Label>
+                                  <Input
+                                    id="temperature"
+                                    type="number"
+                                    step="0.1"
+                                    placeholder="98.6"
+                                    value={vitals.temperature}
+                                    onChange={(e) =>
+                                      setVitals({
+                                        ...vitals,
+                                        temperature: e.target.value,
+                                      })
+                                    }
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label
+                                    htmlFor="bloodPressure"
+                                    className="flex items-center"
+                                  >
+                                    <Heart className="mr-1 h-4 w-4" />
+                                    Blood Pressure
+                                  </Label>
+                                  <Input
+                                    id="bloodPressure"
+                                    placeholder="120/80"
+                                    value={vitals.bloodPressure}
+                                    onChange={(e) =>
+                                      setVitals({
+                                        ...vitals,
+                                        bloodPressure: e.target.value,
+                                      })
+                                    }
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="heartRate">
+                                    Heart Rate (bpm)
+                                  </Label>
+                                  <Input
+                                    id="heartRate"
+                                    type="number"
+                                    placeholder="72"
+                                    value={vitals.heartRate}
+                                    onChange={(e) =>
+                                      setVitals({
+                                        ...vitals,
+                                        heartRate: e.target.value,
+                                      })
+                                    }
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="respiratoryRate">
+                                    Respiratory Rate
+                                  </Label>
+                                  <Input
+                                    id="respiratoryRate"
+                                    type="number"
+                                    placeholder="16"
+                                    value={vitals.respiratoryRate}
+                                    onChange={(e) =>
+                                      setVitals({
+                                        ...vitals,
+                                        respiratoryRate: e.target.value,
+                                      })
+                                    }
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="oxygenSaturation">
+                                    O2 Saturation (%)
+                                  </Label>
+                                  <Input
+                                    id="oxygenSaturation"
+                                    type="number"
+                                    placeholder="98"
+                                    value={vitals.oxygenSaturation}
+                                    onChange={(e) =>
+                                      setVitals({
+                                        ...vitals,
+                                        oxygenSaturation: e.target.value,
+                                      })
+                                    }
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label
+                                    htmlFor="weight"
+                                    className="flex items-center"
+                                  >
+                                    <Scale className="mr-1 h-4 w-4" />
+                                    Weight (kg)
+                                  </Label>
+                                  <Input
+                                    id="weight"
+                                    type="number"
+                                    placeholder="150"
+                                    value={vitals.weight}
+                                    onChange={(e) =>
+                                      setVitals({
+                                        ...vitals,
+                                        weight: e.target.value,
+                                      })
+                                    }
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label
+                                  htmlFor="height"
+                                  className="flex items-center"
+                                >
+                                  <Ruler className="mr-1 h-4 w-4" />
+                                  Height (inches)
+                                </Label>
+                                <Input
+                                  id="height"
+                                  type="number"
+                                  placeholder="66"
+                                  value={vitals.height}
+                                  onChange={(e) =>
+                                    setVitals({
+                                      ...vitals,
+                                      height: e.target.value,
+                                    })
                                   }
                                 />
-                              </SelectTrigger>
+                              </div>
 
-                              <SelectContent>
-                                {loadingProviders ? (
-                                  <div className="space-y-2">
-                                    <Skeleton className="h-10 w-full" />
+                              {vitals.weight && vitals.height && (
+                                <div className="p-3 bg-muted rounded-lg">
+                                  <Label className="text-sm font-medium">
+                                    Calculated BMI:
+                                  </Label>
+                                  <div className="text-lg font-bold">
+                                    {calculateBMI(vitals.weight, vitals.height)}
                                   </div>
+                                </div>
+                              )}
+
+                              <div className="space-y-2">
+                                <Label htmlFor="vitals-notes">Notes</Label>
+                                <Textarea
+                                  id="vitals-notes"
+                                  placeholder="Additional observations or notes..."
+                                  value={vitals.notes}
+                                  onChange={(e) =>
+                                    setVitals({
+                                      ...vitals,
+                                      notes: e.target.value,
+                                    })
+                                  }
+                                />
+                              </div>
+
+                              <Button type="submit" className="w-full">
+                                {isSubmitting ? (
+                                  <>
+                                    <Loader2 className="animate-spin size-6" />
+                                    Submitting...
+                                  </>
                                 ) : (
-                                  providers?.map((pro) => (
-                                    <SelectItem key={pro.id} value={pro.id}>
-                                      {pro.first_name} {pro.last_name}
-                                    </SelectItem>
-                                  ))
+                                  <>
+                                    {" "}
+                                    <Save className="mr-2 h-4 w-4" />
+                                    Save Vitals
+                                  </>
                                 )}
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            <Button onClick={() => setToggle(true)} size="sm">
-                              Schedule Provider
-                            </Button>
-                          ))}
-                      </div>
+                              </Button>
+                            </form>
+                          </DialogContent>
+                        </Dialog>
+                      )}
                     </div>
                   ))}
                 </div>

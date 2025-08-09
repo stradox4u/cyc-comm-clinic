@@ -16,15 +16,15 @@ router.post(
 )
 
 router.get(
-    '/:appointmentId',
+    '/appointments',
     authenticateMultipleUser([UserType.PATIENT, UserType.PROVIDER]),
-    appointmentController.getAppointment
+    appointmentController.getAppointments
 )
 
 router.get(
-    '/appointments/:userId',
+    '/:appointmentId',
     authenticateMultipleUser([UserType.PATIENT, UserType.PROVIDER]),
-    appointmentController.getAppointments
+    appointmentController.getAppointment
 )
 
 router.put(
@@ -33,8 +33,10 @@ router.put(
     appointmentController.updateAppointment
 )
 
-{/*router.patch(
-    '/:appointment/Id'
+router.patch(
+    '/:appointmentId',
+    authenticateMultipleUser([UserType.PATIENT, UserType.PROVIDER]),
+    appointmentController.patchAppointment
 )
-*/}
+
 export default router

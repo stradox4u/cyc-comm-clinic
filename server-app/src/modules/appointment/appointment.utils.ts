@@ -166,3 +166,30 @@ export function canScheduleAppointment(
 }
 
 // Appointment wait time tracking for a provider
+export function calculateWaitTimeMinutes(
+  checkedInTime: Date | undefined,
+  attendingTime: Date | undefined
+): number | null {
+  if (!checkedInTime || !attendingTime) {
+    return null;
+  }
+
+  const diffMs = attendingTime.getTime() - checkedInTime.getTime()
+  if (diffMs < 0) {
+    return null;
+  }
+
+  const diffMinutes = diffMs / 1000 / 60;
+
+  return diffMinutes;
+}
+
+// Appointment no show rates
+export function calculateNoShowRate(
+  appointments: { status: string }[]
+): number {
+  if (appointments.length === 0) return 0;
+  const noShowCount = appointments.filter(app => app.status === "NO_SHOW").length;
+  const rate = (noShowCount / appointments.length) * 100;
+  return parseFloat(rate.toFixed(2));
+}
