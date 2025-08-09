@@ -133,6 +133,38 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {[
+                  {
+                    time: '9:00 AM',
+                    patient: 'Sarah Johnson',
+                    type: 'Check-up',
+                    status: 'confirmed',
+                  },
+                  {
+                    time: '9:30 AM',
+                    patient: 'Michael Chen',
+                    type: 'Follow-up',
+                    status: 'confirmed',
+                  },
+                  {
+                    time: '10:00 AM',
+                    patient: 'Emma Davis',
+                    type: 'Vaccination',
+                    status: 'pending',
+                  },
+                  {
+                    time: '10:30 AM',
+                    patient: 'Robert Wilson',
+                    type: 'Consultation',
+                    status: 'confirmed',
+                  },
+                  {
+                    time: '11:00 AM',
+                    patient: 'Lisa Anderson',
+                    type: 'Screening',
+                    status: 'no-show',
+                  },
+                ].map((appointment, index) => (
                 {todayAppointments?.map((appointment) => (
                   <div
                     key={appointment?.id}
@@ -201,7 +233,7 @@ export default function AdminDashboard() {
                 variant="outline"
                 className="w-full justify-start bg-transparent"
               >
-                <Link to="/insurance">
+                <Link to="/provider/insurance-check">
                   <CheckCircle className="mr-2 h-4 w-4" />
                   Check Insurance
                 </Link>

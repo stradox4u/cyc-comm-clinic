@@ -93,6 +93,7 @@ const findPatient = async (
 ): Promise<Patient | null> => {
   return await prisma.patient.findUnique({
     where: filter,
+    include: { insurance_provider: true },
   })
 }
 

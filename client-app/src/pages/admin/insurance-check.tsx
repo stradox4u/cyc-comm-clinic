@@ -1,39 +1,56 @@
-import type React from "react";
-import { useState } from "react";
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Badge } from "../../components/ui/badge";
+} from '../../components/ui/card'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Label } from '../../components/ui/label'
+import { Badge } from '../../components/ui/badge'
 import {
   CheckCircle,
   XCircle,
   AlertCircle,
   CreditCard,
   Search,
-  User,
-} from "lucide-react";
+} from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { usePatient } from '../../features/patients/hook'
 
 export default function InsuranceCheck() {
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const id = searchParams.get('patient_id') as string | undefined
+  const { data: patientData } = usePatient(id)
   const [checkData, setCheckData] = useState({
-    patientName: "",
-    dateOfBirth: "",
-    insuranceProvider: "",
-    policyNumber: "",
-    groupNumber: "",
-  });
-  const [isChecking, setIsChecking] = useState(false);
-  const [checkResult, setCheckResult] = useState<any>(null);
+    patientName: '',
+    dateOfBirth: '',
+    insuranceProvider: '',
+    policyNumber: '',
+    groupNumber: '',
+  })
+  const [isChecking, setIsChecking] = useState(false)
+  const [checkResult, setCheckResult] = useState<any>(null)
+
+  useEffect(() => {
+    if (patientData?.success) {
+      setCheckData((prevCheckData) => ({
+        ...prevCheckData,
+        patientName: `${patientData?.data?.first_name} ${patientData?.data?.last_name}`,
+        dateOfBirth: patientData?.data?.date_of_birth?.substring(0, 10),
+        insuranceProvider: patientData?.data?.insurance_provider?.name,
+        policyNumber: patientData?.data?.insurance_coverage,
+      }))
+    }
+  }, [patientData])
 
   const handleInsuranceCheck = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsChecking(true);
+    e.preventDefault()
+    setIsChecking(true)
 
     // Simulate API call
     setTimeout(() => {
@@ -42,7 +59,7 @@ export default function InsuranceCheck() {
         provider: checkData.insuranceProvider,
         policyNumber: checkData.policyNumber,
         patientName: checkData.patientName,
-        copay: Math.random() > 0.5 ? "$25" : "$40",
+        copay: Math.random() > 0.5 ? '$25' : '$40',
         deductible: `$${Math.floor(Math.random() * 2000) + 500}`,
         deductibleMet: Math.random() > 0.6,
         coverageDetails: {
@@ -55,12 +72,12 @@ export default function InsuranceCheck() {
         },
         notes:
           Math.random() > 0.7
-            ? "Prior authorization required for specialist visits"
+            ? 'Prior authorization required for specialist visits'
             : null,
-      };
+      }
 
-      setCheckResult(mockResult);
-      setIsChecking(false);
+      setCheckResult(mockResult)
+      setIsChecking(false)
       // toast.custom({
       //   title: mockResult.eligible ? "Insurance Verified" : "Insurance Issue",
       //   description: mockResult.eligible
@@ -68,43 +85,8 @@ export default function InsuranceCheck() {
       //     : "Insurance verification failed - please check details",
       //   variant: mockResult.eligible ? "default" : "destructive",
       // });
-    }, 2000);
-  };
-
-  const recentChecks = [
-    {
-      id: 1,
-      patientName: "Sarah Johnson",
-      provider: "Blue Cross Blue Shield",
-      status: "eligible",
-      checkedAt: "2024-01-15 09:30 AM",
-      copay: "$25",
-    },
-    {
-      id: 2,
-      patientName: "Michael Chen",
-      provider: "Aetna",
-      status: "eligible",
-      checkedAt: "2024-01-15 09:15 AM",
-      copay: "$40",
-    },
-    {
-      id: 3,
-      patientName: "Emma Davis",
-      provider: "Cigna",
-      status: "not-eligible",
-      checkedAt: "2024-01-15 08:45 AM",
-      copay: "N/A",
-    },
-    {
-      id: 4,
-      patientName: "Robert Wilson",
-      provider: "United Healthcare",
-      status: "eligible",
-      checkedAt: "2024-01-15 08:30 AM",
-      copay: "$30",
-    },
-  ];
+    }, 2000)
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -121,7 +103,10 @@ export default function InsuranceCheck() {
           <h2 className="text-3xl font-bold tracking-tight">
             Insurance Eligibility Check
           </h2>
-          <Button variant="outline">
+          <Button
+            variant="outline"
+            onClick={() => navigate('/provider/patients')}
+          >
             <Search className="h-4 w-4 mr-2" />
             Batch Check
           </Button>
@@ -253,8 +238,8 @@ export default function InsuranceCheck() {
                     )}
                     <span className="font-medium">
                       {checkResult.eligible
-                        ? "Insurance Active & Eligible"
-                        : "Insurance Not Eligible"}
+                        ? 'Insurance Active & Eligible'
+                        : 'Insurance Not Eligible'}
                     </span>
                   </div>
 
@@ -329,7 +314,7 @@ export default function InsuranceCheck() {
                                 <XCircle className="h-3 w-3 text-red-500" />
                               )}
                               <span className="text-xs capitalize">
-                                {key.replace(/([A-Z])/g, " $1").trim()}
+                                {key.replace(/([A-Z])/g, ' $1').trim()}
                               </span>
                             </div>
                           )
@@ -360,10 +345,9 @@ export default function InsuranceCheck() {
               )}
             </CardContent>
           </Card>
-        </div>
 
-        {/* Recent Checks */}
-        <Card>
+          {/* Recent Checks */}
+          {/* <Card>
           <CardHeader>
             <CardTitle>Recent Insurance Checks</CardTitle>
             <CardDescription>
@@ -390,10 +374,10 @@ export default function InsuranceCheck() {
                     <span className="text-sm font-medium">{check.copay}</span>
                     <Badge
                       variant={
-                        check.status === "eligible" ? "default" : "destructive"
+                        check.status === 'eligible' ? 'default' : 'destructive'
                       }
                     >
-                      {check.status === "eligible" ? (
+                      {check.status === 'eligible' ? (
                         <>
                           <CheckCircle className="h-3 w-3 mr-1" />
                           Eligible
@@ -410,8 +394,9 @@ export default function InsuranceCheck() {
               ))}
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
+        </div>
       </div>
     </div>
-  );
+  )
 }

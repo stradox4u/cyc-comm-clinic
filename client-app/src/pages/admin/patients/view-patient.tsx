@@ -230,7 +230,7 @@ const ViewPatient = () => {
                 variant="outline"
                 className="w-full justify-start bg-transparent"
               >
-                <Link to="/insurance">
+                <Link to={`/provider/insurance-check?patient_id=${patient.id}`}>
                   <CheckCircle className="mr-2 h-4 w-4" />
                   Check Insurance
                 </Link>
