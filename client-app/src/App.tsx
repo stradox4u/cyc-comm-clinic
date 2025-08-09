@@ -102,30 +102,30 @@ function App() {
 
             <Route path="/settings" element={<Settings />} />
           </Route>
-
-          <Route element={<ProtectedLayout />}>
-            <Route path="/provider/dashboard" element={<Dashboard />} />
-            <Route path="/provider/appointments" element={<Appointments />} />
-            <Route
+        <Route element={<ProtectedLayout />}>
+          <Route path="/provider/dashboard" element={<Dashboard />} />
+          <Route path="/provider/appointments" element={<Appointments />} />
+          <Route
               path="/provider/insurance-check"
               element={<InsuranceCheck />}
             />
-            <Route path="/provider/intake" element={<PatientIntake />} />
-            <Route path="/provider/vitals" element={<VitalsSoapPage />} />
-            <Route
-              path="/provider/providers-dashboard"
-              element={<ProvidersDashboard />}
-            />
-            <Route path="/provider/patients" element={<AllPatients />} />
-            <Route
+          <Route path="/provider/insurance" element={<InsuranceCheck />} />
+          <Route path="/provider/intake" element={<PatientIntake />} />
+          <Route path="/provider/vitals" element={<VitalsSoapPage />} />
+          <Route path="/provider/vitals/:appointmentId" element={<VitalsSoapPage />} />
+          <Route
+            path="/provider/providers-dashboard"
+            element={<ProvidersDashboard />}
+          />
+          <Route path="/provider/patients" element={<AllPatients />} />
+          <Route
               path="/provider/patients/register"
               element={<CreatePatient />}
             />
             <Route path="/provider/patients/:id" element={<ViewPatient />} />
-            <Route path="/provider/outreach" element={<MobileOutreach />} />
-            <Route path="/provider/reminders" element={<Reminders />} />
-          </Route>
-
+          <Route path="/provider/outreach" element={<MobileOutreach />} />
+          <Route path="/provider/reminders" element={<Reminders />} />
+        </Route>
           {/* ❌ Catch-all (404) */}
           <Route path="*" element={<NotFound />} />
         </Routes>

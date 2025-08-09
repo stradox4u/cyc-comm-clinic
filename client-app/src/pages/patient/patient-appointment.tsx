@@ -58,6 +58,7 @@ import {
   formatTimeToAmPm,
   type Appointment,
 } from "../../lib/type";
+import { VitalsCard, type VitalsCardProps } from "../../components/vitals-card";
 
 const recentVisits = [
   {
@@ -84,6 +85,14 @@ export default function PatientAppointments() {
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [appointments, setAppointments] = useState<Appointment[]>();
+  const [viewVitalsAppointmentId, setViewVitalsAppointmentId] = useState<
+    string | null
+  >(null);
+  const [patientVitals, setPatientVitals] = useState<VitalsCardProps | null>(
+    null
+  );
+  const [appointmentId, setAppointmentId] = useState<string | null>(null);
+  const [vitalsLoading, setVitalsLoading] = useState<boolean>(false);
 
   const {
     register,
@@ -146,6 +155,27 @@ export default function PatientAppointments() {
       toast.error(message);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const fetchPatientVitals = async (appointmentId: string) => {
+    try {
+      setVitalsLoading(true);
+      const response = await fetch(`/api/provider/vitals/${appointmentId}`);
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        toast.error(result?.message || "Failed to fetch vitals");
+        return;
+      }
+
+      setPatientVitals(result?.data?.[0] ?? null);
+      setViewVitalsAppointmentId(appointmentId);
+    } catch (error) {
+      console.error(error);
+      toast.error("Something went wrong");
+    } finally {
+      setVitalsLoading(false);
     }
   };
 
@@ -262,11 +292,22 @@ export default function PatientAppointments() {
                       <div className="text-sm text-muted-foreground">
                         Main Clinic
                       </div>
+                      {vitalsLoading ? (
+                        <div className="space-y-2">
+                          <Skeleton className="h-6 w-1/3" />
+                          <Skeleton className="h-5 w-full" />
+                          <Skeleton className="h-4 w-1/2 mt-2" />
+                        </div>
+                      ) : (
+                        viewVitalsAppointmentId === appointment.id &&
+                        !vitalsLoading &&
+                        patientVitals && <VitalsCard {...patientVitals} />
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Badge
-                      className="lowercase"
+                      className="uppercase"
                       variant={
                         appointment.status === "CONFIRMED"
                           ? "default"
@@ -275,9 +316,24 @@ export default function PatientAppointments() {
                     >
                       {appointment.status}
                     </Badge>
-                    <Button variant="outline" size="sm">
-                      Reschedule
-                    </Button>
+                    {appointment.status === "ATTENDING" ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setAppointmentId(appointment.id);
+                          fetchPatientVitals(appointment.id);
+                        }}
+                      >
+                        {viewVitalsAppointmentId === appointment.id
+                          ? "View Vitals"
+                          : "Show Vitals"}
+                      </Button>
+                    ) : (
+                      <Button variant="outline" size="sm">
+                        Reschedule
+                      </Button>
+                    )}
                     <Button variant="outline" size="sm">
                       Cancel
                     </Button>
@@ -363,23 +419,6 @@ export default function PatientAppointments() {
 
             {/* Date */}
             <div className="">
-              {/* <Select
-                onValueChange={(value) =>
-                  setValue("schedule.appointment_date", value)
-                }
-                defaultValue={watch("schedule.appointment_date")}
-              >
-                <SelectTrigger className="w-full rounded-md p-2">
-                  <SelectValue placeholder="Select Weekday" />
-                </SelectTrigger>
-                <SelectContent>
-                  {weekdays.map(({ label, value }) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select> */}
               <Label className="mb-1 block">Date</Label>
               <Popover>
                 <PopoverTrigger asChild>

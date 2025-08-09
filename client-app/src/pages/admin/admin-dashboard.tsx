@@ -18,8 +18,43 @@ import {
   MapPin,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import {
+  formatPurposeText,
+  formatTimeToAmPm,
+  type Appointment,
+} from '../../lib/type'
+import API from '../../lib/api'
 
 export default function AdminDashboard() {
+  const [stats, setStats] = useState<{
+    todayAppointments: Appointment[]
+    totalActivePatientsInLastMonth: number
+  } | null>(null)
+  const [waitTime, setWaitTime] = useState<number | null>(null)
+  const [noShowRate, setNoShowRate] = useState<number | null>(null)
+
+  const fetchStats = async () => {
+    const { data } = await API.get('/api/user/dashboard')
+    setStats(data.data)
+  }
+  const fetchWaitTime = async () => {
+    const { data } = await API.get('/api/provider/appointment/waittime')
+    setWaitTime(data.data)
+  }
+  const fetchNoShowRate = async () => {
+    const { data } = await API.get('/api/provider/appointment/no-show-rates')
+    setNoShowRate(data.data)
+  }
+
+  const todayAppointments = stats?.todayAppointments?.slice(0, 4)
+
+  useEffect(() => {
+    fetchStats()
+    fetchWaitTime()
+    fetchNoShowRate()
+  }, [])
+
   return (
     <div className="flex flex-col min-h-screen">
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -42,8 +77,9 @@ export default function AdminDashboard() {
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">24</div>
-              <p className="text-xs text-muted-foreground">+2 from yesterday</p>
+              <div className="text-2xl font-bold">
+                {stats?.todayAppointments?.length}
+              </div>
             </CardContent>
           </Card>
 
@@ -55,8 +91,9 @@ export default function AdminDashboard() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">1,247</div>
-              <p className="text-xs text-muted-foreground">+15 this week</p>
+              <div className="text-2xl font-bold">
+                {stats?.totalActivePatientsInLastMonth}
+              </div>
             </CardContent>
           </Card>
 
@@ -68,10 +105,7 @@ export default function AdminDashboard() {
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">18 min</div>
-              <p className="text-xs text-muted-foreground">
-                -5 min from last week
-              </p>
+              <div className="text-2xl font-bold">{waitTime || '--'} min</div>
             </CardContent>
           </Card>
 
@@ -83,10 +117,7 @@ export default function AdminDashboard() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">8.2%</div>
-              <p className="text-xs text-muted-foreground">
-                -1.2% from last month
-              </p>
+              <div className="text-2xl font-bold">{noShowRate || '--'}%</div>
             </CardContent>
           </Card>
         </div>
@@ -134,31 +165,39 @@ export default function AdminDashboard() {
                     status: 'no-show',
                   },
                 ].map((appointment, index) => (
+                {todayAppointments?.map((appointment) => (
                   <div
-                    key={index}
+                    key={appointment?.id}
                     className="flex items-center justify-between p-3 border border-muted rounded-lg"
                   >
                     <div className="flex items-center space-x-3">
                       <div className="text-sm font-medium">
-                        {appointment.time}
+                        {formatTimeToAmPm(
+                          appointment?.schedule?.appointment_time
+                        )}
                       </div>
                       <div>
-                        <div className="font-medium">{appointment.patient}</div>
+                        <div className="font-medium">
+                          {appointment?.patient?.first_name}{' '}
+                          {appointment?.patient?.last_name}
+                        </div>
                         <div className="text-sm text-muted-foreground">
-                          {appointment.type}
+                          {formatPurposeText(appointment?.purposes)}
                         </div>
                       </div>
                     </div>
                     <Badge
                       variant={
-                        appointment.status === 'confirmed'
+                        appointment?.status === 'SCHEDULED'
                           ? 'default'
-                          : appointment.status === 'pending'
+                          : appointment?.status === 'SUBMITTED'
                           ? 'secondary'
-                          : 'destructive'
+                          : appointment?.status === 'CANCELLED'
+                          ? 'destructive'
+                          : 'outline'
                       }
                     >
-                      {appointment.status}
+                      {appointment?.status}
                     </Badge>
                   </div>
                 ))}

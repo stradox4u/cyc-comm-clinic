@@ -1,15 +1,24 @@
 import logger from '../src/middlewares/logger.js'
 import prisma from '../src/config/prisma.js'
 import { faker } from '@faker-js/faker'
-import { Prisma, ProviderRoleTitle } from '@prisma/client'
-import type { PatientRegisterSchema } from '../src/modules/auth/auth.validation.js'
+import {
+  AppointmentPurpose,
+  AppointmentStatus,
+  Prisma,
+  ProviderRoleTitle,
+} from '@prisma/client'
 import bcrypt from 'bcryptjs'
+import { addDays, subDays } from 'date-fns'
 
 export type PatientCreateInput = Prisma.PatientCreateInput
 export type ProviderRoleCreateInput = Prisma.ProviderRoleCreateInput
 export type ProviderUncheckedCreateInput = Prisma.ProviderUncheckedCreateInput
+export type InsuranceProviderUncheckedCreateInput =
+  Prisma.InsuranceProviderUncheckedCreateInput
 
-const createRandomPatient = (): PatientRegisterSchema => ({
+// 30 Fake Patients and Cuspom Patient
+
+const createRandomPatient = (): PatientCreateInput => ({
   email: faker.internet.email().toLowerCase(),
   password: faker.internet.password({ length: 8 }),
   first_name: faker.person.firstName(),
@@ -36,12 +45,10 @@ const createRandomPatient = (): PatientRegisterSchema => ({
     ['Pollen', 'Dust', 'Peanuts', 'Shellfish', 'Milk', 'Eggs', 'Latex'],
     { min: 0, max: 3 }
   ),
-  insurance_coverage: null,
-  insurance_provider_id: null,
 })
 
 const fakePatients = faker.helpers.multiple(createRandomPatient, {
-  count: 30,
+  count: 50,
 })
 
 const customPatient: PatientCreateInput = {
@@ -67,6 +74,21 @@ const customPatient: PatientCreateInput = {
     },
   },
 }
+
+// 20 Fake Provider & a Custom Provider
+
+const createRandomProvider = (): ProviderUncheckedCreateInput => ({
+  email: faker.internet.email().toLowerCase(),
+  password: faker.internet.password({ length: 8 }),
+  first_name: faker.person.firstName(),
+  last_name: faker.person.lastName(),
+  phone: '081' + faker.string.numeric(8),
+  role_title: faker.helpers.arrayElement(Object.values(ProviderRoleTitle)),
+})
+
+const fakeProviders = faker.helpers.multiple(createRandomProvider, {
+  count: 20,
+})
 
 const customProviders: ProviderUncheckedCreateInput[] = [
   {
@@ -170,16 +192,98 @@ const providerRoles: ProviderRoleCreateInput[] = [
   },
 ]
 
+const createRandomInsuranceProvider =
+  (): InsuranceProviderUncheckedCreateInput => ({
+    name: faker.company.name(),
+    description: faker.company.catchPhrase(),
+  })
+
+const fakeInsuranceProviders = faker.helpers.multiple(
+  createRandomInsuranceProvider,
+  { count: 10 }
+)
+
+const customPatientWithAppointments: PatientCreateInput = {
+  email: 'janedoe@gmail.com',
+  password: await bcrypt.hash('test1234', 10),
+  is_verified: true,
+  first_name: 'Jane',
+  last_name: 'Doe',
+  phone: '081' + faker.string.numeric(8),
+  date_of_birth: '1990-07-13T14:45:00.000Z',
+  address: 'No 99, West Rock street, Abeokuta, Ogun State, Nigeria',
+  gender: 'FEMALE',
+  emergency_contact_name: 'Mama Doe',
+  emergency_contact_phone: '081' + faker.string.numeric(8),
+  blood_group: 'AB+',
+  allergies: ['Peanut', 'Bee Sting'],
+  insurance_coverage: 'Basic Health Package',
+  insurance_provider: {
+    create: {
+      name: 'Medicare Corps',
+      description:
+        'Providing the best in class insurance package for all your health care needs. Your Number one most trusted insurance provider',
+    },
+  },
+  appointments: {
+    createMany: {
+      data: [
+        {
+          has_insurance: true,
+          schedule: {
+            appointment_date: addDays(new Date(), 1),
+            appointment_time: '14:00',
+            change_count: 0,
+          },
+          purposes: [AppointmentPurpose.ROUTINE_HEALTH_CHECKUP],
+          status: AppointmentStatus.SUBMITTED,
+        },
+        {
+          has_insurance: true,
+          schedule: {
+            appointment_date: new Date(),
+            appointment_time: '12:00',
+            change_count: 0,
+          },
+          purposes: [AppointmentPurpose.FAMILY_PLANNING],
+          status: AppointmentStatus.SCHEDULED,
+        },
+        {
+          has_insurance: true,
+          schedule: {
+            appointment_date: subDays(new Date(), 1),
+            appointment_time: '08:00',
+            change_count: 2,
+          },
+          purposes: [AppointmentPurpose.DENTAL_CARE],
+          status: AppointmentStatus.CANCELLED,
+        },
+      ],
+      skipDuplicates: true,
+    },
+  },
+}
+
 const seed = async () => {
   try {
     logger.info('Seeding database tables...')
 
-    await Promise.all([
+    await prisma.$transaction([
       prisma.patient.createMany({ data: fakePatients, skipDuplicates: true }),
-      await prisma.patient.upsert({
+      prisma.provider.createMany({ data: fakeProviders, skipDuplicates: true }),
+      prisma.insuranceProvider.createMany({
+        data: fakeInsuranceProviders,
+        skipDuplicates: true,
+      }),
+      prisma.patient.upsert({
         where: { email: customPatient.email },
         update: {}, // no update if it exists
         create: customPatient,
+      }),
+      prisma.patient.upsert({
+        where: { email: customPatientWithAppointments.email },
+        update: {}, // no update if it exists
+        create: customPatientWithAppointments,
       }),
       prisma.providerRole.createMany({
         data: providerRoles,
