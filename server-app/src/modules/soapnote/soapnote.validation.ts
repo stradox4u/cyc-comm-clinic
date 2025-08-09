@@ -15,20 +15,20 @@ const jsonValue: z.ZodType<any> = z.lazy(() =>
 
 export const subjectiveSchema = z.object({
     symptoms: z.array(z.string()),
-    purpose_of_appointment: z.array(z.string()),
+    purpose_of_appointment: z.array(z.string()).optional(),
     others: z.string()
 }).partial()
 
 export const objectiveSchema = z.object({
-    physical_exam_report: z.array(z.string()),
-    vitals_summary: VitalsRecordSchema,
+    physical_exam_report: z.array(z.string()).optional(),
+    vitals_summary: VitalsRecordSchema.optional(),
     labs: z.record(z.string(), jsonValue).optional(),
     others: z.string()
 }).partial()
 
 export const assessmentSchema = z.object({
     diagnosis: z.array(z.string()),
-    preferential: z.array(z.string()),
+    differential: z.array(z.string()),
 }).partial()
 
 export const prescriptionSchema = z.object({
@@ -51,10 +51,10 @@ export const planSchema = z.object({
 
 export const SoapNoteRecordSchema = z.object({
     appointment_id: z.uuid(),
-    subjective: subjectiveSchema,
-    objective: objectiveSchema,
-    assessment: assessmentSchema,
-    plan: planSchema,
+    subjective: subjectiveSchema.optional(),
+    objective: objectiveSchema.optional(),
+    assessment: assessmentSchema.optional(),
+    plan: planSchema.optional(),
     created_by_id: z.uuid(),
     events: z.array(EventFullSchema).optional().default([])
 })

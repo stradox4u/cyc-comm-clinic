@@ -215,6 +215,9 @@ async function findSoapNotes(userId: string, role: UserType | ProviderRoleTitle)
       },
       appointment: true,
     },
+    orderBy: {
+      updated_at: "desc"
+    }
   });
 
   return soapNotes;
@@ -251,6 +254,9 @@ async function findSoapNotesByAppointment(
         },
       },
     },
+    orderBy: {
+      updated_at: "desc"
+    }
   });
 
   return soapNotes;

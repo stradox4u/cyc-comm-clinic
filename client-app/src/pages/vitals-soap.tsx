@@ -1,5 +1,6 @@
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "react-router";
 import {
   Card,
   CardContent,
@@ -9,8 +10,6 @@ import {
 } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Textarea } from "../components/ui/textarea";
 import {
   Tabs,
   TabsContent,
@@ -33,15 +32,17 @@ import {
   TableRow,
 } from "../components/ui/table";
 import {
-  Heart,
-  Thermometer,
-  Activity,
-  Scale,
-  Ruler,
-  Save,
   Search,
   FileText,
+  Activity,
 } from "lucide-react";
+import { 
+  type Appointment,
+  type AppointmentStatus
+} from '../lib/type'
+import SoapNoteDialog from "../components/soap-note-dialog";
+import VitalsFormDialog from "../components/vitals-form";
+import { useAuthStore } from "../store/auth-store";
 
 const vitalsHistory = [
   {
@@ -51,10 +52,10 @@ const vitalsHistory = [
     date: "2024-01-15",
     time: "10:30 AM",
     temperature: "98.6°C",
-    bloodPressure: "120/80",
-    heartRate: "72",
-    respiratoryRate: "16",
-    oxygenSaturation: "98%",
+    blood_pressure: "120/80",
+    heart_rate: "72",
+    respiratory_rate: "16",
+    oxygen_saturation: "98%",
     weight: "75 kg",
     height: "5'6\"",
     bmi: "23.4",
@@ -68,10 +69,10 @@ const vitalsHistory = [
     date: "2024-01-20",
     time: "2:15 PM",
     temperature: "99.2°C",
-    bloodPressure: "135/85",
-    heartRate: "78",
-    respiratoryRate: "18",
-    oxygenSaturation: "97%",
+    blood_pressure: "135/85",
+    heart_rate: "78",
+    respiratory_rate: "18",
+    oxygen_saturation: "97%",
     weight: "180 lbs",
     height: "5'10\"",
     bmi: "25.8",
@@ -113,70 +114,81 @@ const soapNotes = [
   },
 ];
 
-export default function VitalsSoapPage() {
+interface VitalsSoapNoteProps {
+  appointment?: Appointment
+  setAppointmentId?: React.Dispatch<React.SetStateAction<string | null>>;
+}
+
+export default function VitalsSoapPage({
+  appointment: propAppointment,
+  setAppointmentId
+}:VitalsSoapNoteProps) {
+  const { appointmentId: urlAppointmentId } = useParams<{ appointmentId: string }>();
   const [selectedPatient, setSelectedPatient] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const user = useAuthStore((state) => state.user)
+  const [appointmentStatus, setAppointmentStatus] = useState<AppointmentStatus>("SCHEDULED");
+  const [hasVitals, setHasVitals] = useState(false);
+  const [appointment, setAppointment] = useState<Appointment | null>(propAppointment || null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Vitals form state
-  const [vitals, setVitals] = useState({
-    temperature: "",
-    bloodPressure: "",
-    heartRate: "",
-    respiratoryRate: "",
-    oxygenSaturation: "",
-    weight: "",
-    height: "",
-    notes: "",
-  });
+  useEffect(() => {
+    const fetchAppointment = async (appointmentId: string) => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(`/api/appointment/${appointmentId}`);
+        const result = await response.json();
+        if (result.success) {
+          setAppointment(result.data);
+        } else {
+          console.error('Failed to fetch appointment:', result.message);
+        }
+      } catch (error) {
+        console.error('Error fetching appointment:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // SOAP note form state
-  const [soapNote, setSoapNote] = useState({
-    chiefComplaint: "",
-    subjective: "",
-    objective: "",
-    assessment: "",
-    plan: "",
-  });
-
-  const handleVitalsSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Vitals submitted:", vitals);
-    // Reset form
-    setVitals({
-      temperature: "",
-      bloodPressure: "",
-      heartRate: "",
-      respiratoryRate: "",
-      oxygenSaturation: "",
-      weight: "",
-      height: "",
-      notes: "",
-    });
-  };
-
-  const handleSoapSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("SOAP note submitted:", soapNote);
-    // Reset form
-    setSoapNote({
-      chiefComplaint: "",
-      subjective: "",
-      objective: "",
-      assessment: "",
-      plan: "",
-    });
-  };
-
-  const calculateBMI = (weight: string, height: string) => {
-    // Simple BMI calculation (assuming weight in lbs, height in inches)
-    const weightNum = Number.parseFloat(weight);
-    const heightNum = Number.parseFloat(height);
-    if (weightNum && heightNum) {
-      const bmi = (weightNum / (heightNum * heightNum)) * 703;
-      return bmi.toFixed(1);
+    if (urlAppointmentId && !propAppointment) {
+      fetchAppointment(urlAppointmentId);
+    } else if (propAppointment) {
+      setAppointment(propAppointment);
     }
-    return "";
-  };
+  }, [urlAppointmentId, propAppointment]);
+
+  useEffect(() => {
+    if (appointment?.status) {
+      setAppointmentStatus(appointment.status);
+    }
+  }, [appointment?.status]);
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 space-y-6 p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <h2 className="text-lg font-semibold">Loading appointment data...</h2>
+            <p className="text-muted-foreground">Please wait while we load the appointment information.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!appointment || !appointment.id) {
+    return (
+      <div className="flex-1 space-y-6 p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <h2 className="text-lg font-semibold">No appointment data available</h2>
+            <p className="text-muted-foreground">Please select an appointment to view vitals and SOAP notes.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -225,158 +237,14 @@ export default function VitalsSoapPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleVitalsSubmit} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="temperature"
-                        className="flex items-center"
-                      >
-                        <Thermometer className="mr-1 h-4 w-4" />
-                        Temperature (°C)
-                      </Label>
-                      <Input
-                        id="temperature"
-                        type="number"
-                        step="0.1"
-                        placeholder="98.6"
-                        value={vitals.temperature}
-                        onChange={(e) =>
-                          setVitals({ ...vitals, temperature: e.target.value })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="bloodPressure"
-                        className="flex items-center"
-                      >
-                        <Heart className="mr-1 h-4 w-4" />
-                        Blood Pressure
-                      </Label>
-                      <Input
-                        id="bloodPressure"
-                        placeholder="120/80"
-                        value={vitals.bloodPressure}
-                        onChange={(e) =>
-                          setVitals({
-                            ...vitals,
-                            bloodPressure: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="heartRate">Heart Rate (bpm)</Label>
-                      <Input
-                        id="heartRate"
-                        type="number"
-                        placeholder="72"
-                        value={vitals.heartRate}
-                        onChange={(e) =>
-                          setVitals({ ...vitals, heartRate: e.target.value })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="respiratoryRate">Respiratory Rate</Label>
-                      <Input
-                        id="respiratoryRate"
-                        type="number"
-                        placeholder="16"
-                        value={vitals.respiratoryRate}
-                        onChange={(e) =>
-                          setVitals({
-                            ...vitals,
-                            respiratoryRate: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="oxygenSaturation">
-                        O2 Saturation (%)
-                      </Label>
-                      <Input
-                        id="oxygenSaturation"
-                        type="number"
-                        placeholder="98"
-                        value={vitals.oxygenSaturation}
-                        onChange={(e) =>
-                          setVitals({
-                            ...vitals,
-                            oxygenSaturation: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="weight" className="flex items-center">
-                        <Scale className="mr-1 h-4 w-4" />
-                        Weight (kg)
-                      </Label>
-                      <Input
-                        id="weight"
-                        type="number"
-                        placeholder="150"
-                        value={vitals.weight}
-                        onChange={(e) =>
-                          setVitals({ ...vitals, weight: e.target.value })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="height" className="flex items-center">
-                      <Ruler className="mr-1 h-4 w-4" />
-                      Height (inches)
-                    </Label>
-                    <Input
-                      id="height"
-                      type="number"
-                      placeholder="66"
-                      value={vitals.height}
-                      onChange={(e) =>
-                        setVitals({ ...vitals, height: e.target.value })
-                      }
-                    />
-                  </div>
-
-                  {vitals.weight && vitals.height && (
-                    <div className="p-3 bg-muted rounded-lg">
-                      <Label className="text-sm font-medium">
-                        Calculated BMI:
-                      </Label>
-                      <div className="text-lg font-bold">
-                        {calculateBMI(vitals.weight, vitals.height)}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <Label htmlFor="vitals-notes">Notes</Label>
-                    <Textarea
-                      id="vitals-notes"
-                      placeholder="Additional observations or notes..."
-                      value={vitals.notes}
-                      onChange={(e) =>
-                        setVitals({ ...vitals, notes: e.target.value })
-                      }
-                    />
-                  </div>
-
-                  <Button type="submit" className="w-full">
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Vitals
-                  </Button>
-                </form>
+                <VitalsFormDialog
+                  appointmentId={appointment.id}
+                  setAppointmentId={setAppointmentId || (() => {})}
+                  userId={user?.id ?? ""}
+                  setHasVitals={setHasVitals}
+                  setAppointmentStatus={setAppointmentStatus}
+                  showAsDialog={false}
+                />
               </CardContent>
             </Card>
 
@@ -431,84 +299,13 @@ export default function VitalsSoapPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSoapSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="chief-complaint">Chief Complaint</Label>
-                  <Input
-                    id="chief-complaint"
-                    placeholder="Patient's primary concern or reason for visit"
-                    value={soapNote.chiefComplaint}
-                    onChange={(e) =>
-                      setSoapNote({
-                        ...soapNote,
-                        chiefComplaint: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="subjective">Subjective</Label>
-                  <Textarea
-                    id="subjective"
-                    placeholder="Patient's description of symptoms, history of present illness, review of systems..."
-                    rows={4}
-                    value={soapNote.subjective}
-                    onChange={(e) =>
-                      setSoapNote({ ...soapNote, subjective: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="objective">Objective</Label>
-                  <Textarea
-                    id="objective"
-                    placeholder="Physical examination findings, vital signs, laboratory results, imaging..."
-                    rows={4}
-                    value={soapNote.objective}
-                    onChange={(e) =>
-                      setSoapNote({ ...soapNote, objective: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="assessment">Assessment</Label>
-                  <Textarea
-                    id="assessment"
-                    placeholder="Clinical impression, differential diagnosis, problem list..."
-                    rows={3}
-                    value={soapNote.assessment}
-                    onChange={(e) =>
-                      setSoapNote({ ...soapNote, assessment: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="plan">Plan</Label>
-                  <Textarea
-                    id="plan"
-                    placeholder="Treatment plan, medications, follow-up instructions, patient education..."
-                    rows={4}
-                    value={soapNote.plan}
-                    onChange={(e) =>
-                      setSoapNote({ ...soapNote, plan: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="flex space-x-2">
-                  <Button type="submit" className="flex-1">
-                    <Save className="mr-2 h-4 w-4" />
-                    Save SOAP Note
-                  </Button>
-                  <Button type="button" variant="outline">
-                    Save as Template
-                  </Button>
-                </div>
-              </form>
+              <SoapNoteDialog 
+                appointmentId={appointment.id}
+                vitals={appointment.vitals}
+                purposes={appointment.purposes || appointment.other_purpose}
+                setAppointmentId={setAppointmentId || (() => {})}
+                showAsDialog={false}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -567,8 +364,8 @@ export default function VitalsSoapPage() {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>{vital.bloodPressure}</TableCell>
-                        <TableCell>{vital.heartRate}</TableCell>
+                        <TableCell>{vital.blood_pressure}</TableCell>
+                        <TableCell>{vital.heart_rate}</TableCell>
                         <TableCell>{vital.temperature}</TableCell>
                       </TableRow>
                     ))}
@@ -583,6 +380,7 @@ export default function VitalsSoapPage() {
                 <CardDescription>Latest clinical documentation</CardDescription>
               </CardHeader>
               <CardContent>
+                {/*Put soapnote cards here */}
                 <div className="space-y-4">
                   {soapNotes.map((note) => (
                     <div key={note.id} className="border rounded-lg p-4">
