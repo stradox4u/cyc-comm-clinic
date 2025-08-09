@@ -64,12 +64,12 @@ cron.schedule('0 7 * * *', async () => {
   logger.info('Appointment reminder cron job executed successfully')
 })
 
-cron.schedule('20 4 * * *', async () => {
+cron.schedule('0 19 * * *', async () => {
   logger.info('Running appointment no-show cron job at 7:00PM')
 
   const noShowAppointments = await prisma.appointment.updateManyAndReturn({
     where: {
-      status: AppointmentStatus.SUBMITTED,
+      status: AppointmentStatus.SCHEDULED,
       schedule: { path: ['appointment_date'], lte: new Date() },
     },
     data: { status: AppointmentStatus.NO_SHOW },
@@ -79,7 +79,6 @@ cron.schedule('20 4 * * *', async () => {
       patient: { select: { email: true, first_name: true } },
     },
   })
-  console.log(noShowAppointments)
 
   const emailPromises = noShowAppointments.map((appointment) => {
     return emailService.sendAppointmentResheduleRequestMail(appointment, {
