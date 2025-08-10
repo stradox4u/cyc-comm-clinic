@@ -184,6 +184,7 @@ model AppointmentProviders {
   created_at      DateTime    @default(now())
   updated_at      DateTime    @updatedAt
 
+  @@unique([appointment_id, provider_id])
   @@map("appointmentproviders")
 }
 

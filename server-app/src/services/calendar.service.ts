@@ -1,6 +1,7 @@
 import { calendar_v3, google } from 'googleapis'
 import googleapis from '../config/googleapis.js'
 import type { Credentials } from 'google-auth-library'
+import logger from '../middlewares/logger.js'
 
 const calendar = (tokens: Credentials) => {
   googleapis.oauth2Client.setCredentials(tokens)
@@ -10,12 +11,35 @@ const calendar = (tokens: Credentials) => {
 
 const createCalendarEvent = async (
   tokens: Credentials,
-  event: calendar_v3.Schema$Event
+  payload: { summary: string; description: string; start: string; end: string }
 ) => {
+  const event: calendar_v3.Schema$Event = {
+    summary: payload.summary,
+    description: payload.description,
+    start: {
+      dateTime: payload.start,
+      timeZone: 'Africa/Lagos',
+    },
+    end: {
+      dateTime: payload.end,
+      timeZone: 'Africa/Lagos',
+    },
+    reminders: {
+      useDefault: false,
+      overrides: [
+        { method: 'email', minutes: 60 },
+        { method: 'popup', minutes: 30 },
+      ],
+    },
+  }
+
   const res = await calendar(tokens).events.insert({
     calendarId: 'primary',
     requestBody: event,
   })
+  if (!res.ok) {
+    logger.error('Calendar API Error setting up calendar event: ' + res.data)
+  }
 
   return res.data
 }

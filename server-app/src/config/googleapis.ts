@@ -16,7 +16,7 @@ const getAuthUrl = () => {
 }
 const getTokens = async (code: string) => {
   const res = await oauth2Client.getToken(code)
-  console.log(res)
+
   return res.tokens
 }
 

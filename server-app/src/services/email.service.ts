@@ -2,6 +2,7 @@ import { sendEmail } from '../config/email.js'
 import config from '../config/config.js'
 import type { Appointment, AppointmentPurpose } from '@prisma/client'
 import type { AppointmentSchedule } from '../cron-job.js'
+import { formatInTimeZone } from 'date-fns-tz'
 
 const sendWelcomeMail = async (email: string, firstName: string) => {
   return await sendEmail({
@@ -116,6 +117,45 @@ const sendPasswordChangedMail = async (email: string, first_name: string) => {
   })
 }
 
+const sendAppointmentScheduledMail = async (
+  patient: { email: string; first_name: string },
+  schedule: AppointmentSchedule
+) => {
+  return await sendEmail({
+    to: patient.email,
+    subject: 'Your appointment request is now scheduled',
+    html: `
+      <h3>Dear ${patient.first_name},</h3>
+      <div>
+        This is to inform you that your appointment request has been scheduled for: 
+        <br/><br/>
+        <li>
+          ${formatInTimeZone(
+            schedule.appointment_date,
+            'Africa/Lagos',
+            'do MMMM, yyyy'
+          )}
+        </li>
+        <li>
+          ${schedule.appointment_time}
+        </li>
+
+        If this appointment schedule is no longer possible, please feel free to reschedule or cancel here:
+        <br/><br/>
+        <a href="${config.ORIGIN_URL}/appointments" 
+          style="text-align:center;background:#4f5ddb;color:#fff;padding:6px 10px;font-size:16px;border-radius:3px;"
+        >
+          View appointment
+        </a>
+      </div>
+      <br/>
+      Warm Regards, 
+      <br/>
+      ${config.APP_NAME} Team.
+    `,
+  })
+}
+
 const sendAppointmentReminderMail = async (
   appointment: Appointment,
   patient: { email: string; first_name: string }
@@ -139,7 +179,7 @@ const sendAppointmentReminderMail = async (
 
         If this appointment schedule is no longer possible, please feel free to reschedule or cancel here:
         <br/><br/>
-        <a href="${config.ORIGIN_URL}/appointments/${appointment.id}" 
+        <a href="${config.ORIGIN_URL}/appointments" 
           style="text-align:center;background:#4f5ddb;color:#fff;padding:6px 10px;font-size:16px;border-radius:3px;"
         >
           Update appointment
@@ -195,6 +235,7 @@ export default {
   sendEmailVerificationRequestMail,
   sendForgotPasswordMail,
   sendPasswordChangedMail,
+  sendAppointmentScheduledMail,
   sendAppointmentReminderMail,
   sendAppointmentResheduleRequestMail,
 }
