@@ -19,7 +19,6 @@ import {
 } from "./ui/select";
 import { Skeleton } from "./ui/skeleton";
 import VitalsFormDialog from "./vitals-form";
-import SoapNoteDialog from "./soap-note-dialog";
 import { useAuthStore } from "../store/auth-store";
 
 interface AppointmentCardProps {
@@ -232,12 +231,6 @@ export default function AppointmentCard({
             setHasVitals={setHasVitals}
             setAppointmentStatus={setAppointmentStatus}
           />
-          <SoapNoteDialog 
-            appointmentId={appointment.id}
-            vitals={appointment.vitals}
-            purposes={appointment.purposes || appointment.other_purpose}
-            setAppointmentId={setAppointmentId}
-          />
         </div>
       ) : (
         <div className="flex items-center space-x-2">
@@ -248,7 +241,7 @@ export default function AppointmentCard({
             className="bg-transparent"
           >
             <FileText className="mr-1 h-3 w-3" />
-            Vitals & SOAP
+            Vitals & <strong>SOAP</strong>
           </Button>
           <VitalsFormDialog
             appointmentId={appointment.id}
@@ -256,12 +249,6 @@ export default function AppointmentCard({
             userId={user?.id ?? ""}
             setHasVitals={setHasVitals}
             setAppointmentStatus={setAppointmentStatus}
-          />
-          <SoapNoteDialog 
-            appointmentId={appointment.id}
-            vitals={appointment.vitals}
-            purposes={appointment.purposes || appointment.other_purpose}
-            setAppointmentId={setAppointmentId}
           />
         </div>
       )}

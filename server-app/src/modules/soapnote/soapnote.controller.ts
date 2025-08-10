@@ -17,6 +17,7 @@ const createSoapNote = catchAsync(async (req, res) => {
             message: "Provider ID is required to create a soap note"
         });
     }
+    
     const savedSoapNote = await soapnoteService.createSoapNote(newSoapNote)
 
     res.status(201).json({

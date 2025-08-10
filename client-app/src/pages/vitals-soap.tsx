@@ -40,9 +40,11 @@ import {
   type Appointment,
   type AppointmentStatus
 } from '../lib/type'
+import { type SoapNote } from '../lib/schema'
 import SoapNoteDialog from "../components/soap-note-dialog";
 import VitalsFormDialog from "../components/vitals-form";
 import { useAuthStore } from "../store/auth-store";
+import { SoapNoteCard } from "../components/soap-note-card";
 
 const vitalsHistory = [
   {
@@ -81,38 +83,7 @@ const vitalsHistory = [
   },
 ];
 
-const soapNotes = [
-  {
-    id: "SOAP001",
-    patientName: "Sarah Johnson",
-    patientId: "P001",
-    date: "2024-01-15",
-    provider: "Dr. Martinez",
-    chiefComplaint: "Annual physical examination",
-    subjective:
-      "Patient reports feeling well overall. No new complaints. Continues to take medications as prescribed. Reports good energy levels and sleeping well. No chest pain, shortness of breath, or palpitations.",
-    objective:
-      "Vital signs stable. Physical examination reveals no acute distress. Heart rate regular, lungs clear to auscultation bilaterally. Abdomen soft, non-tender. Extremities without edema.",
-    assessment:
-      "1. Hypertension - well controlled on current medications\n2. Type 2 Diabetes - HbA1c improved from last visit\n3. Health maintenance - due for mammogram",
-    plan: "1. Continue current antihypertensive regimen\n2. Continue metformin, recheck HbA1c in 3 months\n3. Schedule mammogram\n4. Return in 6 months for follow-up\n5. Patient education on diet and exercise reinforced",
-  },
-  {
-    id: "SOAP002",
-    patientName: "Michael Chen",
-    patientId: "P002",
-    date: "2024-01-20",
-    provider: "Dr. Kim",
-    chiefComplaint: "Follow-up for asthma and elevated blood pressure",
-    subjective:
-      "Patient reports increased work stress over past month. Asthma symptoms well controlled with current inhaler. No recent exacerbations. Reports occasional headaches, especially in the morning.",
-    objective:
-      "BP elevated at 135/85. Lungs clear, good air movement bilaterally. Peak flow 450 L/min (baseline 480). Heart rate regular. No acute distress.",
-    assessment:
-      "1. Asthma - well controlled\n2. Hypertension - suboptimal control, likely stress-related\n3. Work-related stress",
-    plan: "1. Continue current asthma medications\n2. Increase lisinopril to 10mg daily\n3. Stress management counseling referral\n4. Home BP monitoring\n5. Follow-up in 4 weeks",
-  },
-];
+// This will be replaced by fetched data from the API
 
 interface VitalsSoapNoteProps {
   appointment?: Appointment
@@ -131,6 +102,50 @@ export default function VitalsSoapPage({
   const [hasVitals, setHasVitals] = useState(false);
   const [appointment, setAppointment] = useState<Appointment | null>(propAppointment || null);
   const [isLoading, setIsLoading] = useState(false);
+  const [soapNotes, setSoapNotes] = useState<(SoapNote & { 
+    created_at?: string; 
+    updated_at?: string;
+    created_by?: { 
+      id: string; 
+      first_name: string; 
+      last_name: string; 
+      role_title: string; 
+    };
+    events?: {
+      id: string;
+      type: string;
+      created_by_id: string;
+      appointment_id: string;
+      created_at: string;
+      updated_at: string;
+      created_by: {
+        id: string;
+        first_name: string;
+        last_name: string;
+        role_title: string;
+      };
+    }[];
+  })[]>([]);
+  const [soapNotesLoading, setSoapNotesLoading] = useState(false);
+
+  const fetchSoapNotes = async (appointmentId: string) => {
+    setSoapNotesLoading(true);
+    try {
+      const response = await fetch(`/api/provider/soapnotes?appointmentId=${appointmentId}`);
+      const result = await response.json();
+      if (result.success && result.data) {
+        setSoapNotes(result.data);
+      } else {
+        setSoapNotes([]);
+        console.error('Failed to fetch soap notes:', result.message);
+      }
+    } catch (error) {
+      console.error('Error fetching soap notes:', error);
+      setSoapNotes([]);
+    } finally {
+      setSoapNotesLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchAppointment = async (appointmentId: string) => {
@@ -140,6 +155,8 @@ export default function VitalsSoapPage({
         const result = await response.json();
         if (result.success) {
           setAppointment(result.data);
+
+          fetchSoapNotes(appointmentId);
         } else {
           console.error('Failed to fetch appointment:', result.message);
         }
@@ -154,6 +171,10 @@ export default function VitalsSoapPage({
       fetchAppointment(urlAppointmentId);
     } else if (propAppointment) {
       setAppointment(propAppointment);
+      
+      if (propAppointment.id) {
+        fetchSoapNotes(propAppointment.id);
+      }
     }
   }, [urlAppointmentId, propAppointment]);
 
@@ -305,6 +326,7 @@ export default function VitalsSoapPage({
                 purposes={appointment.purposes || appointment.other_purpose}
                 setAppointmentId={setAppointmentId || (() => {})}
                 showAsDialog={false}
+                onSoapNoteSaved={() => fetchSoapNotes(appointment.id)}
               />
             </CardContent>
           </Card>
@@ -326,88 +348,52 @@ export default function VitalsSoapPage({
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Vitals</CardTitle>
-                <CardDescription>Latest vital sign recordings</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Patient</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>BP</TableHead>
-                      <TableHead>HR</TableHead>
-                      <TableHead>Temp</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {vitalsHistory.map((vital) => (
-                      <TableRow key={vital.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">
-                              {vital.patientName}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {vital.patientId}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div>{vital.date}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {vital.time}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>{vital.blood_pressure}</TableCell>
-                        <TableCell>{vital.heart_rate}</TableCell>
-                        <TableCell>{vital.temperature}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-
+          <div className="grid">
             <Card>
               <CardHeader>
                 <CardTitle>Recent SOAP Notes</CardTitle>
                 <CardDescription>Latest clinical documentation</CardDescription>
               </CardHeader>
               <CardContent>
-                {/*Put soapnote cards here */}
-                <div className="space-y-4">
-                  {soapNotes.map((note) => (
-                    <div key={note.id} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <div className="font-medium">{note.patientName}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {note.patientId}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm">{note.date}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {note.provider}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-sm">
-                        <strong>Chief Complaint:</strong> {note.chiefComplaint}
-                      </div>
-                      <Button variant="ghost" size="sm" className="mt-2">
-                        <FileText className="mr-1 h-3 w-3" />
-                        View Full Note
-                      </Button>
-                    </div>
-                  ))}
-                </div>
+                {soapNotesLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <p className="text-muted-foreground">Loading SOAP notes...</p>
+                  </div>
+                ) : soapNotes.length > 0 ? (
+                  <div className="space-y-16">
+                    {soapNotes.map((note, index) => {
+                      const creationEvent = note.events?.find((event: any) => event.type === 'SOAP_NOTE_RECORDED');
+                      const createdBy = creationEvent?.created_by;
+                      const createdAt = creationEvent?.created_at || note.created_at;
+                      
+                      return (
+                        <SoapNoteCard 
+                          key={note.appointment_id + index}
+                          soapNote={note}
+                          created_at={createdAt}
+                          updated_at={note.updated_at}
+                          created_by={createdBy}
+                          onUpdate={() => {
+                            if (appointment?.id) {
+                              fetchSoapNotes(appointment.id);
+                            }
+                          }}
+                          onDelete={() => {
+                            if (appointment?.id) {
+                              fetchSoapNotes(appointment.id);
+                            }
+                          }}
+                          canEdit={true}
+                          canDelete={true}
+                        />
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center py-8">
+                    <p className="text-muted-foreground">No SOAP notes found for this appointment</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
