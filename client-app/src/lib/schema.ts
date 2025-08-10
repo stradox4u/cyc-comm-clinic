@@ -223,8 +223,8 @@ export const prescriptionSchema = z.object({
 
 export const planSchema = z.object({
     prescription: z.array(prescriptionSchema).optional(),
-    test_requests: z.record(z.string(), jsonValue).optional(),
-    recommendation: z.record(z.string(), jsonValue).optional(),
+    test_requests: z.union([z.array(z.string()), z.record(z.string(), jsonValue)]).optional(),
+    recommendation: z.union([z.array(z.string()), z.record(z.string(), jsonValue)]).optional(),
     has_referral : z.boolean(),
     referred_provider_name: z.string().optional(),
     others: z.string()

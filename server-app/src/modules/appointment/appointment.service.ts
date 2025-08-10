@@ -8,7 +8,6 @@ import {
 } from "@prisma/client";
 import prisma from "../../config/prisma.js";
 import { startOfDay, endOfDay } from 'date-fns';
-import { includes } from "zod";
 import { 
   calculateWaitTimeMinutes,
   calculateNoShowRate 
@@ -36,6 +35,35 @@ async function createAppointment(
       vitals: true,
       soap_note: true,
     },
+  })
+}
+
+{/*Schedule is Json so custom function to sort
+  appointment by earliest date
+  */}
+
+function sortAppointmentsByEarliestDate(appointments: Appointment[]) {
+  const getEarlistDate = (appt: Appointment): Date => {
+    let scheduleObj: any = appt.schedule;
+    if (typeof scheduleObj === "string") {
+      try {
+        scheduleObj = JSON.parse(scheduleObj);
+      } catch {
+        scheduleObj = {};
+      }
+    }
+    if (scheduleObj && typeof scheduleObj === "object" && "appointment_date" in scheduleObj) {
+      return new Date(scheduleObj.appointment_date);
+    }
+    if (appt.created_at) {
+      return new Date(appt.created_at);
+    }
+    return new Date(appt.updated_at);
+  };
+  return appointments.sort((a, b) => {
+    const dateA = getEarlistDate(a).getTime();
+    const dateB = getEarlistDate(b).getTime();
+    return dateA - dateB;
   })
 }
 
@@ -67,7 +95,7 @@ async function findAppointment(filter: AppointmentWhereUniqueInput): Promise<
 async function searchAppointments(
   filter: AppointmentWhereInput
 ): Promise<Appointment[]> {
-  return await prisma.appointment.findMany({
+  const appointments = await prisma.appointment.findMany({
     where: filter,
     include: {
       appointment_providers: {
@@ -88,11 +116,9 @@ async function searchAppointments(
           insurance_provider_id: true,
         },
       },
-    },
-    orderBy: {
-      updated_at: "desc",
     }
   })
+  return sortAppointmentsByEarliestDate(appointments)
 }
 
 // Find appointments by patient
@@ -100,7 +126,7 @@ async function findAppointmentsByPatient(
   patient_id: string,
   filter?: Prisma.AppointmentWhereInput
 ): Promise<Appointment[]> {
-  return prisma.appointment.findMany({
+  const appointments = await prisma.appointment.findMany({
     where: {
       patient_id,
       ...(filter || {}),
@@ -125,10 +151,8 @@ async function findAppointmentsByPatient(
         },
       },
     },
-    orderBy: {
-      updated_at: "desc"
-    },
   });
+  return sortAppointmentsByEarliestDate(appointments)
 }
 
 // Find appointments by provider
@@ -164,12 +188,10 @@ async function findAppointmentsByProvider(
           },
         },
       },
-    },
-    orderBy: {
-      updated_at: "desc"
     }
   })
-  return appointmentProviders.map((entry) => entry.appointment)
+  const appointments = appointmentProviders.map((entry) => entry.appointment);
+  return sortAppointmentsByEarliestDate(appointments)
 }
 
 {
@@ -445,7 +467,7 @@ function buildProvidersCreate(
   }
 }
 
-export async function findAppointmentByPatientAndDate(
+async function findAppointmentByPatientAndDate(
   patientId: string,
   date: Date
 ) {
@@ -460,13 +482,36 @@ export async function findAppointmentByPatientAndDate(
   })
 }
 
-export async function getNoShowRatesPerProviderPatient(providerId?: string): Promise<{
-  providerId: string;
-  patients: {
-    patientId: string;
-    noShowRate: number;
-  }[];
-}[]> {
+async function getNoShowRatesPerProviderPatient(
+  providerId?: string,
+  returnOnlyNumber = false
+): Promise<
+  | {
+      providerId: string;
+      patients: {
+        patientId: string;
+        noShowRate: number;
+      }[];
+    }[]
+  | number
+> {
+  if (returnOnlyNumber) {
+    const whereFilter = providerId
+    ? {
+      appointment_providers: {
+            some: { provider_id: providerId },
+          },
+    }
+    : {};
+    const appointment = await prisma.appointment.findMany({
+      where: whereFilter,
+      select: {
+        status: true,
+      },
+    });
+    return calculateNoShowRate(appointment)
+  }
+
   const providers = providerId
     ? [{ provider_id: providerId }]
     : await prisma.appointmentProviders.findMany({
@@ -520,6 +565,28 @@ export async function getNoShowRatesPerProviderPatient(providerId?: string): Pro
   return result;
 }
 
+async function getNoShowRatesForAdmin() {
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const appointments = await prisma.appointment.findMany({
+    where: {
+      OR: [
+        {
+          created_at: {
+            gte: thirtyDaysAgo,
+          }
+        },
+        {
+          updated_at: {
+            gte: thirtyDaysAgo
+          }
+        }
+      ]
+    }
+  })
+  const noShowRate = calculateNoShowRate(appointments);
+  return noShowRate;
+}
 
 export default {
     createAppointment,
@@ -534,5 +601,6 @@ export default {
     searchAppointments,
     getAverageWaitTimeForProvider,
     getAverageWaitTimeForAllProviders,
-    getNoShowRatesPerProviderPatient
+    getNoShowRatesPerProviderPatient,
+    getNoShowRatesForAdmin
 }
