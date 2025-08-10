@@ -1,5 +1,4 @@
 // soapnote.service.ts
-
 import type { Vitals, Prisma } from "@prisma/client";
 import { EventType } from "@prisma/client";
 import prisma from "../../config/prisma.js";
@@ -211,6 +210,14 @@ async function findSoapNotes(userId: string, role: UserType | ProviderRoleTitle)
           appointment_id: true,
           created_at: true,
           updated_at: true,
+          created_by: {
+            select: {
+              id: true,
+              first_name: true,
+              last_name: true,
+              role_title: true,
+            }
+          }
         },
       },
       appointment: true,
@@ -241,7 +248,16 @@ async function findSoapNotesByAppointment(
 
   const soapNotes = await prisma.soapNote.findMany({
     where: whereClause,
-    include: {
+    select: {
+      id: true,
+      appointment_id: true,
+      subjective: true,
+      objective: true,
+      assessment: true,
+      plan: true,
+      created_by_id: true,
+      created_at: true,
+      updated_at: true,
       events: {
         orderBy: { created_at: 'desc' },
         select: {
@@ -251,6 +267,14 @@ async function findSoapNotesByAppointment(
           appointment_id: true,
           created_at: true,
           updated_at: true,
+          created_by: {
+            select: {
+              id: true,
+              first_name: true,
+              last_name: true,
+              role_title: true,
+            }
+          }
         },
       },
     },
@@ -273,7 +297,11 @@ async function deleteSoapNote(
       id: true,
       appointment: {
         select: {
-          appointment_providers: true,
+          appointment_providers: {
+            select: {
+              provider_id: true,
+            },
+          },
         },
       },
     },
@@ -283,7 +311,7 @@ async function deleteSoapNote(
     throw new Error("SOAP note not found");
   }
 
-  const assignedProviderIds = existingNote.appointment?.appointment_providers?.map(p => p.id) || [];
+  const assignedProviderIds = existingNote.appointment?.appointment_providers?.map(p => p.provider_id) || [];
   const isOwner = assignedProviderIds.includes(userId);
 
   const isAdminOrReceptionist =

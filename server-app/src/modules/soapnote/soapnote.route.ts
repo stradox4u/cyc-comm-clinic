@@ -8,10 +8,18 @@ import { UserType } from '../../types/index.js';
 
 const router = express.Router()
 
+const injectCreatedById = (req: any, res: any, next: any) => {
+    if (req.user?.id) {
+        req.body.created_by_id = req.user.id;
+    }
+    next();
+};
+
 router.post(
     '/record',
     authenticate(UserType.PROVIDER),
     authorize(Object.values(ProviderRoleTitle)),
+    injectCreatedById,
     validate(soapnoteValidation.SoapNoteRecordSchema),
     soapnoteController.createSoapNote
 )
@@ -20,6 +28,7 @@ router.put(
     '/update/:id',
     authenticate(UserType.PROVIDER),
     authorize(Object.values(ProviderRoleTitle)),
+    injectCreatedById,
     soapnoteController.updateSoapNote
 )
 
