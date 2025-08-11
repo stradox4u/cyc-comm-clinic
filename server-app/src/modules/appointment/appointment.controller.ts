@@ -26,6 +26,7 @@ import {
   NotFoundError,
   ValidationError,
 } from '../../middlewares/errorHandler.js'
+import { addMinutes } from 'date-fns'
 
 const appointmentCreate = catchAsync(async (req, res) => {
   const newAppointment: AppointmentRegisterSchema = req.body
@@ -54,12 +55,10 @@ const appointmentCreate = catchAsync(async (req, res) => {
       : appointment_date
 
   const dateTimeString = `${dateStr}T${appointment_time.trim()}:00`
-  console.log('Date string:', dateTimeString)
 
   const appointmentDateTime = new Date(dateTimeString)
 
   if (isNaN(appointmentDateTime.getTime())) {
-    console.log('Invalid Date:', appointmentDateTime)
     return res.status(400).json({
       success: false,
       message: 'Invalid date format',
@@ -112,6 +111,14 @@ const appointmentCreate = catchAsync(async (req, res) => {
       })
     }
   }
+
+  const [hours, minutes] = newAppointment.schedule?.appointment_time?.split(':')
+  if (!hours || !minutes) throw new ValidationError('Invalid Time')
+
+  newAppointment.schedule.appointment_date = addMinutes(
+    new Date(newAppointment.schedule.appointment_date),
+    parseInt(hours) * 60 + parseInt(minutes)
+  )
 
   const prismaCreateInput: any = {
     ...newAppointment,
@@ -416,15 +423,16 @@ const assignAppointmentProvider = catchAsync(async (req, res) => {
     }
     await calendarService.createCalendarEvent(token.tokens as Credentials, {
       summary: `${config.APP_NAME} Medical Appointment Schedule`,
-      description: `
-        Appointment is scheduled for ${appointment.purposes.join(', ')}
-        Visit ${config.ORIGIN_URL}/appointments for more details.
-      `,
+      description: `Appointment is scheduled for ${appointment.purposes.join(
+        ', '
+      )}. \nVisit ${config.ORIGIN_URL}/appointments for more details.`,
       start: (
         appointment.schedule as AppointmentSchedule
       ).appointment_date.toString(),
       end: addMinutesToDate(
-        (appointment.schedule as AppointmentSchedule).appointment_date
+        (
+          appointment.schedule as AppointmentSchedule
+        ).appointment_date.toString()
       ),
     })
   }
