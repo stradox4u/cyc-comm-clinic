@@ -53,7 +53,7 @@ const Settings = () => {
               </div>
             </div>
             {user?.has_calendar_access ? (
-              <Badge className="bg-success">CONFIRMED</Badge>
+              <Badge variant={'outline'}>CONFIRMED</Badge>
             ) : (
               <Button onClick={() => setShowGoogleModal(true)}>
                 <GlobeIcon />

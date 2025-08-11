@@ -37,10 +37,10 @@ const authenticateMultipleUser =
     if (!user) throw new UnauthenticatedError('Not authenticated')
 
     if (!allowedUsers.includes(user.type)) {
-      return res.status(403).json({ success: false, message: 'Forbidden' });
+      throw new UnauthorizedError('Access denied')
     }
-    
-    req.user = user;
+
+    req.user = user
     next()
   }
 

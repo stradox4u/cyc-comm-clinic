@@ -1,9 +1,10 @@
 import type { Request, Response } from 'express'
 import catchAsync from '../../../utils/catchAsync.js'
 import googleapis from '../../../config/googleapis.js'
-import authService from './googleAuth.service.js'
+import googleAuthService from './googleAuth.service.js'
 import config from '../../../config/config.js'
 import logger from '../../../middlewares/logger.js'
+import patientService from '../../patient/patient.service.js'
 
 const getAuthUrl = catchAsync((req, res) => {
   const authUrl = googleapis.getAuthUrl()
@@ -22,9 +23,13 @@ const handleCallback = async (req: Request, res: Response) => {
 
     const tokens: {} = await googleapis.getTokens(code)
 
-    await authService.updateorCreateCalendarToken(
+    await googleAuthService.updateorCreateCalendarToken(
       { patient_id },
       { patient_id, tokens }
+    )
+    await patientService.updatePatient(
+      { id: patient_id },
+      { has_calendar_access: true }
     )
 
     res.redirect(`${config.ORIGIN_URL}/settings?calendar-auth=success`)

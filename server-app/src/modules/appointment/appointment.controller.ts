@@ -16,6 +16,17 @@ import {
   isWithinClinicHours,
 } from './appointment.utils.js'
 import prisma from '../../config/prisma.js'
+import emailService from '../../services/email.service.js'
+import type { AppointmentSchedule } from '../../cron-job.js'
+import calendarService from '../../services/calendar.service.js'
+import googleAuthService from '../auth/google/googleAuth.service.js'
+import type { Credentials } from 'google-auth-library'
+import config from '../../config/config.js'
+import {
+  NotFoundError,
+  ValidationError,
+} from '../../middlewares/errorHandler.js'
+import { addMinutes } from 'date-fns'
 
 const appointmentCreate = catchAsync(async (req, res) => {
   const newAppointment: AppointmentRegisterSchema = req.body
@@ -44,12 +55,10 @@ const appointmentCreate = catchAsync(async (req, res) => {
       : appointment_date
 
   const dateTimeString = `${dateStr}T${appointment_time.trim()}:00`
-  console.log('Date string:', dateTimeString)
 
   const appointmentDateTime = new Date(dateTimeString)
 
   if (isNaN(appointmentDateTime.getTime())) {
-    console.log('Invalid Date:', appointmentDateTime)
     return res.status(400).json({
       success: false,
       message: 'Invalid date format',
@@ -102,6 +111,14 @@ const appointmentCreate = catchAsync(async (req, res) => {
       })
     }
   }
+
+  const [hours, minutes] = newAppointment.schedule?.appointment_time?.split(':')
+  if (!hours || !minutes) throw new ValidationError('Invalid Time')
+
+  newAppointment.schedule.appointment_date = addMinutes(
+    new Date(newAppointment.schedule.appointment_date),
+    parseInt(hours) * 60 + parseInt(minutes)
+  )
 
   const prismaCreateInput: any = {
     ...newAppointment,
@@ -377,46 +394,53 @@ const appointmentDelete = catchAsync(async (req, res) => {
 })
 
 const assignAppointmentProvider = catchAsync(async (req, res) => {
-  const loggedInUser = getLoggedInUser(req)
-  const newAppointmentProvider: AppointmentProviderSchema | undefined = req.body
+  const { appointment_id, provider_id }: AppointmentProviderSchema = req.body
 
-  if (!newAppointmentProvider) {
-    return res.status(400).json({
-      success: false,
-      message: 'Appointment provider data is required',
-    })
-  }
-
-  const { appointment_id, provider_id } = newAppointmentProvider
-
-  const appointment = await appointmentService.findAppointment({
-    id: appointment_id,
+  const isAlreadyAssigned = await prisma.appointmentProviders.findUnique({
+    where: { appointment_id_provider_id: { appointment_id, provider_id } },
   })
-  if (!appointment) {
-    return res.status(404).json({
-      success: false,
-      message: 'Appointment not found',
-    })
-  }
+  if (isAlreadyAssigned) throw new ValidationError('Provider already assigned')
 
-  try {
-    authorizeSensitiveAppointmentFields(req, appointment)
-  } catch (err: any) {
-    return res.status(err.statusCode || 400).json({
-      success: false,
-      message: err.message,
-    })
-  }
-
-  const assignedProvider = await appointmentService.assignProvider({
-    appointment: { connect: { id: newAppointmentProvider.appointment_id } },
-    provider: { connect: { id: newAppointmentProvider.provider_id } },
+  const appointment = await appointmentService.assignProvider({
+    appointment_id: appointment_id,
+    provider_id: provider_id,
   })
+  if (!appointment) throw new NotFoundError('Appointment not found')
+
+  await emailService.sendAppointmentScheduledMail(
+    appointment.patient,
+    appointment.schedule as AppointmentSchedule
+  )
+
+  const token = await googleAuthService.findCalendarToken({
+    patient_id: appointment.patient_id,
+  })
+  if (token) {
+    const addMinutesToDate = (iso: string | Date) => {
+      const date = new Date(iso)
+      date.setMinutes(date.getMinutes() + 30)
+      return date.toISOString()
+    }
+    await calendarService.createCalendarEvent(token.tokens as Credentials, {
+      summary: `${config.APP_NAME} Medical Appointment Schedule`,
+      description: `Appointment is scheduled for ${appointment.purposes.join(
+        ', '
+      )}. \nVisit ${config.ORIGIN_URL}/appointments for more details.`,
+      start: (
+        appointment.schedule as AppointmentSchedule
+      ).appointment_date.toString(),
+      end: addMinutesToDate(
+        (
+          appointment.schedule as AppointmentSchedule
+        ).appointment_date.toString()
+      ),
+    })
+  }
 
   return res.status(200).json({
     success: true,
     message: 'Appointment provider assigned successfully',
-    data: assignedProvider,
+    data: appointment,
   })
 })
 
@@ -519,13 +543,16 @@ const getNoShowRates = catchAsync(async (req, res) => {
   if (user.roleTitle === 'ADMIN' || user.roleTitle === 'RECEPTIONIST') {
     data = await appointmentService.getNoShowRatesForAdmin()
   } else if (user.type === UserType.PROVIDER) {
-    data = await appointmentService.getNoShowRatesPerProviderPatient(user.id, true)
+    data = await appointmentService.getNoShowRatesPerProviderPatient(
+      user.id,
+      true
+    )
   } else {
     return res.status(403).json({ success: false, message: 'Access denied' })
   }
 
   if (!data || (Array.isArray(data) && data.length === 0)) {
-   data = 0
+    data = 0
   }
 
   res.status(200).json({

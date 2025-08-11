@@ -4,14 +4,15 @@ import {
   type Prisma,
   type Vitals,
   type SoapNote,
-  EventType
-} from "@prisma/client";
-import prisma from "../../config/prisma.js";
-import { startOfDay, endOfDay } from 'date-fns';
-import { 
+  EventType,
+  AppointmentStatus,
+} from '@prisma/client'
+import prisma from '../../config/prisma.js'
+import { startOfDay, endOfDay } from 'date-fns'
+import {
   calculateWaitTimeMinutes,
-  calculateNoShowRate 
-} from "./appointment.utils.js";
+  calculateNoShowRate,
+} from './appointment.utils.js'
 
 export type AppointmentWhereUniqueInput = Prisma.AppointmentWhereUniqueInput
 export type AppointmentWhereInput = Prisma.AppointmentWhereInput
@@ -20,8 +21,8 @@ export type AppointmentUpdateInput = Prisma.AppointmentUpdateInput
 export type AppointmentUncheckedUpdateInput =
   Prisma.AppointmentUncheckedUpdateInput
 
-export type AppointmentProvidersCreateInput =
-  Prisma.AppointmentProvidersCreateInput
+export type AppointmentProvidersUncheckedCreateInput =
+  Prisma.AppointmentProvidersUncheckedCreateInput
 export type AppointmentProvidersWhereInput =
   Prisma.AppointmentProvidersWhereInput
 
@@ -38,32 +39,38 @@ async function createAppointment(
   })
 }
 
-{/*Schedule is Json so custom function to sort
+{
+  /*Schedule is Json so custom function to sort
   appointment by earliest date
-  */}
+  */
+}
 
 function sortAppointmentsByEarliestDate(appointments: Appointment[]) {
   const getEarlistDate = (appt: Appointment): Date => {
-    let scheduleObj: any = appt.schedule;
-    if (typeof scheduleObj === "string") {
+    let scheduleObj: any = appt.schedule
+    if (typeof scheduleObj === 'string') {
       try {
-        scheduleObj = JSON.parse(scheduleObj);
+        scheduleObj = JSON.parse(scheduleObj)
       } catch {
-        scheduleObj = {};
+        scheduleObj = {}
       }
     }
-    if (scheduleObj && typeof scheduleObj === "object" && "appointment_date" in scheduleObj) {
-      return new Date(scheduleObj.appointment_date);
+    if (
+      scheduleObj &&
+      typeof scheduleObj === 'object' &&
+      'appointment_date' in scheduleObj
+    ) {
+      return new Date(scheduleObj.appointment_date)
     }
     if (appt.created_at) {
-      return new Date(appt.created_at);
+      return new Date(appt.created_at)
     }
-    return new Date(appt.updated_at);
-  };
+    return new Date(appt.updated_at)
+  }
   return appointments.sort((a, b) => {
-    const dateA = getEarlistDate(a).getTime();
-    const dateB = getEarlistDate(b).getTime();
-    return dateA - dateB;
+    const dateA = getEarlistDate(a).getTime()
+    const dateB = getEarlistDate(b).getTime()
+    return dateA - dateB
   })
 }
 
@@ -116,7 +123,7 @@ async function searchAppointments(
           insurance_provider_id: true,
         },
       },
-    }
+    },
   })
   return sortAppointmentsByEarliestDate(appointments)
 }
@@ -151,7 +158,7 @@ async function findAppointmentsByPatient(
         },
       },
     },
-  });
+  })
   return sortAppointmentsByEarliestDate(appointments)
 }
 
@@ -188,9 +195,9 @@ async function findAppointmentsByProvider(
           },
         },
       },
-    }
+    },
   })
-  const appointments = appointmentProviders.map((entry) => entry.appointment);
+  const appointments = appointmentProviders.map((entry) => entry.appointment)
   return sortAppointmentsByEarliestDate(appointments)
 }
 
@@ -233,12 +240,12 @@ async function updateAppointment(
         rest.status.set === 'ATTENDING'))
 
   const statusChangeToCheckedIn =
-    existing?.status !== "CHECKED_IN" &&
-    ((typeof rest.status === "string" && rest.status === "CHECKED_IN") ||
-      (typeof rest.status === "object" &&
+    existing?.status !== 'CHECKED_IN' &&
+    ((typeof rest.status === 'string' && rest.status === 'CHECKED_IN') ||
+      (typeof rest.status === 'object' &&
         rest.status !== null &&
-        "set" in rest.status &&
-        rest.status.set === "CHECKED_IN"));
+        'set' in rest.status &&
+        rest.status.set === 'CHECKED_IN'))
 
   const isRescheduled =
     (typeof rest.status === 'string' && rest.status === 'RESCHEDULED') ||
@@ -281,11 +288,11 @@ async function updateAppointment(
       : {}),
   }
 
-  const newEvents = [];
+  const newEvents = []
   if (statusChangeToCheckedIn) {
     newEvents.push({
       type: EventType.APPOINTMENT_STATUS_CHANGED,
-      status: "CHECKED_IN",
+      status: 'CHECKED_IN',
       created_at: new Date(),
       created_by_id: userId,
     })
@@ -294,7 +301,7 @@ async function updateAppointment(
   if (statusChangeToAttending) {
     newEvents.push({
       type: EventType.APPOINTMENT_STATUS_CHANGED,
-      status: "ATTENDING",
+      status: 'ATTENDING',
       created_at: new Date(),
       created_by_id: userId,
     })
@@ -303,7 +310,7 @@ async function updateAppointment(
   if (statusChangeToNoShow) {
     newEvents.push({
       type: EventType.APPOINTMENT_STATUS_CHANGED,
-      status: "NO_SHOW",
+      status: 'NO_SHOW',
       created_at: new Date(),
       created_by_id: userId,
     })
@@ -319,17 +326,19 @@ async function updateAppointment(
       soap_note: true,
       appointment_providers: true,
     },
-  });
+  })
 }
 
 // wait time service
-export async function getAverageWaitTimeForProvider(providerId: string): Promise<number | null> {
+export async function getAverageWaitTimeForProvider(
+  providerId: string
+): Promise<number | null> {
   const appointmentProviders = await prisma.appointmentProviders.findMany({
     where: { provider_id: providerId },
     select: { appointment_id: true },
-  });
+  })
 
-  if (appointmentProviders.length === 0) return null;
+  if (appointmentProviders.length === 0) return null
 
   const waitTimes = await Promise.all(
     appointmentProviders.map(async ({ appointment_id }) => {
@@ -339,46 +348,46 @@ export async function getAverageWaitTimeForProvider(providerId: string): Promise
           type: EventType.APPOINTMENT_STATUS_CHANGED,
         },
         orderBy: { created_at: 'desc' },
-      });
+      })
 
-      const checkedInEvent = events.find(e => e.status === 'CHECKED_IN');
-      const attendingEvent = events.find(e => e.status === 'ATTENDING');
+      const checkedInEvent = events.find((e) => e.status === 'CHECKED_IN')
+      const attendingEvent = events.find((e) => e.status === 'ATTENDING')
 
-      if (!checkedInEvent || !attendingEvent) return null;
+      if (!checkedInEvent || !attendingEvent) return null
 
       return calculateWaitTimeMinutes(
         new Date(checkedInEvent.created_at),
         new Date(attendingEvent.created_at)
-      );
+      )
     })
-  );
+  )
 
-  const validWaitTimes = waitTimes.filter((wt): wt is number => wt !== null);
+  const validWaitTimes = waitTimes.filter((wt): wt is number => wt !== null)
 
-  if (validWaitTimes.length === 0) return null;
+  if (validWaitTimes.length === 0) return null
 
-  const sum = validWaitTimes.reduce((a, b) => a + b, 0);
-  const average = sum / validWaitTimes.length;
+  const sum = validWaitTimes.reduce((a, b) => a + b, 0)
+  const average = sum / validWaitTimes.length
 
-  return average;
+  return average
 }
 
 // Admin wait time service for all Provider
 export async function getAverageWaitTimeForAllProviders(): Promise<
   {
-    providerId: string,
-    providerName: string,
+    providerId: string
+    providerName: string
     averageWaitTime: number | null
-  } []
->{
+  }[]
+> {
   const providers = await prisma.provider.findMany({
     select: {
       id: true,
       role_title: true,
       first_name: true,
       last_name: true,
-    }
-  });
+    },
+  })
   const results = await Promise.all(
     providers.map(async (provider) => {
       const avgWaitTime = await getAverageWaitTimeForProvider(provider.id)
@@ -388,8 +397,8 @@ export async function getAverageWaitTimeForAllProviders(): Promise<
         averageWaitTime: avgWaitTime,
       }
     })
-  );
-  return results;
+  )
+  return results
 }
 
 //Cancel or Delete Appointment
@@ -421,33 +430,29 @@ async function deleteAppointment(
 
 //Assign Provider (AppointmentProviders)
 async function assignProvider(
-  data: AppointmentProvidersCreateInput
-): Promise<Appointment | null> {
-  await prisma.appointmentProviders.create({ data })
-  const appointmentId = data.appointment?.connect?.id
-  if (data.appointment?.connect?.id) {
-    await prisma.appointment.update({
-      where: { id: data.appointment.connect.id },
-      data: { status: 'SCHEDULED' },
-    })
-  }
-  return appointmentId
-    ? prisma.appointment.findUnique({
-        where: { id: appointmentId },
+  payload: AppointmentProvidersUncheckedCreateInput
+): Promise<
+  (Appointment & { patient: { first_name: string; email: string } }) | null
+> {
+  await prisma.$transaction([
+    prisma.appointment.update({
+      where: { id: payload.appointment_id },
+      data: { status: AppointmentStatus.SCHEDULED },
+    }),
+    prisma.appointmentProviders.create({ data: payload }),
+  ])
+
+  return await prisma.appointment.findUnique({
+    where: { id: payload.appointment_id },
+    include: {
+      appointment_providers: {
         include: {
-          appointment_providers: {
-            include: {
-              provider: {
-                select: {
-                  first_name: true,
-                  last_name: true,
-                },
-              },
-            },
-          },
+          provider: { select: { first_name: true, last_name: true } },
         },
-      })
-    : null
+      },
+      patient: { select: { first_name: true, email: true } },
+    },
+  })
 }
 
 function isProviderArray(arr: any): arr is { provider_id: string }[] {
@@ -467,10 +472,7 @@ function buildProvidersCreate(
   }
 }
 
-async function findAppointmentByPatientAndDate(
-  patientId: string,
-  date: Date
-) {
+async function findAppointmentByPatientAndDate(patientId: string, date: Date) {
   return prisma.appointment.findFirst({
     where: {
       patient_id: patientId,
@@ -487,28 +489,28 @@ async function getNoShowRatesPerProviderPatient(
   returnOnlyNumber = false
 ): Promise<
   | {
-      providerId: string;
+      providerId: string
       patients: {
-        patientId: string;
-        noShowRate: number;
-      }[];
+        patientId: string
+        noShowRate: number
+      }[]
     }[]
   | number
 > {
   if (returnOnlyNumber) {
     const whereFilter = providerId
-    ? {
-      appointment_providers: {
+      ? {
+          appointment_providers: {
             some: { provider_id: providerId },
           },
-    }
-    : {};
+        }
+      : {}
     const appointment = await prisma.appointment.findMany({
       where: whereFilter,
       select: {
         status: true,
       },
-    });
+    })
     return calculateNoShowRate(appointment)
   }
 
@@ -519,88 +521,88 @@ async function getNoShowRatesPerProviderPatient(
         select: {
           provider_id: true,
         },
-      });
+      })
 
-  const result = [];
+  const result = []
 
   for (const { provider_id } of providers) {
     const patients = await prisma.appointment.findMany({
-      where: { 
+      where: {
         appointment_providers: {
-          some: { provider_id }
-        }
+          some: { provider_id },
+        },
       },
       distinct: ['patient_id'],
       select: { patient_id: true },
-    });
+    })
 
-    const patientsWithRates = [];
+    const patientsWithRates = []
 
     for (const { patient_id } of patients) {
       const appointments = await prisma.appointment.findMany({
         where: {
           patient_id,
           appointment_providers: {
-            some: { provider_id }
-          }
+            some: { provider_id },
+          },
         },
         select: {
           status: true,
         },
-      });
+      })
 
-      const noShowRate = calculateNoShowRate(appointments);
+      const noShowRate = calculateNoShowRate(appointments)
 
       patientsWithRates.push({
         patientId: patient_id,
         noShowRate,
-      });
+      })
     }
 
     result.push({
       providerId: provider_id,
       patients: patientsWithRates,
-    });
+    })
   }
-  return result;
+  return result
 }
 
 async function getNoShowRatesForAdmin() {
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
   const appointments = await prisma.appointment.findMany({
     where: {
       OR: [
         {
           created_at: {
             gte: thirtyDaysAgo,
-          }
+          },
         },
         {
           updated_at: {
-            gte: thirtyDaysAgo
-          }
-        }
-      ]
-    }
+            gte: thirtyDaysAgo,
+          },
+        },
+      ],
+    },
   })
-  const noShowRate = calculateNoShowRate(appointments);
-  return noShowRate;
+  const noShowRate = calculateNoShowRate(appointments)
+  return noShowRate
 }
 
 export default {
-    createAppointment,
-    findAppointment,
-    findAppointmentsByPatient,
-    findAppointmentsByProvider,
-    updateAppointment,
-    deleteAppointment,
-    assignProvider,
-    findAppointmentByPatientAndDate,
-    buildProvidersCreate,
-    searchAppointments,
-    getAverageWaitTimeForProvider,
-    getAverageWaitTimeForAllProviders,
-    getNoShowRatesPerProviderPatient,
-    getNoShowRatesForAdmin
+  createAppointment,
+  findAppointment,
+  findAppointmentsByPatient,
+  findAppointmentsByProvider,
+  updateAppointment,
+  deleteAppointment,
+  assignProvider,
+  findAppointmentByPatientAndDate,
+  buildProvidersCreate,
+  searchAppointments,
+  getAverageWaitTimeForProvider,
+  getAverageWaitTimeForAllProviders,
+  getNoShowRatesPerProviderPatient,
+  getNoShowRatesForAdmin,
 }
