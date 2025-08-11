@@ -45,7 +45,7 @@ export default function CreatePatient() {
       <header>
         <div className="flex h-14 items-center px-4">
           <div className="ml-4">
-            <h1 className="text-lg font-semibold">Add new Patient</h1>
+            <h1 className="text-lg font-semibold">Patient Intake Form</h1>
           </div>
         </div>
       </header>

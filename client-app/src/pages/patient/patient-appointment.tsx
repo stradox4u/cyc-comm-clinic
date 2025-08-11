@@ -6,93 +6,93 @@ import {
   Loader2,
   AlertCircle,
   CalendarIcon,
-} from "lucide-react";
-import { useEffect, useState } from "react";
-import { Button } from "../../components/ui/button";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+} from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Button } from '../../components/ui/button'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import {
   AppointmentPurpose,
   appointmentSchema,
   timeSlots,
   type AppointmentFormData,
-} from "../../lib/schema";
-import { useNavigate } from "react-router-dom";
-import { Label } from "../../components/ui/label";
+} from '../../lib/schema'
+import { useNavigate } from 'react-router-dom'
+import { Label } from '../../components/ui/label'
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
+} from '../../components/ui/card'
+import { Badge } from '../../components/ui/badge'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../components/ui/select";
+} from '../../components/ui/select'
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "../../components/ui/tabs";
-import { toast } from "sonner";
-import { useAuthStore } from "../../store/auth-store";
-import { Input } from "../../components/ui/input";
-import { Skeleton } from "../../components/ui/skeleton";
-import { Alert } from "../../components/ui/alert";
-import { Calendar } from "../../components/ui/calendar";
-import { format } from "date-fns";
-import { cn } from "../../lib/utils";
+} from '../../components/ui/tabs'
+import { toast } from 'sonner'
+import { useAuthStore } from '../../store/auth-store'
+import { Input } from '../../components/ui/input'
+import { Skeleton } from '../../components/ui/skeleton'
+import { Alert } from '../../components/ui/alert'
+import { Calendar } from '../../components/ui/calendar'
+import { format } from 'date-fns'
+import { cn } from '../../lib/utils'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "../../components/ui/popover";
+} from '../../components/ui/popover'
 import {
   formatDateParts,
   formatPurposeText,
   formatTimeToAmPm,
   type Appointment,
-} from "../../lib/type";
-import { VitalsCard, type VitalsCardProps } from "../../components/vitals-card";
+} from '../../lib/type'
+import { VitalsCard, type VitalsCardProps } from '../../components/vitals-card'
 
 const recentVisits = [
   {
     id: 1,
-    date: "2024-01-10",
-    provider: "Dr. Smith",
-    type: "Consultation",
-    diagnosis: "Hypertension monitoring",
-    status: "completed",
+    date: '2024-01-10',
+    provider: 'Dr. Smith',
+    type: 'Consultation',
+    diagnosis: 'Hypertension monitoring',
+    status: 'completed',
   },
   {
     id: 2,
-    date: "2023-12-15",
-    provider: "Dr. Wilson",
-    type: "Lab Results Review",
-    diagnosis: "Normal blood work",
-    status: "completed",
+    date: '2023-12-15',
+    provider: 'Dr. Wilson',
+    type: 'Lab Results Review',
+    diagnosis: 'Normal blood work',
+    status: 'completed',
   },
-];
+]
 
 export default function PatientAppointments() {
-  const [tab, setTab] = useState("all");
-  const user = useAuthStore((state) => state.user);
-  const [loading, setLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [appointments, setAppointments] = useState<Appointment[]>();
+  const [tab, setTab] = useState('all')
+  const user = useAuthStore((state) => state.user)
+  const [loading, setLoading] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [appointments, setAppointments] = useState<Appointment[]>()
   const [viewVitalsAppointmentId, setViewVitalsAppointmentId] = useState<
     string | null
-  >(null);
+  >(null)
   const [patientVitals, setPatientVitals] = useState<VitalsCardProps | null>(
     null
-  );
-  const [appointmentId, setAppointmentId] = useState<string | null>(null);
-  const [vitalsLoading, setVitalsLoading] = useState<boolean>(false);
+  )
+  const [appointmentId, setAppointmentId] = useState<string | null>(null)
+  const [vitalsLoading, setVitalsLoading] = useState<boolean>(false)
 
   const {
     register,
@@ -111,87 +111,87 @@ export default function PatientAppointments() {
         last_name: user?.last_name,
       },
       schedule: {
-        appointment_date: "",
-        appointment_time: "",
+        appointment_date: '',
+        appointment_time: '',
       },
       purposes: undefined as keyof typeof AppointmentPurpose | undefined,
       has_insurance: true,
     },
-  });
+  })
 
-  const selectedPurpose = watch("purposes");
-  const navigate = useNavigate();
+  const selectedPurpose = watch('purposes')
+  const navigate = useNavigate()
 
   const onSubmit = async (data: AppointmentFormData) => {
-    setIsSubmitting(true);
-    const endpoint = `/api/appointment/create`;
+    setIsSubmitting(true)
+    const endpoint = `/api/appointment/create`
     const payload = {
       ...data,
-      purposes: [watch("purposes")], // <-- array, not a string
-    };
+      purposes: [watch('purposes')], // <-- array, not a string
+    }
 
-    console.log(payload);
+    console.log(payload)
 
     try {
       const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      });
+      })
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create appointment");
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to create appointment')
       }
-      const result = await response.json();
-      toast.success(result?.message);
-      reset(); // Optional: reset form after submit
+      const result = await response.json()
+      toast.success(result?.message)
+      reset() // Optional: reset form after submit
     } catch (error) {
-      console.error("Sign in error:", error);
+      console.error('Sign in error:', error)
       const message =
         error instanceof Error
           ? error.message
-          : "Invalid email or password. Please try again.";
-      toast.error(message);
+          : 'Invalid email or password. Please try again.'
+      toast.error(message)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const fetchPatientVitals = async (appointmentId: string) => {
     try {
-      setVitalsLoading(true);
-      const response = await fetch(`/api/provider/vitals/${appointmentId}`);
-      const result = await response.json();
+      setVitalsLoading(true)
+      const response = await fetch(`/api/provider/vitals/${appointmentId}`)
+      const result = await response.json()
 
       if (!response.ok || !result.success) {
-        toast.error(result?.message || "Failed to fetch vitals");
-        return;
+        toast.error(result?.message || 'Failed to fetch vitals')
+        return
       }
 
-      setPatientVitals(result?.data?.[0] ?? null);
-      setViewVitalsAppointmentId(appointmentId);
+      setPatientVitals(result?.data?.[0] ?? null)
+      setViewVitalsAppointmentId(appointmentId)
     } catch (error) {
-      console.error(error);
-      toast.error("Something went wrong");
+      console.error(error)
+      toast.error('Something went wrong')
     } finally {
-      setVitalsLoading(false);
+      setVitalsLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
     const fetchAppointments = async () => {
-      setLoading(true);
-      const res = await fetch(`/api/appointment/appointments`);
-      const result = await res.json();
+      setLoading(true)
+      const res = await fetch(`/api/appointment/appointments`)
+      const result = await res.json()
       if (!result?.success) {
-        toast.error(result?.message || "Failed to fetch appointments");
+        toast.error(result?.message || 'Failed to fetch appointments')
       }
-      setAppointments(result?.data ?? []);
-      setLoading(false);
-    };
-    fetchAppointments();
-  }, [tab]);
+      setAppointments(result?.data ?? [])
+      setLoading(false)
+    }
+    fetchAppointments()
+  }, [tab])
 
   const renderSkeleton = () => (
     <div className="grid gap-6">
@@ -225,7 +225,7 @@ export default function PatientAppointments() {
         </Card>
       ))}
     </div>
-  );
+  )
 
   const renderTable = () => (
     <div className="grid gap-6">
@@ -268,7 +268,7 @@ export default function PatientAppointments() {
                     </div>
                     <div>
                       <div className="font-medium">
-                        {appointment.purposes.includes("OTHERS")
+                        {appointment.purposes.includes('OTHERS')
                           ? appointment.other_purpose
                           : formatPurposeText(appointment.purposes)}
                       </div>
@@ -278,14 +278,14 @@ export default function PatientAppointments() {
                         )}
                         {appointment.appointment_providers.length > 0 && (
                           <>
-                            {" "}
-                            with{" "}
+                            {' '}
+                            with{' '}
                             {appointment.appointment_providers
                               .map((ap) => {
-                                const p = ap.provider;
-                                return `${p.role_title} ${p.first_name} ${p.last_name}`;
+                                const p = ap.provider
+                                return `${p.first_name} ${p.last_name}`
                               })
-                              .join(", ")}
+                              .join(', ')}
                           </>
                         )}
                       </div>
@@ -309,25 +309,25 @@ export default function PatientAppointments() {
                     <Badge
                       className="uppercase"
                       variant={
-                        appointment.status === "CONFIRMED"
-                          ? "default"
-                          : "secondary"
+                        appointment.status === 'CONFIRMED'
+                          ? 'default'
+                          : 'secondary'
                       }
                     >
                       {appointment.status}
                     </Badge>
-                    {appointment.status === "ATTENDING" ? (
+                    {appointment.status === 'ATTENDING' ? (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          setAppointmentId(appointment.id);
-                          fetchPatientVitals(appointment.id);
+                          setAppointmentId(appointment.id)
+                          fetchPatientVitals(appointment.id)
                         }}
                       >
                         {viewVitalsAppointmentId === appointment.id
-                          ? "View Vitals"
-                          : "Show Vitals"}
+                          ? 'View Vitals'
+                          : 'Show Vitals'}
                       </Button>
                     ) : (
                       <Button variant="outline" size="sm">
@@ -378,13 +378,13 @@ export default function PatientAppointments() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 
   return (
     <Tabs value={tab} onValueChange={setTab} className="w-full">
       <div className="flex justify-between items-center mb-6">
         <Button
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate('/dashboard')}
           variant="ghost"
           className=""
         >
@@ -425,15 +425,15 @@ export default function PatientAppointments() {
                   <Button
                     type="button"
                     className={cn(
-                      "w-full rounded-md border border-muted bg-transparent p-2 text-left text-sm hover:bg-transparent text-white",
-                      !watch("schedule.appointment_date") &&
-                        "text-muted-foreground"
+                      'w-full rounded-md border border-muted bg-transparent p-2 text-left text-sm hover:bg-transparent text-white',
+                      !watch('schedule.appointment_date') &&
+                        'text-muted-foreground'
                     )}
                   >
-                    {watch("schedule.appointment_date") ? (
+                    {watch('schedule.appointment_date') ? (
                       format(
-                        new Date(watch("schedule.appointment_date")),
-                        "PPP"
+                        new Date(watch('schedule.appointment_date')),
+                        'PPP'
                       )
                     ) : (
                       <span>Select a date</span>
@@ -445,14 +445,14 @@ export default function PatientAppointments() {
                   <Calendar
                     mode="single"
                     selected={
-                      watch("schedule.appointment_date")
-                        ? new Date(watch("schedule.appointment_date"))
+                      watch('schedule.appointment_date')
+                        ? new Date(watch('schedule.appointment_date'))
                         : undefined
                     }
                     onSelect={(date) =>
                       date &&
                       setValue(
-                        "schedule.appointment_date",
+                        'schedule.appointment_date',
                         date.toISOString(),
                         {
                           shouldValidate: true,
@@ -476,9 +476,9 @@ export default function PatientAppointments() {
               <Label className="block mb-1 ">Time</Label>
               <Select
                 onValueChange={(value) =>
-                  setValue("schedule.appointment_time", value)
+                  setValue('schedule.appointment_time', value)
                 }
-                defaultValue={watch("schedule.appointment_time")}
+                defaultValue={watch('schedule.appointment_time')}
               >
                 <SelectTrigger className="w-full rounded-md p-2">
                   <SelectValue placeholder="Select Time" />
@@ -503,9 +503,9 @@ export default function PatientAppointments() {
               <Label className="block mb-1 ">Purpose</Label>
               <Select
                 onValueChange={(value) =>
-                  setValue("purposes", value as keyof typeof AppointmentPurpose)
+                  setValue('purposes', value as keyof typeof AppointmentPurpose)
                 } // value is key
-                defaultValue={watch("purposes")?.[0]}
+                defaultValue={watch('purposes')?.[0]}
               >
                 <SelectTrigger className="w-full rounded-md p-2">
                   <SelectValue placeholder="Select purpose" />
@@ -521,18 +521,18 @@ export default function PatientAppointments() {
 
               {errors.purposes && (
                 <p className="text-red-500 text-xs">
-                  {"Please select a purpose"}
+                  {'Please select a purpose'}
                 </p>
               )}
 
-              {selectedPurpose === "OTHERS" && (
+              {selectedPurpose === 'OTHERS' && (
                 <div className="mt-4">
                   <Label htmlFor="other_purpose" className="block mb-1">
                     Please specify
                   </Label>
                   <Input
                     id="other_purpose"
-                    {...register("other_purpose", { required: true })}
+                    {...register('other_purpose', { required: true })}
                     placeholder="Specify other purpose"
                   />
                   {errors.other_purpose && (
@@ -556,7 +556,7 @@ export default function PatientAppointments() {
                     Saving...
                   </>
                 ) : (
-                  "Save"
+                  'Save'
                 )}
               </Button>
             </div>
@@ -574,5 +574,5 @@ export default function PatientAppointments() {
         </Alert>
       </TabsContent>
     </Tabs>
-  );
+  )
 }

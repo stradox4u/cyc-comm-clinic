@@ -1,39 +1,39 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
-import { User, Phone, Mail, Clock, FileText, Activity } from "lucide-react";
-import { Badge } from "../components/ui/badge";
-import { Button } from "../components/ui/button";
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router'
+import { User, Phone, Mail, Clock, FileText, Activity } from 'lucide-react'
+import { Badge } from '../components/ui/badge'
+import { Button } from '../components/ui/button'
 import {
   formatDateParts,
   formatPurposeText,
   type Appointment,
   type Provider,
-  type AppointmentStatus
-} from "../lib/type";
+  type AppointmentStatus,
+} from '../lib/type'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
-import { Skeleton } from "./ui/skeleton";
-import VitalsFormDialog from "./vitals-form";
-import SoapNoteDialog from "./soap-note-dialog";
-import { useAuthStore } from "../store/auth-store";
+} from './ui/select'
+import { Skeleton } from './ui/skeleton'
+import VitalsFormDialog from './vitals-form'
+import SoapNoteDialog from './soap-note-dialog'
+import { useAuthStore } from '../store/auth-store'
 
 interface AppointmentCardProps {
-  appointment: Appointment;
-  adminRole: boolean;
-  providers: Provider[] | undefined;
-  loadingProviders: boolean;
-  toggle: boolean;
-  setToggle: React.Dispatch<React.SetStateAction<boolean>>;
-  selectedProviderId: string | null;
-  setSelectedProviderId: React.Dispatch<React.SetStateAction<string | null>>;
-  handleAssignProvider: (providerId: string, appointmentId: string) => void;
-  sendReminder: (appointmentId: string, method: "sms" | "email") => void;
-  setAppointmentId: React.Dispatch<React.SetStateAction<string | null>>;
+  appointment: Appointment
+  adminRole: boolean
+  providers: Provider[] | undefined
+  loadingProviders: boolean
+  toggle: boolean
+  setToggle: React.Dispatch<React.SetStateAction<boolean>>
+  selectedProviderId: string | null
+  setSelectedProviderId: React.Dispatch<React.SetStateAction<string | null>>
+  handleAssignProvider: (providerId: string, appointmentId: string) => void
+  sendReminder: (appointmentId: string, method: 'sms' | 'email') => void
+  setAppointmentId: React.Dispatch<React.SetStateAction<string | null>>
 }
 
 export default function AppointmentCard({
@@ -49,26 +49,27 @@ export default function AppointmentCard({
   sendReminder,
   setAppointmentId,
 }: AppointmentCardProps) {
-  const [appointmentStatus, setAppointmentStatus] = useState<AppointmentStatus>("SCHEDULED");
-  const [hasVitals, setHasVitals] = useState(false);
-  const navigate = useNavigate();
+  const [appointmentStatus, setAppointmentStatus] =
+    useState<AppointmentStatus>('SCHEDULED')
+  const [hasVitals, setHasVitals] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
-    setAppointmentStatus(appointment.status);
-  }, [appointment.status]);
+    setAppointmentStatus(appointment.status)
+  }, [appointment.status])
 
   useEffect(() => {
     if (appointment.vitals) {
-      setHasVitals(true);
+      setHasVitals(true)
     }
-  }, [appointment.vitals]);
+  }, [appointment.vitals])
 
-  const isScheduled = appointmentStatus === "SCHEDULED";
+  const isScheduled = appointmentStatus === 'SCHEDULED'
   const user = useAuthStore((state) => state.user)
 
   const handleNavigateToVitals = () => {
-    navigate(`/provider/vitals/${appointment.id}`);
-  };
+    navigate(`/provider/vitals/${appointment.id}`)
+  }
 
   return (
     <div className="flex items-center justify-between p-4 border border-muted rounded-lg">
@@ -94,20 +95,22 @@ export default function AppointmentCard({
             <span className="font-medium">
               {appointment?.patient ? (
                 <>
-                  {appointment.patient.first_name}{" "}
+                  {appointment.patient.first_name}{' '}
                   {appointment.patient.last_name}
                 </>
               ) : (
-                "No patient info"
+                'No patient info'
               )}
             </span>
             <Badge
               variant={
-                appointmentStatus === "CONFIRMED"
-                  ? "default"
-                  : appointmentStatus === "SCHEDULED"
-                  ? "secondary"
-                  : "destructive"
+                appointmentStatus === 'SUBMITTED'
+                  ? 'default'
+                  : appointmentStatus === 'SCHEDULED'
+                  ? 'secondary'
+                  : appointmentStatus === 'ATTENDING'
+                  ? 'outline'
+                  : 'destructive'
               }
             >
               {appointmentStatus}
@@ -116,29 +119,29 @@ export default function AppointmentCard({
 
           <div className="text-sm text-muted-foreground space-y-1">
             <div>
-              {appointment.purposes.includes("OTHERS")
+              {appointment.purposes.includes('OTHERS')
                 ? appointment.other_purpose
-                : formatPurposeText(appointment.purposes)}{" "}
+                : formatPurposeText(appointment.purposes)}{' '}
               {appointment.appointment_providers.length > 0 && (
                 <>
-                  with{" "}
+                  with{' '}
                   {appointment.appointment_providers
                     .map((ap) => {
-                      const p = ap.provider;
-                      return `${p.role_title} ${p.first_name} ${p.last_name}`;
+                      const p = ap.provider
+                      return `${p.first_name} ${p.last_name}`
                     })
-                    .join(", ")}
+                    .join(', ')}
                 </>
               )}
             </div>
             <div className="flex items-center space-x-4">
               <span className="flex items-center">
                 <Phone className="h-3 w-3 mr-1" />
-                {appointment?.phone ?? "09034348483"}
+                {appointment?.phone ?? '09034348483'}
               </span>
               <span className="flex items-center">
                 <Mail className="h-3 w-3 mr-1" />
-                {appointment?.email ?? "test@gmail.com"}
+                {appointment?.email ?? 'test@gmail.com'}
               </span>
             </div>
             {appointment.notes && (
@@ -154,31 +157,57 @@ export default function AppointmentCard({
           <Button
             size="sm"
             variant="outline"
-            onClick={() => sendReminder(appointment.id, "sms")}
+            onClick={() => sendReminder(appointment.id, 'sms')}
           >
             SMS
           </Button>
           <Button
             size="sm"
             variant="outline"
-            onClick={() => sendReminder(appointment.id, "email")}
+            onClick={() => sendReminder(appointment.id, 'email')}
           >
             Email
           </Button>
+          {appointment.status === 'ATTENDING' && (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleNavigateToVitals}
+                className="bg-transparent"
+              >
+                <FileText className="mr-1 h-3 w-3" />
+                Vitals & SOAP
+              </Button>
+              <VitalsFormDialog
+                appointmentId={appointment.id}
+                setAppointmentId={setAppointmentId}
+                userId={user?.id ?? ''}
+                setHasVitals={setHasVitals}
+                setAppointmentStatus={setAppointmentStatus}
+              />
+              <SoapNoteDialog
+                appointmentId={appointment.id}
+                vitals={appointment.vitals}
+                purposes={appointment.purposes || appointment.other_purpose}
+                setAppointmentId={setAppointmentId}
+              />
+            </>
+          )}
 
           {appointment.appointment_providers.length === 0 &&
             (toggle ? (
               <div className="space-y-2">
                 <Select
                   onValueChange={(value) => {
-                    setSelectedProviderId(value);
+                    setSelectedProviderId(value)
                   }}
                   disabled={loadingProviders}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue
                       placeholder={
-                        loadingProviders ? "Loading..." : "Select Provider"
+                        loadingProviders ? 'Loading...' : 'Select Provider'
                       }
                     />
                   </SelectTrigger>
@@ -196,7 +225,6 @@ export default function AppointmentCard({
                     )}
                   </SelectContent>
                 </Select>
-
                 <Button
                   size="sm"
                   disabled={!selectedProviderId}
@@ -228,11 +256,11 @@ export default function AppointmentCard({
           <VitalsFormDialog
             appointmentId={appointment.id}
             setAppointmentId={setAppointmentId}
-            userId={user?.id ?? ""}
+            userId={user?.id ?? ''}
             setHasVitals={setHasVitals}
             setAppointmentStatus={setAppointmentStatus}
           />
-          <SoapNoteDialog 
+          <SoapNoteDialog
             appointmentId={appointment.id}
             vitals={appointment.vitals}
             purposes={appointment.purposes || appointment.other_purpose}
@@ -253,11 +281,11 @@ export default function AppointmentCard({
           <VitalsFormDialog
             appointmentId={appointment.id}
             setAppointmentId={setAppointmentId}
-            userId={user?.id ?? ""}
+            userId={user?.id ?? ''}
             setHasVitals={setHasVitals}
             setAppointmentStatus={setAppointmentStatus}
           />
-          <SoapNoteDialog 
+          <SoapNoteDialog
             appointmentId={appointment.id}
             vitals={appointment.vitals}
             purposes={appointment.purposes || appointment.other_purpose}
@@ -266,5 +294,5 @@ export default function AppointmentCard({
         </div>
       )}
     </div>
-  );
+  )
 }

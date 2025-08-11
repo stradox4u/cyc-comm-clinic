@@ -117,7 +117,7 @@ export default function AdminDashboard() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{noShowRate || '--'}%</div>
+              {/* <div className="text-2xl font-bold">{noShowRate || '--'}%</div> */}
             </CardContent>
           </Card>
         </div>
@@ -189,7 +189,7 @@ export default function AdminDashboard() {
                 variant="outline"
                 className="w-full justify-start bg-transparent"
               >
-                <Link to="/appointments">
+                <Link to="/provider/appointments">
                   <Calendar className="mr-2 h-4 w-4" />
                   Schedule Appointment
                 </Link>
