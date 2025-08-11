@@ -12,19 +12,22 @@ import { Button } from "./ui/button";
 import { useState } from "react";
 import { Save } from "lucide-react";
 import { type SoapNote } from '../lib/schema';
+import { toast } from "sonner";
 
 export default function SoapNoteDialog({
   appointmentId,
   vitals,
   purposes,
   setAppointmentId,
-  showAsDialog = true
+  showAsDialog = true,
+  onSoapNoteSaved
 }: {
   appointmentId: string,
-  vitals: object,
+  vitals: Record<string, any>,
   purposes: string[],
   setAppointmentId: React.Dispatch<React.SetStateAction<string | null>>;
-  showAsDialog?: boolean
+  showAsDialog?: boolean;
+  onSoapNoteSaved?: () => void;
 }) {
   const [soapNote, setSoapNote] = useState<SoapNote>({
       appointment_id:  appointmentId,
@@ -54,30 +57,78 @@ export default function SoapNoteDialog({
     });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      console.log(`SoapNote: ${soapNote}`);
+      const filterEmpty = (arr: string[] = []) => arr.filter(item => item?.trim());
+      const arrayToObject = (arr: string[] = []) => 
+        filterEmpty(arr).reduce((acc, item, i) => ({ ...acc, [`item_${i + 1}`]: item }), {});
+
+      const formattedSoapNote = {
+        appointment_id: soapNote.appointment_id,
+        subjective: {
+          symptoms: filterEmpty(soapNote.subjective?.symptoms),
+          purpose_of_appointment: soapNote.subjective?.purpose_of_appointment,
+          others: soapNote.subjective?.others || "",
+        },
+        objective: {
+          physical_exam_report: filterEmpty(soapNote.objective?.physical_exam_report),
+          labs: soapNote.objective?.labs || {},
+          others: soapNote.objective?.others || "",
+        },
+        assessment: {
+          diagnosis: filterEmpty(soapNote.assessment?.diagnosis),
+          differential: filterEmpty(soapNote.assessment?.differential),
+        },
+        plan: {
+          prescription: soapNote.plan?.prescription || [],
+          test_requests: Array.isArray(soapNote.plan?.test_requests) 
+            ? arrayToObject(soapNote.plan.test_requests) 
+            : soapNote.plan?.test_requests || {},
+          recommendation: Array.isArray(soapNote.plan?.recommendation)
+            ? arrayToObject(soapNote.plan.recommendation)
+            : soapNote.plan?.recommendation || {},
+          has_referral: soapNote.plan?.has_referral || false,
+          referred_provider_name: soapNote.plan?.referred_provider_name || "",
+          others: soapNote.plan?.others || "",
+        }
+      };
+
+      console.log("SoapNote:", formattedSoapNote);
       const res = await fetch(`/api/provider/soapnotes/record`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(soapNote),
+        body: JSON.stringify(formattedSoapNote),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
+        console.error("Server response:", data);
+        if (data.errors) {
+          console.error("Validation errors:", data.errors);
+        }
         throw new Error(data.message || "Failed to submit SOAP note");
+      }
+      setSaved(true);
+
+      toast.success("SOAP note saved successfully!");
+      console.log("SOAP note saved successfully:", data);
+
+      if (onSoapNoteSaved) {
+        onSoapNoteSaved();
       }
 
       // Reset form or show toast here
     } catch (error) {
       console.error("SOAP Note Error:", error);
+      toast.error("Failed to save SOAP note. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -117,9 +168,18 @@ const excludeFields = [
 const vitalsText = existingVitals
   ? Object.entries(existingVitals)
       .filter(([key]) => !excludeFields.includes(key))
-      .map(([key, value]) => `${key.replace(/_/g, " ")}: ${value}`)
+      .map(([key, value]) => {
+        const valueStr = typeof value === "string" ? value : JSON.stringify(value);
+        return `${key.replace(/_/g, " ")}: ${valueStr.replace(/null/g, "none")}`;
+      })
       .join("\n")
   : "";
+
+const [labText, setLabText] = useState(() =>
+  typeof soapNote.objective?.labs === "object" && soapNote.objective?.labs !== null
+    ? Object.entries(soapNote.objective.labs).map(([key, value]) => `${key}: ${value}`).join('\n')
+    : ''
+);
 
   const soapContent = (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -140,7 +200,11 @@ const vitalsText = existingVitals
         />
         <Textarea
           placeholder="Purpose of appointment..."
-          value={(soapNote.subjective?.purpose_of_appointment ?? []).join('\n')}
+          value={
+            (soapNote.subjective?.purpose_of_appointment ?? [])
+            .map(item => item.replace(/_/g, " "))
+            .join('\n')
+          }
           readOnly
           className="cursor-not-allowed"
         />
@@ -181,6 +245,40 @@ const vitalsText = existingVitals
         className="cursor-not-allowed"
         />
         <Textarea
+          placeholder="Enter lab results, one per line. Format: Test Name: Result and details
+          Examples:
+          CBC: WBC 5.5 k/uL within normal limits  
+          Glucose: 95 mg/dL fasting
+          Cholesterol: Total 180 mg/dL, LDL 110 mg/dL"
+          value={labText}
+          onChange={(e) => setLabText(e.target.value)}
+          onBlur={() => {
+            const labsObject: Record<string, string> = {};
+            if (labText) {
+              const lines = labText.split('\n');
+              lines.forEach((line, index) => {
+                if (line.includes(':')) {
+                  const colonIndex = line.indexOf(':');
+                  const key = line.substring(0, colonIndex).trim();
+                  const value = line.substring(colonIndex + 1).trim();
+                  if (key) {
+                    labsObject[key] = value || '';
+                  }
+                } else if (line.trim()) {
+                  labsObject[`result_${index + 1}`] = line.trim();
+                }
+              });
+            }
+            setSoapNote({
+              ...soapNote,
+              objective: {
+                ...soapNote.objective,
+                labs: labsObject,
+              },
+            });
+          }}
+        />
+        <Textarea
           placeholder="Any other observations..."
           value={soapNote.objective?.others}
           onChange={(e) =>
@@ -198,7 +296,7 @@ const vitalsText = existingVitals
       <div className="space-y-2">
         <label className="text-sm font-medium">Assessment</label>
         <Textarea
-          placeholder="Clinical impression, problem list..."
+          placeholder="Diagnosis, Clinical impression, problem list..."
           value={(soapNote.assessment?.diagnosis ?? []).join('\n')}
           onChange={(e) =>
             setSoapNote({
@@ -245,7 +343,7 @@ const vitalsText = existingVitals
                     frequency: "",
                     duration: "",
                     instructions: "",
-                    start_date: new Date(),
+                    start_date: new Date()
                   },
                   ],
                 },
@@ -336,33 +434,6 @@ const vitalsText = existingVitals
               />
             </div>
           ))}
-          <Button
-            type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setSoapNote({
-                      ...soapNote,
-                      plan: {
-                        ...soapNote.plan,
-                        prescription: [
-                          ...(soapNote.plan?.prescription ?? []),
-                          {
-                            medication_name: "",
-                            dosage: "",
-                            frequency: "",
-                            duration: "",
-                            instructions: "",
-                            start_date: new Date()
-                          },
-                        ],
-                      },
-                    })
-                  }
-                  className="mt-2"
-                >
-                  Save Prescription
-          </Button>
         </div>
         <Textarea
           placeholder="Test requests (one per line)..."
@@ -448,7 +519,10 @@ const vitalsText = existingVitals
           }
         />
       </div>
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
+      <Button 
+      type="submit" className="w-full" disabled={isSubmitting}
+      onClick={() => setAppointmentId(appointmentId)}
+      >
         {isSubmitting ? (
           "Saving..."
         ) : (
