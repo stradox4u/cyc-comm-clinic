@@ -91,7 +91,15 @@ const SignInPage = () => {
         </div>
 
         <div className="space-y-2">
-          <Label className="font-semibold">Email</Label>
+          <div className="flex justify-between items-center">
+            <Label className="font-semibold">Email</Label>
+            <Link
+              to={'/verify-account'}
+              className="text-end hover:underline text-sm text-[#6A5CA3]"
+            >
+              Verify account?
+            </Link>
+          </div>
           <Input
             {...register('email')}
             className={errors.email ? 'border-red-500' : ''}
@@ -101,12 +109,6 @@ const SignInPage = () => {
             <p className="text-red-500 text-sm">{errors.email.message}</p>
           )}
         </div>
-        <Link
-          to={'/verify-account'}
-          className="text-end hover:underline text-sm text-[#6A5CA3]"
-        >
-          Verify account?
-        </Link>
 
         <div className="space-y-2 relative">
           <Label className="font-medium">Password</Label>
