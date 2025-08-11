@@ -16,18 +16,11 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-<<<<<<< HEAD
 } from './ui/select'
 import { Skeleton } from './ui/skeleton'
 import VitalsFormDialog from './vitals-form'
 import SoapNoteDialog from './soap-note-dialog'
 import { useAuthStore } from '../store/auth-store'
-=======
-} from "./ui/select";
-import { Skeleton } from "./ui/skeleton";
-import VitalsFormDialog from "./vitals-form";
-import { useAuthStore } from "../store/auth-store";
->>>>>>> 1eed7e90feecadad0a02905260c7265fc5338cb0
 
 interface AppointmentCardProps {
   appointment: Appointment
@@ -267,15 +260,12 @@ export default function AppointmentCard({
             setHasVitals={setHasVitals}
             setAppointmentStatus={setAppointmentStatus}
           />
-<<<<<<< HEAD
           <SoapNoteDialog
             appointmentId={appointment.id}
             vitals={appointment.vitals}
             purposes={appointment.purposes || appointment.other_purpose}
             setAppointmentId={setAppointmentId}
           />
-=======
->>>>>>> 1eed7e90feecadad0a02905260c7265fc5338cb0
         </div>
       ) : (
         <div className="flex items-center space-x-2">
@@ -295,15 +285,12 @@ export default function AppointmentCard({
             setHasVitals={setHasVitals}
             setAppointmentStatus={setAppointmentStatus}
           />
-<<<<<<< HEAD
           <SoapNoteDialog
             appointmentId={appointment.id}
             vitals={appointment.vitals}
             purposes={appointment.purposes || appointment.other_purpose}
             setAppointmentId={setAppointmentId}
           />
-=======
->>>>>>> 1eed7e90feecadad0a02905260c7265fc5338cb0
         </div>
       )}
     </div>

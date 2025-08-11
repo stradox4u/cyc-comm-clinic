@@ -18,28 +18,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
-import {
-  Search,
-  FileText,
-  Activity,
-} from "lucide-react";
-import {
-  type Appointment,
-  type AppointmentStatus
-} from '../lib/type'
+
+import { Search, FileText, Activity } from 'lucide-react'
+import { type Appointment, type AppointmentStatus } from '../lib/type'
 import { type SoapNote } from '../lib/schema'
-import SoapNoteDialog from "../components/soap-note-dialog";
-import VitalsFormDialog from "../components/vitals-form";
-import { useAuthStore } from "../store/auth-store";
-import { SoapNoteCard } from "../components/soap-note-card";
+import SoapNoteDialog from '../components/soap-note-dialog'
+import VitalsFormDialog from '../components/vitals-form'
+import { useAuthStore } from '../store/auth-store'
+import { SoapNoteCard } from '../components/soap-note-card'
 
 const vitalsHistory = [
   {
@@ -76,7 +62,7 @@ const vitalsHistory = [
     recordedBy: 'Nurse Smith',
     notes: 'Slightly elevated BP, patient reports stress at work',
   },
-];
+]
 
 // This will be replaced by fetched data from the API
 
@@ -95,54 +81,61 @@ export default function VitalsSoapPage({
   const [selectedPatient, setSelectedPatient] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const user = useAuthStore((state) => state.user)
-  const [appointmentStatus, setAppointmentStatus] = useState<AppointmentStatus>("SCHEDULED");
-  const [hasVitals, setHasVitals] = useState(false);
-  const [appointment, setAppointment] = useState<Appointment | null>(propAppointment || null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [soapNotes, setSoapNotes] = useState<(SoapNote & {
-    created_at?: string;
-    updated_at?: string;
-    created_by?: {
-      id: string;
-      first_name: string;
-      last_name: string;
-      role_title: string;
-    };
-    events?: {
-      id: string;
-      type: string;
-      created_by_id: string;
-      appointment_id: string;
-      created_at: string;
-      updated_at: string;
-      created_by: {
-        id: string;
-        first_name: string;
-        last_name: string;
-        role_title: string;
-      };
-    }[];
-  })[]>([]);
-  const [soapNotesLoading, setSoapNotesLoading] = useState(false);
+  const [appointmentStatus, setAppointmentStatus] =
+    useState<AppointmentStatus>('SCHEDULED')
+  const [hasVitals, setHasVitals] = useState(false)
+  const [appointment, setAppointment] = useState<Appointment | null>(
+    propAppointment || null
+  )
+  const [isLoading, setIsLoading] = useState(false)
+  const [soapNotes, setSoapNotes] = useState<
+    (SoapNote & {
+      created_at?: string
+      updated_at?: string
+      created_by?: {
+        id: string
+        first_name: string
+        last_name: string
+        role_title: string
+      }
+      events?: {
+        id: string
+        type: string
+        created_by_id: string
+        appointment_id: string
+        created_at: string
+        updated_at: string
+        created_by: {
+          id: string
+          first_name: string
+          last_name: string
+          role_title: string
+        }
+      }[]
+    })[]
+  >([])
+  const [soapNotesLoading, setSoapNotesLoading] = useState(false)
 
   const fetchSoapNotes = async (appointmentId: string) => {
-    setSoapNotesLoading(true);
+    setSoapNotesLoading(true)
     try {
-      const response = await fetch(`/api/provider/soapnotes?appointmentId=${appointmentId}`);
-      const result = await response.json();
+      const response = await fetch(
+        `/api/provider/soapnotes?appointmentId=${appointmentId}`
+      )
+      const result = await response.json()
       if (result.success && result.data) {
-        setSoapNotes(result.data);
+        setSoapNotes(result.data)
       } else {
-        setSoapNotes([]);
-        console.error('Failed to fetch soap notes:', result.message);
+        setSoapNotes([])
+        console.error('Failed to fetch soap notes:', result.message)
       }
     } catch (error) {
-      console.error('Error fetching soap notes:', error);
-      setSoapNotes([]);
+      console.error('Error fetching soap notes:', error)
+      setSoapNotes([])
     } finally {
-      setSoapNotesLoading(false);
+      setSoapNotesLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
     const fetchAppointment = async (appointmentId: string) => {
@@ -151,9 +144,9 @@ export default function VitalsSoapPage({
         const response = await fetch(`/api/appointment/${appointmentId}`)
         const result = await response.json()
         if (result.success) {
-          setAppointment(result.data);
+          setAppointment(result.data)
 
-          fetchSoapNotes(appointmentId);
+          fetchSoapNotes(appointmentId)
         } else {
           console.error('Failed to fetch appointment:', result.message)
         }
@@ -167,10 +160,10 @@ export default function VitalsSoapPage({
     if (urlAppointmentId && !propAppointment) {
       fetchAppointment(urlAppointmentId)
     } else if (propAppointment) {
-      setAppointment(propAppointment);
+      setAppointment(propAppointment)
 
       if (propAppointment.id) {
-        fetchSoapNotes(propAppointment.id);
+        fetchSoapNotes(propAppointment.id)
       }
     }
   }, [urlAppointmentId, propAppointment])
@@ -359,14 +352,19 @@ export default function VitalsSoapPage({
               <CardContent>
                 {soapNotesLoading ? (
                   <div className="flex items-center justify-center py-8">
-                    <p className="text-muted-foreground">Loading SOAP notes...</p>
+                    <p className="text-muted-foreground">
+                      Loading SOAP notes...
+                    </p>
                   </div>
                 ) : soapNotes.length > 0 ? (
                   <div className="space-y-16">
                     {soapNotes.map((note, index) => {
-                      const creationEvent = note.events?.find((event: any) => event.type === 'SOAP_NOTE_RECORDED');
-                      const createdBy = creationEvent?.created_by;
-                      const createdAt = creationEvent?.created_at || note.created_at;
+                      const creationEvent = note.events?.find(
+                        (event: any) => event.type === 'SOAP_NOTE_RECORDED'
+                      )
+                      const createdBy = creationEvent?.created_by
+                      const createdAt =
+                        creationEvent?.created_at || note.created_at
 
                       return (
                         <SoapNoteCard
@@ -377,23 +375,25 @@ export default function VitalsSoapPage({
                           created_by={createdBy}
                           onUpdate={() => {
                             if (appointment?.id) {
-                              fetchSoapNotes(appointment.id);
+                              fetchSoapNotes(appointment.id)
                             }
                           }}
                           onDelete={() => {
                             if (appointment?.id) {
-                              fetchSoapNotes(appointment.id);
+                              fetchSoapNotes(appointment.id)
                             }
                           }}
                           canEdit={true}
                           canDelete={true}
                         />
-                      );
+                      )
                     })}
                   </div>
                 ) : (
                   <div className="flex items-center justify-center py-8">
-                    <p className="text-muted-foreground">No SOAP notes found for this appointment</p>
+                    <p className="text-muted-foreground">
+                      No SOAP notes found for this appointment
+                    </p>
                   </div>
                 )}
               </CardContent>
