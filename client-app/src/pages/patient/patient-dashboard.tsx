@@ -7,6 +7,7 @@ import {
   MessageSquare,
   Pill,
   Plus,
+  Thermometer,
 } from 'lucide-react'
 import { useCheckPatientProfile } from '../../hooks/fetch-patient'
 import { Button } from '../../components/ui/button'
@@ -30,6 +31,7 @@ import {
 } from '../../lib/type'
 import { formatDate } from '../../lib/utils'
 import { useNavigate } from 'react-router-dom'
+import { Skeleton } from '../../components/ui/skeleton'
 
 const medications = [
   {
@@ -51,7 +53,8 @@ const medications = [
 ]
 function PatientDashboard() {
   const navigate = useNavigate()
-  const { user, loading } = useCheckPatientProfile()
+  const { user } = useCheckPatientProfile()
+  const [isLoading, setIsLoading] = useState(false)
   const [stats, setStats] = useState<{
     nextAppointment: Appointment
     lastVitals: Vitals
@@ -60,15 +63,21 @@ function PatientDashboard() {
   } | null>(null)
 
   const fetchStats = async () => {
-    const { data } = await API.get('/api/user/dashboard')
-    setStats(data.data)
+    try {
+      setIsLoading(true)
+      const { data } = await API.get('/api/user/dashboard')
+      setStats(data.data)
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   useEffect(() => {
     fetchStats()
   }, [])
 
-  if (loading) return <p>Loading profile...</p>
   return (
     <>
       <GoogleModal />
@@ -103,7 +112,7 @@ function PatientDashboard() {
         </Card>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-          <Card className="dark:bg-[#bcc0f0] dark:text-background/50">
+          <Card className="dark:bg-[#bcc0f0]/20 dark:text-background/50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Next Appointment
@@ -111,7 +120,11 @@ function PatientDashboard() {
               <Calendar className="h-4 w-4" />
             </CardHeader>
             <CardContent>
-              {stats?.nextAppointment ? (
+              {isLoading ? (
+                <Skeleton>
+                  <div className="p-6 w-2" />
+                </Skeleton>
+              ) : stats?.nextAppointment ? (
                 <>
                   <div className="text-2xl font-bold">
                     {formatDate(
@@ -138,20 +151,33 @@ function PatientDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="dark:bg-[#bcc0f0] dark:text-background/50">
+          <Card className="dark:bg-[#bcc0f0]/20 dark:text-background/50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Active Medications
-              </CardTitle>
-              <Pill className="h-4 w-4" />
+              <CardTitle className="text-sm font-medium">Temperature</CardTitle>
+              <Thermometer className="h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">2</div>
-              <p className="text-xs">1 needs refill soon</p>
+              <div className="text-2xl font-bold">
+                {isLoading ? (
+                  <Skeleton>
+                    <div className="p-6 w-2" />
+                  </Skeleton>
+                ) : stats?.lastVitals?.temperature != null ? (
+                  `${stats.lastVitals.temperature}°C`
+                ) : (
+                  'N/A'
+                )}
+              </div>
+              <p className="text-xs">
+                Last reading:{' '}
+                {stats?.lastVitals?.created_at
+                  ? formatDate(stats.lastVitals.created_at)
+                  : 'N/A'}
+              </p>
             </CardContent>
           </Card>
 
-          <Card className="dark:bg-[#bcc0f0] dark:text-background/50">
+          <Card className="dark:bg-[#bcc0f0]/20 dark:text-background/50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Blood Pressure
@@ -159,46 +185,43 @@ function PatientDashboard() {
               <Heart className="h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">128/82</div>
-              <p className="text-xs">Last reading: Jan 10</p>
+              <div className="text-2xl font-bold">
+                {isLoading ? (
+                  <Skeleton>
+                    <div className="p-6 w-2" />
+                  </Skeleton>
+                ) : (
+                  stats?.lastVitals?.blood_pressure || 'N/A'
+                )}
+              </div>
+              <p className="text-xs">
+                Last reading:{' '}
+                {stats?.lastVitals?.created_at
+                  ? formatDate(stats.lastVitals.created_at)
+                  : 'N/A'}
+              </p>
             </CardContent>
           </Card>
 
-          <Card className="dark:bg-[#bcc0f0] dark:text-background/50">
+          <Card className="dark:bg-[#bcc0f0]/20 dark:text-background/50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Heart Rate</CardTitle>
               <Activity className="h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">85 bpm</div>
-              {/* <Progress value={85} className="mt-2" /> */}
+              <div className="text-2xl font-bold">
+                {isLoading ? (
+                  <Skeleton>
+                    <div className="p-6 w-2" />
+                  </Skeleton>
+                ) : (
+                  stats?.lastVitals?.heart_rate || 'N/A'
+                )}
+              </div>
+              <p className="text-xs">bpm</p>
             </CardContent>
           </Card>
         </div>
-
-        {/* <section className="w-full my-16  space-y-6 max-w-2xl mx-auto">
-        <h2 className="font-semibold text-lg text-center">Overview</h2>
-        <div className="flex justify-between text-sm">
-          <p>Age: 35 | Female</p>
-
-          <p>Last Visit: 2weeks ago</p>
-          <div className="flex gap-3">
-            <Stethoscope />
-            <p>Vitals: Normal</p>
-          </div>
-        </div>
-
-        <div className="space-y-3 pt-4">
-          <h4 className="text-lg">Upcoming Appointments</h4>
-          <ul className="list-disc px-4 text-sm">
-            <li>Dr. Temi - Jun 21, 04:00pm</li>
-            <li>Dr. Mark Dennis - Jun 25, 11:00am</li>
-          </ul>
-          <div className="pt-8 flex justify-center">
-            <Button variant={"link"}>view more</Button>
-          </div>
-        </div>
-      </section> */}
 
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Upcoming Appointments */}

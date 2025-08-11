@@ -5,63 +5,87 @@ import {
   FileText,
   Heart,
   TrendingUp,
-} from "lucide-react";
-import { Button } from "../../components/ui/button";
+} from 'lucide-react'
+import { Button } from '../../components/ui/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
+} from '../../components/ui/card'
+import { Badge } from '../../components/ui/badge'
+import type { SoapNote, Vitals } from '../../lib/type'
+import { useEffect, useState } from 'react'
+import API from '../../lib/api'
+import { formatDate } from 'date-fns'
 
 const labResults = [
   {
-    test: "Complete Blood Count",
-    date: "2024-01-10",
-    status: "Normal",
-    provider: "Dr. Smith",
+    test: 'Complete Blood Count',
+    date: '2024-01-10',
+    status: 'Normal',
+    provider: 'Dr. Smith',
   },
   {
-    test: "Lipid Panel",
-    date: "2024-01-10",
-    status: "Elevated",
-    provider: "Dr. Smith",
+    test: 'Lipid Panel',
+    date: '2024-01-10',
+    status: 'Elevated',
+    provider: 'Dr. Smith',
   },
   {
-    test: "HbA1c",
-    date: "2023-12-15",
-    status: "Normal",
-    provider: "Dr. Johnson",
+    test: 'HbA1c',
+    date: '2023-12-15',
+    status: 'Normal',
+    provider: 'Dr. Johnson',
   },
-];
+]
 const PatientFiles = () => {
-  const vitalSigns = {
-    bloodPressure: { systolic: 128, diastolic: 82, date: "2024-01-10" },
-    heartRate: { value: 72, date: "2024-01-10" },
-    weight: { value: 165, date: "2024-01-10" },
-    temperature: { value: 98.6, date: "2024-01-10" },
-  };
+  const [isLoading, setIsLoading] = useState(false)
+  const [stats, setStats] = useState<{
+    lastVitals: Vitals
+    lastSoapNote: SoapNote
+  } | null>(null)
 
   const recentVisits = [
     {
       id: 1,
-      date: "2024-01-10",
-      provider: "Dr. Smith",
-      type: "Consultation",
-      diagnosis: "Hypertension monitoring",
-      status: "completed",
+      date: '2024-01-10',
+      provider: 'Dr. Smith',
+      type: 'Consultation',
+      diagnosis: 'Hypertension monitoring',
+      status: 'completed',
     },
     {
       id: 2,
-      date: "2023-12-15",
-      provider: "Dr. Wilson",
-      type: "Lab Results Review",
-      diagnosis: "Normal blood work",
-      status: "completed",
+      date: '2023-12-15',
+      provider: 'Dr. Wilson',
+      type: 'Lab Results Review',
+      diagnosis: 'Normal blood work',
+      status: 'completed',
     },
-  ];
+  ]
+
+  const fetchStats = async () => {
+    try {
+      setIsLoading(true)
+      const { data } = await API.get('/api/user/dashboard')
+      setStats(data.data)
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchStats()
+  }, [])
+
+  const formattedDate = stats?.lastVitals?.created_at
+    ? new Date(stats.lastVitals.created_at).toISOString().split('T')[0]
+    : 'Unknown'
+
   return (
     <>
       <div className="flex justify-between items-center mb-8">
@@ -85,14 +109,13 @@ const PatientFiles = () => {
                 <div>
                   <div className="font-medium">Blood Pressure</div>
                   <div className="text-sm text-muted-foreground">
-                    {vitalSigns.bloodPressure.date}
+                    {formattedDate}
                   </div>
                 </div>
               </div>
               <div className="text-right">
                 <div className="font-bold">
-                  {vitalSigns.bloodPressure.systolic}/
-                  {vitalSigns.bloodPressure.diastolic}
+                  {stats?.lastVitals.blood_pressure}
                 </div>
                 <div className="text-sm text-muted-foreground">mmHg</div>
               </div>
@@ -104,12 +127,12 @@ const PatientFiles = () => {
                 <div>
                   <div className="font-medium">Heart Rate</div>
                   <div className="text-sm text-muted-foreground">
-                    {vitalSigns.heartRate.date}
+                    {formattedDate}
                   </div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-bold">{vitalSigns.heartRate.value}</div>
+                <div className="font-bold">{stats?.lastVitals.heart_rate}</div>
                 <div className="text-sm text-muted-foreground">bpm</div>
               </div>
             </div>
@@ -120,13 +143,13 @@ const PatientFiles = () => {
                 <div>
                   <div className="font-medium">Weight</div>
                   <div className="text-sm text-muted-foreground">
-                    {vitalSigns.weight.date}
+                    {formattedDate}
                   </div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-bold">{vitalSigns.weight.value}</div>
-                <div className="text-sm text-muted-foreground">lbs</div>
+                <div className="font-bold">{stats?.lastVitals.weight}</div>
+                <div className="text-sm text-muted-foreground">kg</div>
               </div>
             </div>
           </CardContent>
@@ -189,7 +212,7 @@ const PatientFiles = () => {
                 <div className="flex items-center space-x-3">
                   <Badge
                     variant={
-                      result.status === "Normal" ? "default" : "destructive"
+                      result.status === 'Normal' ? 'default' : 'destructive'
                     }
                   >
                     {result.status}
@@ -205,6 +228,6 @@ const PatientFiles = () => {
         </CardContent>
       </Card>
     </>
-  );
-};
-export default PatientFiles;
+  )
+}
+export default PatientFiles

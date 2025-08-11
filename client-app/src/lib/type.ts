@@ -12,33 +12,33 @@ export type AppointmentProvider = {
 }
 
 export type Appointment = {
-  id: string;
-  patient: Patient;
-  purposes: string[];
-  other_purpose: string;
+  id: string
+  patient: Patient
+  purposes: string[]
+  other_purpose: string
   status:
-    | "SUBMITTED"
-    | "CONFIRMED"
-    | "CANCELLED"
-    | "COMPLETED"
-    | "SCHEDULED"
-    | "ATTENDING";
-  has_insurance: boolean;
-  is_follow_up_required: boolean;
-  follow_up_id: string | null;
+    | 'SUBMITTED'
+    | 'CONFIRMED'
+    | 'CANCELLED'
+    | 'COMPLETED'
+    | 'SCHEDULED'
+    | 'ATTENDING'
+  has_insurance: boolean
+  is_follow_up_required: boolean
+  follow_up_id: string | null
   schedule: {
-    schedule_count: number;
-    appointment_date: string;
-    appointment_time: string;
-  };
-  vitals: object;
-  created_at: string;
-  updated_at: string;
-  appointment_providers: AppointmentProvider[];
-  phone?: string | null;
-  email?: string | null;
-  notes?: string | null;
-};
+    schedule_count: number
+    appointment_date: string
+    appointment_time: string
+  }
+  vitals: object
+  created_at: string
+  updated_at: string
+  appointment_providers: AppointmentProvider[]
+  phone?: string | null
+  email?: string | null
+  notes?: string | null
+}
 
 export type Provider = {
   id: string
@@ -116,9 +116,9 @@ export const providerRoles = new Set([
 ])
 
 export type AppointmentStatus =
-  | "SUBMITTED"
-  | "CONFIRMED"
-  | "CANCELLED"
-  | "COMPLETED"
-  | "SCHEDULED"
-  | "ATTENDING";
+  | 'SUBMITTED'
+  | 'CONFIRMED'
+  | 'CANCELLED'
+  | 'COMPLETED'
+  | 'SCHEDULED'
+  | 'ATTENDING'

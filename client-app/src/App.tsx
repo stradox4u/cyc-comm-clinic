@@ -24,7 +24,6 @@ import { ProviderLayout } from './layout/providerLayout'
 import { useEffect } from 'react'
 import Appointments from './pages/admin/all-appointments'
 import InsuranceCheck from './pages/admin/insurance-check'
-import PatientIntake from './pages/admin/patient-intake'
 import AllPatients from './pages/admin/patients/all-patients'
 import MobileOutreach from './pages/admin/mobile-outreach'
 import Reminders from './pages/admin/reminders'
@@ -35,6 +34,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import CreatePatient from './pages/admin/patients/create-patient'
 import ViewPatient from './pages/admin/patients/view-patient'
 import VitalsSoapPage from './pages/vitals-soap'
+import OTPVerification from './components/auth/otp-verification'
 
 const queryClient = new QueryClient()
 
@@ -91,6 +91,7 @@ function App() {
 
           {/* Common Public Route */}
           <Route path="/change-password" element={<ChangePassword />} />
+          <Route path="/verify-account" element={<OTPVerification />} />
 
           {/* ✅ Protected Routes - all use ProtectedRoute + PageLayout */}
           <Route element={<ProtectedLayout />}>
@@ -110,7 +111,7 @@ function App() {
               element={<InsuranceCheck />}
             />
             <Route path="/provider/insurance" element={<InsuranceCheck />} />
-            <Route path="/provider/intake" element={<PatientIntake />} />
+            <Route path="/provider/intake" element={<CreatePatient />} />
             <Route path="/provider/vitals" element={<VitalsSoapPage />} />
             <Route
               path="/provider/vitals/:appointmentId"
@@ -121,10 +122,10 @@ function App() {
               element={<ProvidersDashboard />}
             />
             <Route path="/provider/patients" element={<AllPatients />} />
-            <Route
+            {/* <Route
               path="/provider/patients/register"
               element={<CreatePatient />}
-            />
+            /> */}
             <Route path="/provider/patients/:id" element={<ViewPatient />} />
             <Route path="/provider/outreach" element={<MobileOutreach />} />
             <Route path="/provider/reminders" element={<Reminders />} />

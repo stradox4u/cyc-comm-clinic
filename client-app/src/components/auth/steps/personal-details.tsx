@@ -1,41 +1,41 @@
-import { useFormContext } from "react-hook-form";
+import { useFormContext } from 'react-hook-form'
 
-import { type FormData } from "../../../lib/schema";
-import { Label } from "../../ui/label";
-import { Input } from "../../ui/input";
-import { Button } from "../../ui/button";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { type FormData } from '../../../lib/schema'
+import { Label } from '../../ui/label'
+import { Input } from '../../ui/input'
+import { Button } from '../../ui/button'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../ui/select";
+} from '../../ui/select'
 
 interface PersonalDetailsStepProps {
-  onNext: () => void;
-  onPrev: () => void;
+  onNext: () => void
+  onPrev: () => void
 }
 
-const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
 
 type InsuranceProvider = {
-  id: string;
-  name: string;
-  description: string;
-  created_at: Date;
-  updated_at: Date;
-};
+  id: string
+  name: string
+  description: string
+  created_at: Date
+  updated_at: Date
+}
 
-export type Gender = "MALE" | "FEMALE" | "NULL";
+export type Gender = 'MALE' | 'FEMALE' | 'NULL'
 
 const GENDER_OPTIONS = [
-  { label: "Male", value: "MALE" },
-  { label: "Female", value: "FEMALE" },
-  { label: "Other", value: "NULL" },
-];
+  { label: 'Male', value: 'MALE' },
+  { label: 'Female', value: 'FEMALE' },
+  { label: 'Other', value: 'NULL' },
+]
 
 const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
   const {
@@ -43,69 +43,69 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
     setValue,
     watch,
     formState: { errors },
-  } = useFormContext<FormData>();
+  } = useFormContext<FormData>()
   const [insuranceProviders, setInsuranceProviders] = useState<
     InsuranceProvider[]
-  >([]);
-  const [loading, setLoading] = useState(false);
-  const insuranceValue = watch("insurance_provider_id");
-  const bloodGroupValue = watch("blood_group") || "";
-  const gender = watch("gender");
+  >([])
+  const [loading, setLoading] = useState(false)
+  const insuranceValue = watch('insurance_provider_id')
+  const bloodGroupValue = watch('blood_group') || ''
+  const gender = watch('gender')
 
   const personalFields = [
-    ["First Name", "first_name", "text", "e.g. John"],
-    ["Last Name", "last_name", "text", "e.g. Doe"],
-    ["Address", "address", "text", "e.g. 123 Main St, Springfield"],
-    ["Email", "email", "email", "e.g. johndoe@gmail.com"],
-    ["Phone", "phone", "text", "0903-322-827"],
-    ["Date of Birth", "date_of_birth", "date"],
-    ["Allergies", "allergies", "text", "e.g. Peanuts, Penicillin"],
-  ];
+    ['First Name', 'first_name', 'text', 'e.g. John'],
+    ['Last Name', 'last_name', 'text', 'e.g. Doe'],
+    ['Address', 'address', 'text', 'e.g. 123 Main St, Springfield'],
+    ['Email', 'email', 'email', 'e.g. johndoe@gmail.com'],
+    ['Phone', 'phone', 'text', '0903-322-827'],
+    ['Date of Birth', 'date_of_birth', 'date'],
+    ['Allergies', 'allergies', 'text', 'e.g. Peanuts, Penicillin'],
+  ]
 
   const additionalFields = [
-    ["Occupation", "occupation", "e.g. Software Engineer"],
-    ["Emergency Contact Name", "emergency_contact_name", "e.g. Jane Doe"],
+    ['Occupation', 'occupation', 'e.g. Software Engineer'],
+    ['Emergency Contact Name', 'emergency_contact_name', 'e.g. Jane Doe'],
     [
-      "Emergency Contact Phone",
-      "emergency_contact_phone",
-      "e.g. 0803-456-7890",
+      'Emergency Contact Phone',
+      'emergency_contact_phone',
+      'e.g. 0803-456-7890',
     ],
     [
-      "Insurance Coverage",
-      "insurance_coverage",
-      "e.g. Basic Health Package or N/A",
+      'Insurance Coverage',
+      'insurance_coverage',
+      'e.g. Basic Health Package or N/A',
     ],
-  ];
+  ]
 
   useEffect(() => {
     const fetchInsuranceProvider = async () => {
-      setLoading(true);
+      setLoading(true)
       try {
-        const response = await fetch("/api/insurance-providers");
+        const response = await fetch('/api/insurance-providers')
 
         // Ensure response is ok and content-type is JSON
-        const contentType = response.headers.get("content-type");
-        if (!response.ok || !contentType?.includes("application/json")) {
-          throw new Error("Invalid response");
+        const contentType = response.headers.get('content-type')
+        if (!response.ok || !contentType?.includes('application/json')) {
+          throw new Error('Invalid response')
         }
 
-        const result = await response.json();
+        const result = await response.json()
 
         if (!result.success) {
-          toast.error("Error fetching providers");
+          toast.error('Error fetching providers')
         } else {
-          setInsuranceProviders(result.data);
+          setInsuranceProviders(result.data)
         }
       } catch (err) {
-        console.error("Fetch failed:", err);
-        toast.error("Failed to fetch insurance providers.");
+        console.error('Fetch failed:', err)
+        toast.error('Failed to fetch insurance providers.')
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchInsuranceProvider();
-  }, []);
+    fetchInsuranceProvider()
+  }, [])
 
   return (
     <div className="text-black">
@@ -116,13 +116,13 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
         <p className="text-xs text-muted-foreground">Tell us about yourself</p>
       </div>
 
-      <div className="md:grid lg:grid-cols-2 gap-4 space-y-2">
+      <div className="md:grid lg:grid-cols-2 gap-4">
         {personalFields.map(
-          ([label, name, type = "text", placeholder, width = "col-span-2"]) => (
+          ([label, name, type = 'text', placeholder, width = 'col-span-2']) => (
             <div
               key={name}
               className={`space-y-2 ${
-                (name as keyof FormData) === "address" && width
+                (name as keyof FormData) === 'address' && width
               }`}
             >
               <Label className="font-semibold">{label}</Label>
@@ -130,7 +130,7 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
                 type={type}
                 {...register(name as keyof FormData)}
                 className={`${
-                  errors[name as keyof FormData] && "border-red-500"
+                  errors[name as keyof FormData] && 'border-red-500'
                 } bg-background/20`}
                 placeholder={placeholder}
               />
@@ -148,7 +148,7 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
           <Select
             value={gender}
             onValueChange={(val) =>
-              setValue("gender", val as "MALE" | "FEMALE" | "NULL")
+              setValue('gender', val as 'MALE' | 'FEMALE' | 'NULL')
             }
           >
             <SelectTrigger className="">
@@ -171,7 +171,7 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
           <Label className="font-semibold">Blood Group</Label>
           <Select
             value={bloodGroupValue}
-            onValueChange={(val) => setValue("blood_group", val)}
+            onValueChange={(val) => setValue('blood_group', val)}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select Blood Group" />
@@ -185,7 +185,7 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
             </SelectContent>
           </Select>
           {errors.blood_group && (
-            <p className="text-red-500 text-sm">{"Blood Group is required"}</p>
+            <p className="text-red-500 text-sm">{'Blood Group is required'}</p>
           )}
         </div>
 
@@ -201,7 +201,7 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
             <Input
               {...register(name as keyof FormData)}
               className={`${
-                errors[name as keyof FormData] && "border-red-500"
+                errors[name as keyof FormData] && 'border-red-500'
               } bg-background/20`}
               placeholder={placeholder}
             />
@@ -223,7 +223,7 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
           ) : (
             <Select
               value={insuranceValue}
-              onValueChange={(val) => setValue("insurance_provider_id", val)}
+              onValueChange={(val) => setValue('insurance_provider_id', val)}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select Insurance Provider" />
@@ -262,7 +262,7 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
         </Button>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default PersonalDetailsStep;
+export default PersonalDetailsStep

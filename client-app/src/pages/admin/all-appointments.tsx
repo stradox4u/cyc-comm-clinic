@@ -1,161 +1,161 @@
-import type React from "react";
-import { useEffect, useState } from "react";
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
+} from '../../components/ui/card'
 
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Badge } from "../../components/ui/badge";
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Label } from '../../components/ui/label'
+import { Badge } from '../../components/ui/badge'
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "../../components/ui/tabs";
+} from '../../components/ui/tabs'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../components/ui/select";
+} from '../../components/ui/select'
 
-import { Textarea } from "../../components/ui/textarea";
-import { toast } from "sonner";
-import { type Provider, type Appointment } from "../../lib/type";
-import { Skeleton } from "../../components/ui/skeleton";
-import { useAuthStore } from "../../store/auth-store";
+import { Textarea } from '../../components/ui/textarea'
+import { toast } from 'sonner'
+import { type Provider, type Appointment } from '../../lib/type'
+import { Skeleton } from '../../components/ui/skeleton'
+import { useAuthStore } from '../../store/auth-store'
 
-import AppointmentList from "../../components/appointment-list";
-import { Search } from "lucide-react";
+import AppointmentList from '../../components/appointment-list'
+import { Search } from 'lucide-react'
 
 export default function Appointments() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadingProviders, setLoadingProviders] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadingProviders, setLoadingProviders] = useState(false)
 
-  const [appointments, setAppointments] = useState<Appointment[]>();
+  const [appointments, setAppointments] = useState<Appointment[]>()
 
-  const [toggle, setToggle] = useState(false);
-  const user = useAuthStore((state) => state.user);
-  const [providers, setProviders] = useState<Provider[]>();
+  const [toggle, setToggle] = useState(false)
+  const user = useAuthStore((state) => state.user)
+  const [providers, setProviders] = useState<Provider[]>()
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(
     null
-  );
-  const adminRole = user?.role_title === "ADMIN";
+  )
+  const adminRole = user?.role_title === 'ADMIN'
   const [newAppointment, setNewAppointment] = useState({
-    patientName: "",
-    phone: "",
-    email: "",
-    date: "",
-    time: "",
-    type: "",
-    provider: "",
-    notes: "",
-  });
+    patientName: '',
+    phone: '',
+    email: '',
+    date: '',
+    time: '',
+    type: '',
+    provider: '',
+    notes: '',
+  })
 
   const handleScheduleAppointment = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     toast.success(
       `Appointment for ${newAppointment.patientName} has been scheduled successfully.`
-    );
+    )
     setNewAppointment({
-      patientName: "",
-      phone: "",
-      email: "",
-      date: "",
-      time: "",
-      type: "",
-      provider: "",
-      notes: "",
-    });
-  };
+      patientName: '',
+      phone: '',
+      email: '',
+      date: '',
+      time: '',
+      type: '',
+      provider: '',
+      notes: '',
+    })
+  }
 
-  const sendReminder = (appointmentId: string, method: "sms" | "email") => {
-    const appointment = appointments?.find((apt) => apt.id === appointmentId);
-    toast(`${method.toUpperCase()} reminder sent to ${appointment?.patient}`);
-  };
+  const sendReminder = (appointmentId: string, method: 'sms' | 'email') => {
+    const appointment = appointments?.find((apt) => apt.id === appointmentId)
+    toast(`${method.toUpperCase()} reminder sent to ${appointment?.patient}`)
+  }
 
   const filteredAppointments = appointments?.filter((apt) => {
     const patientName =
-      `${apt.patient.first_name} ${apt.patient.last_name}`.toLowerCase();
+      `${apt.patient.first_name} ${apt.patient.last_name}`.toLowerCase()
 
     return (
       apt.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
       patientName.includes(searchTerm.toLowerCase()) ||
       apt.id.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
+    )
+  })
 
   const fetchAppointments = async () => {
-    setIsLoading(true);
-    const res = await fetch(`/api/appointment/appointments`);
-    const result = await res.json();
+    setIsLoading(true)
+    const res = await fetch(`/api/appointment/appointments`)
+    const result = await res.json()
     if (!result?.success) {
-      toast.error(result?.message || "Failed to fetch appointments");
+      toast.error(result?.message || 'Failed to fetch appointments')
     }
-    console.log(result?.data);
+    console.log(result?.data)
 
-    setAppointments(result?.data ?? []);
-    setIsLoading(false);
-  };
+    setAppointments(result?.data ?? [])
+    setIsLoading(false)
+  }
 
   useEffect(() => {
-    fetchAppointments();
-  }, [user]);
+    fetchAppointments()
+  }, [user])
 
   useEffect(() => {
     const fetchProviders = async () => {
-      setLoadingProviders(true);
-      const res = await fetch(`/api/providers`);
-      const result = await res.json();
+      setLoadingProviders(true)
+      const res = await fetch(`/api/providers`)
+      const result = await res.json()
       if (!result?.success) {
-        toast.error(result?.message || "Failed to fetch appointments");
+        toast.error(result?.message || 'Failed to fetch appointments')
       }
-      setProviders(result?.data ?? []);
-      setLoadingProviders(false);
-    };
-    if (user?.role_title === "ADMIN") {
-      fetchProviders();
+      setProviders(result?.data ?? [])
+      setLoadingProviders(false)
     }
-  }, [toggle, user?.role_title]);
+    if (user?.role_title === 'ADMIN') {
+      fetchProviders()
+    }
+  }, [toggle, user?.role_title])
 
   const handleAssignProvider = async (
     providerId: string,
     appointmentId: string
   ) => {
     try {
-      const res = await fetch("/api/provider/appointment/assign-provider", {
-        method: "PATCH",
+      const res = await fetch('/api/provider/appointment/assign-provider', {
+        method: 'PATCH',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           appointment_id: appointmentId,
           provider_id: providerId,
         }),
-      });
+      })
 
-      const result = await res.json();
+      const result = await res.json()
 
       if (!result.success) {
-        toast.error(result.message || "Failed to assign provider");
+        toast.error(result.message || 'Failed to assign provider')
       } else {
-        toast.success("Provider assigned successfully");
-        setToggle(false);
-        await fetchAppointments();
+        toast.success('Provider assigned successfully')
+        setToggle(false)
+        await fetchAppointments()
       }
     } catch (error) {
-      toast.error("Something went wrong");
-      console.log(error);
+      toast.error('Something went wrong')
+      console.log(error)
     }
-  };
+  }
 
   if (isLoading) {
     return (
@@ -190,7 +190,7 @@ export default function Appointments() {
           </Card>
         ))}
       </div>
-    );
+    )
   }
 
   return (
@@ -210,10 +210,6 @@ export default function Appointments() {
                 className="pl-8 w-64"
               />
             </div>
-            {/* <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              New Appointment
-            </Button> */}
           </div>
         </div>
 
@@ -507,5 +503,5 @@ export default function Appointments() {
         </Tabs>
       </div>
     </div>
-  );
+  )
 }
