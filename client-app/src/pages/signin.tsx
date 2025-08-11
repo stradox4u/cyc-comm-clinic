@@ -1,24 +1,24 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeClosed, Loader2 } from "lucide-react";
-import { useAuthStore } from "../store/auth-store";
-import { loginSchema, type LoginData } from "../lib/schema";
-import { toast } from "sonner";
-import AuthLayout from "../layout/AuthLayout";
-import { Label } from "../components/ui/label";
-import { Input } from "../components/ui/input";
-import { Button } from "../components/ui/button";
+import { Link, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Eye, EyeClosed, Loader2 } from 'lucide-react'
+import { useAuthStore } from '../store/auth-store'
+import { loginSchema, type LoginData } from '../lib/schema'
+import { toast } from 'sonner'
+import AuthLayout from '../layout/AuthLayout'
+import { Label } from '../components/ui/label'
+import { Input } from '../components/ui/input'
+import { Button } from '../components/ui/button'
 
 const SignInPage = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const setUser = useAuthStore((state) => state.setUser);
-  const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const setUser = useAuthStore((state) => state.setUser)
+  const navigate = useNavigate()
   const [resolvedUserType, setResolvedUserType] = useState<
-    "patient" | "provider"
-  >("patient");
+    'patient' | 'provider'
+  >('patient')
 
   const {
     register,
@@ -27,53 +27,53 @@ const SignInPage = () => {
     formState: { errors },
   } = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
-    mode: "onTouched",
+    mode: 'onTouched',
     defaultValues: {
-      email: "",
-      password: "",
+      email: '',
+      password: '',
     },
-  });
+  })
 
   const onSubmit = async (data: LoginData) => {
-    setIsSubmitting(true);
-    const endpoint = `/api/auth/${resolvedUserType}/login`;
+    setIsSubmitting(true)
+    const endpoint = `/api/auth/${resolvedUserType}/login`
 
     try {
       const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
-      });
+      })
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Login failed");
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Login failed')
       }
 
-      const result = await response.json();
-      setUser(result.data);
-      toast.success("Logged in successfully!");
-      navigate("/dashboard");
+      const result = await response.json()
+      setUser(result.data)
+      toast.success('Logged in successfully!')
+      navigate('/dashboard')
     } catch (error) {
-      console.error("Sign in error:", error);
+      console.error('Sign in error:', error)
       const message =
         error instanceof Error
           ? error.message
-          : "Invalid email or password. Please try again.";
-      toast.error(message);
+          : 'Invalid email or password. Please try again.'
+      toast.error(message)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const toggleUserType = () => {
-    const newType = resolvedUserType === "patient" ? "provider" : "patient";
-    setResolvedUserType(newType);
+    const newType = resolvedUserType === 'patient' ? 'provider' : 'patient'
+    setResolvedUserType(newType)
     reset({
-      email: "",
-      password: "",
-    });
-  };
+      email: '',
+      password: '',
+    })
+  }
 
   return (
     <AuthLayout size>
@@ -91,10 +91,18 @@ const SignInPage = () => {
         </div>
 
         <div className="space-y-2">
-          <Label className="font-semibold">Email</Label>
+          <div className="flex justify-between items-center">
+            <Label className="font-semibold">Email</Label>
+            <Link
+              to={'/verify-account'}
+              className="text-end hover:underline text-sm text-[#6A5CA3]"
+            >
+              Verify account?
+            </Link>
+          </div>
           <Input
-            {...register("email")}
-            className={errors.email ? "border-red-500" : ""}
+            {...register('email')}
+            className={errors.email ? 'border-red-500' : ''}
             placeholder="e.g. user@example.com"
           />
           {errors.email && (
@@ -105,11 +113,11 @@ const SignInPage = () => {
         <div className="space-y-2 relative">
           <Label className="font-medium">Password</Label>
           <Input
-            {...register("password")}
+            {...register('password')}
             placeholder="••••••••"
-            type={showPassword ? "text" : "password"}
+            type={showPassword ? 'text' : 'password'}
             className={`${
-              errors.email ? "border-red-500" : ""
+              errors.email ? 'border-red-500' : ''
             } placeholder:text-2xl`}
           />
           <div className="text-gray-400 absolute -right-3 top-8">
@@ -160,32 +168,32 @@ const SignInPage = () => {
               Signing In...
             </>
           ) : (
-            "Sign In"
+            'Sign In'
           )}
         </Button>
 
         <div className="text-center text-sm font-semibold pt-2">
           <p>
-            Don&apos;t have an account yet?{" "}
+            Don&apos;t have an account yet?{' '}
             <Link to="/signup" className="text-purple-400 hover:underline">
               Sign Up
             </Link>
           </p>
           <p>
-            Not a {resolvedUserType}?{" "}
+            Not a {resolvedUserType}?{' '}
             <Button
-              variant={"link"}
+              variant={'link'}
               className="text-purple-400 hover:underline px-1 p-0"
               onClick={toggleUserType}
             >
-              Switch to{" "}
-              {resolvedUserType === "patient" ? "Provider" : "Patient"} Login
+              Switch to{' '}
+              {resolvedUserType === 'patient' ? 'Provider' : 'Patient'} Login
             </Button>
           </p>
         </div>
       </form>
     </AuthLayout>
-  );
-};
+  )
+}
 
-export default SignInPage;
+export default SignInPage

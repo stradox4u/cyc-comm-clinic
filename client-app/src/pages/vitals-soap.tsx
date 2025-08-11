@@ -1,218 +1,198 @@
-import type React from "react";
-import { useState, useEffect } from "react";
-import { useParams } from "react-router";
+import type React from 'react'
+import { useState, useEffect } from 'react'
+import { useParams } from 'react-router'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../components/ui/tabs";
+} from '../components/ui/card'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
-import {
-  Search,
-  FileText,
-  Activity,
-} from "lucide-react";
-import { 
-  type Appointment,
-  type AppointmentStatus
-} from '../lib/type'
+} from '../components/ui/select'
+
+import { Search, FileText, Activity } from 'lucide-react'
+import { type Appointment, type AppointmentStatus } from '../lib/type'
 import { type SoapNote } from '../lib/schema'
-import SoapNoteDialog from "../components/soap-note-dialog";
-import VitalsFormDialog from "../components/vitals-form";
-import { useAuthStore } from "../store/auth-store";
-import { SoapNoteCard } from "../components/soap-note-card";
+import SoapNoteDialog from '../components/soap-note-dialog'
+import VitalsFormDialog from '../components/vitals-form'
+import { useAuthStore } from '../store/auth-store'
+import { SoapNoteCard } from '../components/soap-note-card'
 
 const vitalsHistory = [
   {
-    id: "V001",
-    patientName: "Sarah Johnson",
-    patientId: "P001",
-    date: "2024-01-15",
-    time: "10:30 AM",
-    temperature: "98.6°C",
-    blood_pressure: "120/80",
-    heart_rate: "72",
-    respiratory_rate: "16",
-    oxygen_saturation: "98%",
-    weight: "75 kg",
-    height: "5'6\"",
-    bmi: "23.4",
-    recordedBy: "Nurse Johnson",
-    notes: "Patient feeling well, no complaints",
+    id: 'V001',
+    patientName: 'Sarah Johnson',
+    patientId: 'P001',
+    date: '2024-01-15',
+    time: '10:30 AM',
+    temperature: '98.6°C',
+    blood_pressure: '120/80',
+    heart_rate: '72',
+    respiratory_rate: '16',
+    oxygen_saturation: '98%',
+    weight: '75 kg',
+    height: '5\'6"',
+    bmi: '23.4',
+    recordedBy: 'Nurse Johnson',
+    notes: 'Patient feeling well, no complaints',
   },
   {
-    id: "V002",
-    patientName: "Michael Chen",
-    patientId: "P002",
-    date: "2024-01-20",
-    time: "2:15 PM",
-    temperature: "99.2°C",
-    blood_pressure: "135/85",
-    heart_rate: "78",
-    respiratory_rate: "18",
-    oxygen_saturation: "97%",
-    weight: "180 lbs",
-    height: "5'10\"",
-    bmi: "25.8",
-    recordedBy: "Nurse Smith",
-    notes: "Slightly elevated BP, patient reports stress at work",
+    id: 'V002',
+    patientName: 'Michael Chen',
+    patientId: 'P002',
+    date: '2024-01-20',
+    time: '2:15 PM',
+    temperature: '99.2°C',
+    blood_pressure: '135/85',
+    heart_rate: '78',
+    respiratory_rate: '18',
+    oxygen_saturation: '97%',
+    weight: '180 lbs',
+    height: '5\'10"',
+    bmi: '25.8',
+    recordedBy: 'Nurse Smith',
+    notes: 'Slightly elevated BP, patient reports stress at work',
   },
-];
+]
 
 // This will be replaced by fetched data from the API
 
 interface VitalsSoapNoteProps {
   appointment?: Appointment
-  setAppointmentId?: React.Dispatch<React.SetStateAction<string | null>>;
+  setAppointmentId?: React.Dispatch<React.SetStateAction<string | null>>
 }
 
 export default function VitalsSoapPage({
   appointment: propAppointment,
-  setAppointmentId
-}:VitalsSoapNoteProps) {
-  const { appointmentId: urlAppointmentId } = useParams<{ appointmentId: string }>();
-  const [selectedPatient, setSelectedPatient] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
+  setAppointmentId,
+}: VitalsSoapNoteProps) {
+  const { appointmentId: urlAppointmentId } = useParams<{
+    appointmentId: string
+  }>()
+  const [selectedPatient, setSelectedPatient] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
   const user = useAuthStore((state) => state.user)
-  const [appointmentStatus, setAppointmentStatus] = useState<AppointmentStatus>("SCHEDULED");
-  const [hasVitals, setHasVitals] = useState(false);
-  const [appointment, setAppointment] = useState<Appointment | null>(propAppointment || null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [soapNotes, setSoapNotes] = useState<(SoapNote & { 
-    created_at?: string; 
-    updated_at?: string;
-    created_by?: { 
-      id: string; 
-      first_name: string; 
-      last_name: string; 
-      role_title: string; 
-    };
-    events?: {
-      id: string;
-      type: string;
-      created_by_id: string;
-      appointment_id: string;
-      created_at: string;
-      updated_at: string;
-      created_by: {
-        id: string;
-        first_name: string;
-        last_name: string;
-        role_title: string;
-      };
-    }[];
-  })[]>([]);
-  const [soapNotesLoading, setSoapNotesLoading] = useState(false);
+  const [appointmentStatus, setAppointmentStatus] =
+    useState<AppointmentStatus>('SCHEDULED')
+  const [hasVitals, setHasVitals] = useState(false)
+  const [appointment, setAppointment] = useState<Appointment | null>(
+    propAppointment || null
+  )
+  const [isLoading, setIsLoading] = useState(false)
+  const [soapNotes, setSoapNotes] = useState<
+    (SoapNote & {
+      created_at?: string
+      updated_at?: string
+      created_by?: {
+        id: string
+        first_name: string
+        last_name: string
+        role_title: string
+      }
+      events?: {
+        id: string
+        type: string
+        created_by_id: string
+        appointment_id: string
+        created_at: string
+        updated_at: string
+        created_by: {
+          id: string
+          first_name: string
+          last_name: string
+          role_title: string
+        }
+      }[]
+    })[]
+  >([])
+  const [soapNotesLoading, setSoapNotesLoading] = useState(false)
 
   const fetchSoapNotes = async (appointmentId: string) => {
-    setSoapNotesLoading(true);
+    setSoapNotesLoading(true)
     try {
-      const response = await fetch(`/api/provider/soapnotes?appointmentId=${appointmentId}`);
-      const result = await response.json();
+      const response = await fetch(
+        `/api/provider/soapnotes?appointmentId=${appointmentId}`
+      )
+      const result = await response.json()
       if (result.success && result.data) {
-        setSoapNotes(result.data);
+        setSoapNotes(result.data)
       } else {
-        setSoapNotes([]);
-        console.error('Failed to fetch soap notes:', result.message);
+        setSoapNotes([])
+        console.error('Failed to fetch soap notes:', result.message)
       }
     } catch (error) {
-      console.error('Error fetching soap notes:', error);
-      setSoapNotes([]);
+      console.error('Error fetching soap notes:', error)
+      setSoapNotes([])
     } finally {
-      setSoapNotesLoading(false);
+      setSoapNotesLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
     const fetchAppointment = async (appointmentId: string) => {
-      setIsLoading(true);
+      setIsLoading(true)
       try {
-        const response = await fetch(`/api/appointment/${appointmentId}`);
-        const result = await response.json();
+        const response = await fetch(`/api/appointment/${appointmentId}`)
+        const result = await response.json()
         if (result.success) {
-          setAppointment(result.data);
+          setAppointment(result.data)
 
-          fetchSoapNotes(appointmentId);
+          fetchSoapNotes(appointmentId)
         } else {
-          console.error('Failed to fetch appointment:', result.message);
+          console.error('Failed to fetch appointment:', result.message)
         }
       } catch (error) {
-        console.error('Error fetching appointment:', error);
+        console.error('Error fetching appointment:', error)
       } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (urlAppointmentId && !propAppointment) {
-      fetchAppointment(urlAppointmentId);
-    } else if (propAppointment) {
-      setAppointment(propAppointment);
-      
-      if (propAppointment.id) {
-        fetchSoapNotes(propAppointment.id);
+        setIsLoading(false)
       }
     }
-  }, [urlAppointmentId, propAppointment]);
+
+    if (urlAppointmentId && !propAppointment) {
+      fetchAppointment(urlAppointmentId)
+    } else if (propAppointment) {
+      setAppointment(propAppointment)
+
+      if (propAppointment.id) {
+        fetchSoapNotes(propAppointment.id)
+      }
+    }
+  }, [urlAppointmentId, propAppointment])
 
   useEffect(() => {
     if (appointment?.status) {
-      setAppointmentStatus(appointment.status);
+      setAppointmentStatus(appointment.status)
     }
-  }, [appointment?.status]);
+  }, [appointment?.status])
 
   if (isLoading) {
     return (
       <div className="flex-1 space-y-6 p-6">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <h2 className="text-lg font-semibold">Loading appointment data...</h2>
-            <p className="text-muted-foreground">Please wait while we load the appointment information.</p>
+            <h2 className="text-lg font-semibold">
+              Loading appointment data...
+            </h2>
+            <p className="text-muted-foreground">
+              Please wait while we load the appointment information.
+            </p>
           </div>
         </div>
       </div>
-    );
+    )
   }
-
-  if (!appointment || !appointment.id) {
-    return (
-      <div className="flex-1 space-y-6 p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <h2 className="text-lg font-semibold">No appointment data available</h2>
-            <p className="text-muted-foreground">Please select an appointment to view vitals and SOAP notes.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1  space-y-6 p-3">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
@@ -246,66 +226,81 @@ export default function VitalsSoapPage({
         </TabsList>
 
         <TabsContent value="record-vitals" className="space-y-4">
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Activity className="mr-2 h-5 w-5" />
-                  Record Vital Signs
-                </CardTitle>
-                <CardDescription>
-                  Enter patient vital signs and measurements
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <VitalsFormDialog
-                  appointmentId={appointment.id}
-                  setAppointmentId={setAppointmentId || (() => {})}
-                  userId={user?.id ?? ""}
-                  setHasVitals={setHasVitals}
-                  setAppointmentStatus={setAppointmentStatus}
-                  showAsDialog={false}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Vital Signs Reference</CardTitle>
-                <CardDescription>
-                  Normal ranges for adult patients
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-2 bg-muted rounded">
-                    <span className="font-medium">Temperature:</span>
-                    <span>97.8°F - 99.1°C</span>
-                  </div>
-                  <div className="flex justify-between items-center p-2 bg-muted rounded">
-                    <span className="font-medium">Blood Pressure:</span>
-                    <span>{"<120/80 mmHg"}</span>
-                  </div>
-                  <div className="flex justify-between items-center p-2 bg-muted rounded">
-                    <span className="font-medium">Heart Rate:</span>
-                    <span>60-100 bpm</span>
-                  </div>
-                  <div className="flex justify-between items-center p-2 bg-muted rounded">
-                    <span className="font-medium">Respiratory Rate:</span>
-                    <span>12-20 breaths/min</span>
-                  </div>
-                  <div className="flex justify-between items-center p-2 bg-muted rounded">
-                    <span className="font-medium">O2 Saturation:</span>
-                    <span>95-100%</span>
-                  </div>
-                  <div className="flex justify-between items-center p-2 bg-muted rounded">
-                    <span className="font-medium">BMI:</span>
-                    <span>18.5-24.9</span>
-                  </div>
+          {!appointment || !appointment.id ? (
+            <div className="flex-1 space-y-6 p-6">
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <h2 className="text-lg font-semibold">
+                    No appointment data available
+                  </h2>
+                  <p className="text-muted-foreground">
+                    Please select an appointment to view vitals and SOAP notes.
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </div>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Activity className="mr-2 h-5 w-5" />
+                    Record Vital Signs
+                  </CardTitle>
+                  <CardDescription>
+                    Enter patient vital signs and measurements
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <VitalsFormDialog
+                    appointmentId={appointment.id}
+                    setAppointmentId={setAppointmentId || (() => {})}
+                    userId={user?.id ?? ''}
+                    setHasVitals={setHasVitals}
+                    setAppointmentStatus={setAppointmentStatus}
+                    showAsDialog={false}
+                  />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Vital Signs Reference</CardTitle>
+                  <CardDescription>
+                    Normal ranges for adult patients
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-2 bg-muted rounded">
+                      <span className="font-medium">Temperature:</span>
+                      <span>97.8°F - 99.1°C</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-muted rounded">
+                      <span className="font-medium">Blood Pressure:</span>
+                      <span>{'<120/80 mmHg'}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-muted rounded">
+                      <span className="font-medium">Heart Rate:</span>
+                      <span>60-100 bpm</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-muted rounded">
+                      <span className="font-medium">Respiratory Rate:</span>
+                      <span>12-20 breaths/min</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-muted rounded">
+                      <span className="font-medium">O2 Saturation:</span>
+                      <span>95-100%</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-muted rounded">
+                      <span className="font-medium">BMI:</span>
+                      <span>18.5-24.9</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="soap-notes" className="space-y-4">
@@ -320,10 +315,10 @@ export default function VitalsSoapPage({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <SoapNoteDialog 
-                appointmentId={appointment.id}
-                vitals={appointment.vitals}
-                purposes={appointment.purposes || appointment.other_purpose}
+              <SoapNoteDialog
+                appointmentId={appointment?.id}
+                vitals={appointment?.vitals}
+                purposes={appointment?.purposes || appointment?.other_purpose}
                 setAppointmentId={setAppointmentId || (() => {})}
                 showAsDialog={false}
                 onSoapNoteSaved={() => fetchSoapNotes(appointment.id)}
@@ -357,17 +352,22 @@ export default function VitalsSoapPage({
               <CardContent>
                 {soapNotesLoading ? (
                   <div className="flex items-center justify-center py-8">
-                    <p className="text-muted-foreground">Loading SOAP notes...</p>
+                    <p className="text-muted-foreground">
+                      Loading SOAP notes...
+                    </p>
                   </div>
                 ) : soapNotes.length > 0 ? (
                   <div className="space-y-16">
                     {soapNotes.map((note, index) => {
-                      const creationEvent = note.events?.find((event: any) => event.type === 'SOAP_NOTE_RECORDED');
-                      const createdBy = creationEvent?.created_by;
-                      const createdAt = creationEvent?.created_at || note.created_at;
-                      
+                      const creationEvent = note.events?.find(
+                        (event: any) => event.type === 'SOAP_NOTE_RECORDED'
+                      )
+                      const createdBy = creationEvent?.created_by
+                      const createdAt =
+                        creationEvent?.created_at || note.created_at
+
                       return (
-                        <SoapNoteCard 
+                        <SoapNoteCard
                           key={note.appointment_id + index}
                           soapNote={note}
                           created_at={createdAt}
@@ -375,23 +375,25 @@ export default function VitalsSoapPage({
                           created_by={createdBy}
                           onUpdate={() => {
                             if (appointment?.id) {
-                              fetchSoapNotes(appointment.id);
+                              fetchSoapNotes(appointment.id)
                             }
                           }}
                           onDelete={() => {
                             if (appointment?.id) {
-                              fetchSoapNotes(appointment.id);
+                              fetchSoapNotes(appointment.id)
                             }
                           }}
                           canEdit={true}
                           canDelete={true}
                         />
-                      );
+                      )
                     })}
                   </div>
                 ) : (
                   <div className="flex items-center justify-center py-8">
-                    <p className="text-muted-foreground">No SOAP notes found for this appointment</p>
+                    <p className="text-muted-foreground">
+                      No SOAP notes found for this appointment
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -528,5 +530,5 @@ export default function VitalsSoapPage({
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }
