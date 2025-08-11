@@ -168,7 +168,7 @@ export default function AppointmentCard({
           >
             Email
           </Button>
-          {appointment.status === 'ATTENDING' && (
+          {appointment.status === 'ATTENDING' ? (
             <>
               <Button
                 size="sm"
@@ -182,15 +182,47 @@ export default function AppointmentCard({
               <VitalsFormDialog
                 appointmentId={appointment.id}
                 setAppointmentId={setAppointmentId}
-                userId={user?.id ?? ''}
+                userId={user?.id ?? ""}
                 setHasVitals={setHasVitals}
                 setAppointmentStatus={setAppointmentStatus}
               />
-              <SoapNoteDialog
+            </>
+          ) : isScheduled ? (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleNavigateToVitals}
+                className="bg-transparent"
+              >
+                <Activity className="mr-1 h-3 w-3" />
+                Vitals & SOAP
+              </Button>
+              <VitalsFormDialog
                 appointmentId={appointment.id}
-                vitals={appointment.vitals}
-                purposes={appointment.purposes || appointment.other_purpose}
                 setAppointmentId={setAppointmentId}
+                userId={user?.id ?? ""}
+                setHasVitals={setHasVitals}
+                setAppointmentStatus={setAppointmentStatus}
+              />
+            </>
+          ) : (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleNavigateToVitals}
+                className="bg-transparent"
+              >
+                <FileText className="mr-1 h-3 w-3" />
+                Vitals & <strong>SOAP</strong>
+              </Button>
+              <VitalsFormDialog
+                appointmentId={appointment.id}
+                setAppointmentId={setAppointmentId}
+                userId={user?.id ?? ""}
+                setHasVitals={setHasVitals}
+                setAppointmentStatus={setAppointmentStatus}
               />
             </>
           )}

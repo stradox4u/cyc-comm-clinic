@@ -161,7 +161,7 @@ export default function PatientAppointments() {
   const fetchPatientVitals = async (appointmentId: string) => {
     try {
       setVitalsLoading(true)
-      const response = await fetch(`/api/provider/vitals/${appointmentId}`)
+      const response = await fetch(`/api/vitals/${appointmentId}`)
       const result = await response.json()
 
       if (!response.ok || !result.success) {
