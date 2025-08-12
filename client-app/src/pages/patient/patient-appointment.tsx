@@ -94,6 +94,12 @@ export default function PatientAppointments() {
   const [appointmentId, setAppointmentId] = useState<string | null>(null)
   const [vitalsLoading, setVitalsLoading] = useState<boolean>(false)
 
+  // Handler for cancel button in vitals view
+  const onCancel = () => {
+    setViewVitalsAppointmentId(null)
+    setPatientVitals(null)
+  }
+
   const {
     register,
     handleSubmit,
@@ -301,7 +307,15 @@ export default function PatientAppointments() {
                       ) : (
                         viewVitalsAppointmentId === appointment.id &&
                         !vitalsLoading &&
-                        patientVitals && <VitalsCard {...patientVitals} />
+                        patientVitals && <div className="relative bg-background p-8 rounded-2xl border-2 border-foreground">
+                          <button
+                          onClick={onCancel}
+                          className="absolute text-foreground top-2 right-4 border-2 border-foreground rounded-full w-8 h-8 flex items-center justify-center"
+                          >
+                          X
+                          </button>
+                          <VitalsCard {...patientVitals} />
+                        </div>
                       )}
                     </div>
                   </div>

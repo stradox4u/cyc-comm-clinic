@@ -53,10 +53,18 @@ export function authorizeSensitiveAppointmentFields(req: any, updateData: any) {
     'status'
 ];
 
+  if (
+    loggedInUser &&
+    loggedInUser.type === UserType.PATIENT &&
+    updateData.status === 'CANCELLED'
+  ) {
+    return
+  }
+
   for (const field of sensitiveFields) {
     if (updateData[field]) {
       if (!loggedInUser?.roleTitle || !PROVIDER_ROLES.includes(loggedInUser.roleTitle)) {
-        const err: any = new Error(`Only providers with valid roles can update ${field.replace('_', ' ')}`);
+        const err: any = new Error(`Only providers with valid roles can update ${field.replace(/_/g, ' ')}`);
         err.statusCode = 403;
         throw err;
       }

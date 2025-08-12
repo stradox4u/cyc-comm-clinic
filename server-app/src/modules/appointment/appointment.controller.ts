@@ -562,6 +562,38 @@ const getNoShowRates = catchAsync(async (req, res) => {
   })
 })
 
+const getPatientAppointmentsForProvider = catchAsync(async (req, res) => {
+  const user = getLoggedInUser(req)
+  const patient_id = req.params.patientId
+  const provider_id = user.id
+
+  if (user.type !== UserType.PROVIDER) {
+    return res.status(403).json({
+      success: false,
+      message: 'Access denied'
+    })
+  }
+
+  let appointments
+
+  if (user.role_title === 'ADMIN' || user.role_title === 'RECEPTIONIST') {
+    appointments = await appointmentService.searchAppointments({patient_id})
+  } else {
+    appointments = await appointmentService.searchAppointments({
+      patient_id,
+      appointment_providers: {
+        some: {provider_id}
+      }
+    })
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Patient appointments fetched successfully',
+    data: appointments
+  })
+})
+
 export default {
   appointmentCreate,
   getAppointment,
@@ -572,4 +604,5 @@ export default {
   waitTimeTracking,
   patchAppointment,
   getNoShowRates,
+  getPatientAppointmentsForProvider
 }
