@@ -264,17 +264,38 @@ const customPatientWithAppointments: PatientCreateInput = {
   },
 }
 
+const seedPatientsOrSkip = async () => {
+  const patientsCount = await prisma.patient.count()
+  if (patientsCount < 50) {
+    return await prisma.patient.createMany({ data: fakePatients, skipDuplicates: true })
+  }
+  logger.info('Skipping patient seeding, already enough patients in the database.')
+}
+
+const seedProvidersOrSkip = async () => {
+  const providersCount = await prisma.provider.count()
+  if (providersCount < 20) {
+    return await prisma.provider.createMany({ data: fakeProviders, skipDuplicates: true })
+  }
+  logger.info('Skipping provider seeding, already enough providers in the database.')
+}
+
+const seedInsuranceProvidersOrSkip = async () => {
+  const insuranceProvidersCount = await prisma.insuranceProvider.count()
+  if (insuranceProvidersCount < 10) {
+    return await prisma.insuranceProvider.createMany({ data: fakeInsuranceProviders, skipDuplicates: true })
+  }
+  logger.info('Skipping insurance provider seeding, already enough insurance providers in the database.')
+}
+
 const seed = async () => {
   try {
     logger.info('Seeding database tables...')
 
+    await seedPatientsOrSkip(),
+    await seedProvidersOrSkip(),
+    await seedInsuranceProvidersOrSkip(),
     await prisma.$transaction([
-      prisma.patient.createMany({ data: fakePatients, skipDuplicates: true }),
-      prisma.provider.createMany({ data: fakeProviders, skipDuplicates: true }),
-      prisma.insuranceProvider.createMany({
-        data: fakeInsuranceProviders,
-        skipDuplicates: true,
-      }),
       prisma.patient.upsert({
         where: { email: customPatient.email },
         update: {}, // no update if it exists
