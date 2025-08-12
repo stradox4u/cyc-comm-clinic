@@ -293,8 +293,6 @@ const seed = async () => {
     logger.info('Seeding database tables...')
 
     await seedPatientsOrSkip(),
-    await seedProvidersOrSkip(),
-    await seedInsuranceProvidersOrSkip(),
     await prisma.$transaction([
       prisma.patient.upsert({
         where: { email: customPatient.email },
@@ -311,6 +309,8 @@ const seed = async () => {
         skipDuplicates: true,
       }),
     ])
+    await seedProvidersOrSkip(),
+    await seedInsuranceProvidersOrSkip(),
     await prisma.provider.createMany({
       data: customProviders,
       skipDuplicates: true,
