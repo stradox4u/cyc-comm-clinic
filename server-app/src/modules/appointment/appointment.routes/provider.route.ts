@@ -41,4 +41,10 @@ router.get(
     appointmentController.getNoShowRates
 )
 
+router.get(
+    '/:patientId',
+    authorize(Object.values(ProviderRoleTitle)),
+    appointmentController.getPatientAppointmentsForProvider
+)
+
 export default router
