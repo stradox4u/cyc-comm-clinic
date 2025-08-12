@@ -2,6 +2,8 @@ export type Patient = {
   id: string
   first_name: string
   last_name: string
+  email: string
+  phone: string
   insurance_provider_id?: string
 }
 

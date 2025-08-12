@@ -7,37 +7,26 @@ import {
   CardHeader,
   CardTitle,
 } from '../../../components/ui/card'
-import PatientForm from '../../../features/patients/components/patient-form'
-import type { CreatePatientSchema } from '../../../features/patients/schema'
-import { useCreatePatient } from '../../../features/patients/hook'
+import ProviderForm from '../../../features/providers/components/provider-form'
+import type { CreateProviderSchema } from '../../../features/providers/schema'
+import { useCreateProvider } from '../../../features/providers/hook'
 
-export default function CreatePatient() {
-  const { mutate: createPatient, isPending } = useCreatePatient()
+export default function CreateProvider() {
+  const { mutate: createProvider, isPending } = useCreateProvider()
 
-  const [formData, setFormData] = useState<CreatePatientSchema>({
+  const [formData, setFormData] = useState<CreateProviderSchema>({
     first_name: '',
     last_name: '',
-    date_of_birth: '',
-    gender: 'MALE',
     phone: '',
     email: '',
     password: '',
-    address: '',
-    blood_group: '',
-    emergency_contact_name: '',
-    emergency_contact_phone: '',
-    insurance_coverage: '',
-    insurance_provider_id: '',
-    allergies: [],
+    role_title: 'GENERAL_PRACTIONER',
   })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    const allergies = [formData.allergies as unknown as string]
-    const date_of_birth = new Date(formData.date_of_birth).toISOString()
-
-    createPatient({ ...formData, allergies, date_of_birth })
+    createProvider(formData)
   }
 
   return (
@@ -45,7 +34,7 @@ export default function CreatePatient() {
       <header>
         <div className="flex h-14 items-center px-4 md:p-8 lg:px-32">
           <div className="ml-4">
-            <h1 className="text-lg font-semibold">Patient Intake Form</h1>
+            <h1 className="text-lg font-semibold">Provider Form</h1>
           </div>
         </div>
       </header>
@@ -54,14 +43,14 @@ export default function CreatePatient() {
         <div className="max-w-4xl mx-auto">
           <Card>
             <CardHeader>
-              <CardTitle>New Patient Registration</CardTitle>
+              <CardTitle>New Provider Registration</CardTitle>
               <CardDescription>
-                Please fill out all required information for patient
+                Please fill out all required information for provider
                 registration
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <PatientForm
+              <ProviderForm
                 formData={formData}
                 setFormData={setFormData}
                 onSubmit={handleSubmit}

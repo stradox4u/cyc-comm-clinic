@@ -33,7 +33,7 @@ const createPatient = async (payload: CreatePatientSchema) => {
 }
 
 const updatePatient = async (id: string, payload: UpdatePatientSchema) => {
-  const { data } = await API.patch(`/api/patients/${id}`, payload)
+  const { data } = await API.put(`/api/patients/${id}`, payload)
   return data
 }
 

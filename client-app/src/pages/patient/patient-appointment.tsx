@@ -91,8 +91,7 @@ export default function PatientAppointments() {
   const [patientVitals, setPatientVitals] = useState<VitalsCardProps | null>(
     null
   )
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_appointmentId, setAppointmentId] = useState<string | null>(null)
+  const [, setAppointmentId] = useState<string | null>(null)
   const [vitalsLoading, setVitalsLoading] = useState<boolean>(false)
 
   // Handler for cancel button in vitals view
@@ -137,8 +136,6 @@ export default function PatientAppointments() {
       purposes: [watch('purposes')], // <-- array, not a string
     }
 
-    console.log(payload)
-
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -168,7 +165,9 @@ export default function PatientAppointments() {
   const fetchPatientVitals = async (appointmentId: string) => {
     try {
       setVitalsLoading(true)
-      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/vitals/${appointmentId}`)
+      const response = await fetch(
+        `${import.meta.env.VITE_SERVER_URL}/api/vitals/${appointmentId}`
+      )
       const result = await response.json()
 
       if (!response.ok || !result.success) {
@@ -189,7 +188,9 @@ export default function PatientAppointments() {
   useEffect(() => {
     const fetchAppointments = async () => {
       setLoading(true)
-      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/appointment/appointments`)
+      const res = await fetch(
+        `${import.meta.env.VITE_SERVER_URL}/api/appointment/appointments`
+      )
       const result = await res.json()
       if (!result?.success) {
         toast.error(result?.message || 'Failed to fetch appointments')
@@ -308,15 +309,17 @@ export default function PatientAppointments() {
                       ) : (
                         viewVitalsAppointmentId === appointment.id &&
                         !vitalsLoading &&
-                        patientVitals && <div className="relative bg-background p-8 rounded-2xl border-2 border-foreground">
-                          <button
-                          onClick={onCancel}
-                          className="absolute text-foreground top-2 right-4 border-2 border-foreground rounded-full w-8 h-8 flex items-center justify-center"
-                          >
-                          X
-                          </button>
-                          <VitalsCard {...patientVitals} />
-                        </div>
+                        patientVitals && (
+                          <div className="relative bg-background p-8 rounded-2xl border-2 border-foreground">
+                            <button
+                              onClick={onCancel}
+                              className="absolute text-foreground top-2 right-4 border-2 border-foreground rounded-full w-8 h-8 flex items-center justify-center"
+                            >
+                              X
+                            </button>
+                            <VitalsCard {...patientVitals} />
+                          </div>
+                        )
                       )}
                     </div>
                   </div>

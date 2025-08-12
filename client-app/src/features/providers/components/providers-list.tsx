@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
-import type { IPagination, Patient } from '../types'
+import type { IPagination, Provider } from '../types'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { usePatients, useSearchPatientsByName } from '../hook'
 import { useDebounce } from '../../../hooks/useDebounce'
 import { Skeleton } from '../../../components/ui/skeleton'
 import {
@@ -15,10 +14,10 @@ import {
 import { Button } from '../../../components/ui/button'
 import { Calendar, Edit, Eye, Mail, Phone } from 'lucide-react'
 import { Avatar, AvatarFallback } from '../../../components/ui/avatar'
-import { differenceInYears } from 'date-fns'
-import type { InsuranceProvider } from '../../insuranceProviders/types'
 import type { Appointment } from '../../../lib/type'
 import { formatDate } from '../../../lib/utils'
+import { Badge } from '../../../components/ui/badge'
+import { useProviders, useSearchProvidersByName } from '../hook'
 
 interface Props {
   searchValue: string
@@ -26,41 +25,40 @@ interface Props {
   setPagination: (pagination: Required<IPagination>) => void
 }
 
-const PatientsList = ({ searchValue, pagination, setPagination }: Props) => {
-  const [patients, setPatients] = useState<
-    | (Patient & {
-        insurance_provider: InsuranceProvider
-        lastVisit: Appointment
+const ProvidersList = ({ searchValue, pagination, setPagination }: Props) => {
+  const [providers, setProviders] = useState<
+    | (Provider & {
         nextAppointment: Appointment
+        lastAppointment: Appointment
       })[]
     | null
   >(null)
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { data: patientsData, isLoading } = usePatients(pagination)
-  const { mutate: searchPatientsByName, data: patientsSearchData } =
-    useSearchPatientsByName()
+  const { data: providersData, isLoading } = useProviders(pagination)
+  const { mutate: searchProvidersByName, data: providersSearchData } =
+    useSearchProvidersByName()
 
   useEffect(() => {
-    if (patientsData) {
-      setPatients(patientsData?.data)
-      setPagination({ ...pagination, total: patientsData?.total })
+    if (providersData) {
+      setProviders(providersData?.data)
+      setPagination({ ...pagination, total: providersData?.total })
     }
-  }, [patientsData])
+  }, [providersData])
   useEffect(() => {
-    if (patientsSearchData) setPatients(patientsSearchData?.data)
-  }, [patientsSearchData])
+    if (providersSearchData) setProviders(providersSearchData?.data)
+  }, [providersSearchData])
 
   useEffect(() => {
     const page = Number(searchParams.get('page')) || 1
-    setPagination({ ...pagination, page })
+    setPagination((prevPagination) => ({ ...prevPagination, page }))
   }, [searchParams.get('page')])
 
   useDebounce(
     () => {
-      if (searchValue || patientsData) {
+      if (searchValue || providersData) {
         const query = { page: 1, limit: pagination.limit }
-        searchPatientsByName({ name: searchValue, query })
+        searchProvidersByName({ name: searchValue, query })
       }
     },
     1000,
@@ -72,17 +70,17 @@ const PatientsList = ({ searchValue, pagination, setPagination }: Props) => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Patient</TableHead>
+            <TableHead>Provider</TableHead>
             <TableHead>Contact</TableHead>
-            <TableHead>Insurance</TableHead>
-            <TableHead>Last Visit</TableHead>
+            <TableHead>Role</TableHead>
+            <TableHead>Last Appointment</TableHead>
             <TableHead>Next Appointment</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {isLoading
-            ? [...Array(20)].map((_i, index) => (
+            ? [...Array(20)].map((i, index) => (
                 <TableRow key={index}>
                   <TableCell>
                     <Skeleton className="h-3 w-full" />
@@ -104,27 +102,19 @@ const PatientsList = ({ searchValue, pagination, setPagination }: Props) => {
                   </TableCell>
                 </TableRow>
               ))
-            : patients?.map((patient) => (
-                <TableRow key={patient?.id}>
+            : providers?.map((provider) => (
+                <TableRow key={provider?.id}>
                   <TableCell>
                     <div className="flex items-center space-x-3">
                       <Avatar className="h-8 w-8">
                         <AvatarFallback>
-                          {patient?.first_name?.slice(0, 1)}
-                          {patient?.last_name?.slice(0, 1)}
+                          {provider?.first_name?.slice(0, 1)}
+                          {provider?.last_name?.slice(0, 1)}
                         </AvatarFallback>
                       </Avatar>
                       <div>
                         <div className="font-medium">
-                          {patient?.first_name} {patient?.last_name}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {differenceInYears(
-                            new Date(),
-                            patient?.date_of_birth
-                          )}
-                          y •{' '}
-                          <span className="capitalize">{patient?.gender}</span>
+                          {provider?.first_name} {provider?.last_name}
                         </div>
                       </div>
                     </div>
@@ -133,25 +123,27 @@ const PatientsList = ({ searchValue, pagination, setPagination }: Props) => {
                     <div className="space-y-1">
                       <div className="flex items-center text-sm">
                         <Phone className="mr-1 h-3 w-3" />
-                        {patient?.phone}
+                        {provider?.phone}
                       </div>
                       <div className="flex items-center text-sm text-muted-foreground">
                         <Mail className="mr-1 h-3 w-3" />
-                        {patient?.email?.toLowerCase()}
+                        {provider?.email?.toLowerCase()}
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm">
-                      {patient?.insurance_provider?.name}
+                    <div className="flex items-center text-sm">
+                      <Badge variant={'outline'}>
+                        {provider?.role_title.replace('_', ' ')}
+                      </Badge>
                     </div>
                   </TableCell>
                   <TableCell>
-                    {patient?.lastVisit ? (
+                    {provider?.lastAppointment ? (
                       <div className="flex items-center text-sm">
                         <Calendar className="mr-1 h-3 w-3" />
                         {formatDate(
-                          patient?.lastVisit?.schedule?.appointment_date
+                          provider?.lastAppointment?.schedule?.appointment_date
                         )}
                       </div>
                     ) : (
@@ -161,16 +153,16 @@ const PatientsList = ({ searchValue, pagination, setPagination }: Props) => {
                     )}
                   </TableCell>
                   <TableCell>
-                    {patient?.nextAppointment ? (
+                    {provider?.nextAppointment ? (
                       <div className="flex items-center text-sm">
                         <Calendar className="mr-1 h-3 w-3" />
                         {formatDate(
-                          patient?.nextAppointment?.schedule?.appointment_date
+                          provider?.nextAppointment?.schedule?.appointment_date
                         )}
                       </div>
                     ) : (
                       <span className="text-muted-foreground text-sm">
-                        None scheduled
+                        None
                       </span>
                     )}
                   </TableCell>
@@ -180,16 +172,7 @@ const PatientsList = ({ searchValue, pagination, setPagination }: Props) => {
                         variant="ghost"
                         size="sm"
                         onClick={() =>
-                          navigate(`/provider/patients/${patient?.id}`)
-                        }
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          navigate(`/provider/patients/${patient?.id}/edit`)
+                          navigate(`/provider/${provider?.id}/edit`)
                         }
                       >
                         <Edit className="h-4 w-4" />
@@ -203,4 +186,4 @@ const PatientsList = ({ searchValue, pagination, setPagination }: Props) => {
     </div>
   )
 }
-export default PatientsList
+export default ProvidersList

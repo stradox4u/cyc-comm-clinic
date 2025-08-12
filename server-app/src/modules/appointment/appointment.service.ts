@@ -127,6 +127,8 @@ async function searchAppointments(
         select: {
           first_name: true,
           last_name: true,
+          email: true,
+          phone: true,
           insurance_provider_id: true,
         },
       },
@@ -197,6 +199,8 @@ async function findAppointmentsByProvider(
             select: {
               first_name: true,
               last_name: true,
+              email: true,
+              phone: true,
               insurance_provider_id: true,
             },
           },
