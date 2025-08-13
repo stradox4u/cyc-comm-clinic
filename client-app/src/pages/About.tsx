@@ -12,9 +12,9 @@ const About = ({ team }: AboutProps) => {
         <AboutHeader />
       <strong className="font-semibold text-[#ece9f1] text-3xl text-center block px-8 mt-4">Meet The Team</strong>
 
-      <div className="flex flex-col items-center gap-3 mt-8 max-w-7xl mx-auto px-4">
+      <div className="flex flex-col items-center gap-6 mt-8 max-w-7xl mx-auto px-4 sm:px-6">
         {team[0] && (
-          <div className="w-80 h-auto min-h-96 rounded-xl p-6 pb-8 shadow text-[#6a5ca3] bg-white/90 backdrop-blur-sm flex flex-col items-center mb-6">
+          <div className="w-full max-w-sm sm:w-80 h-auto min-h-96 rounded-xl p-6 pb-8 shadow text-[#6a5ca3] bg-white/90 backdrop-blur-sm flex flex-col items-center">
             <img
               src={team[0].image}
               alt={team[0].name}
@@ -76,9 +76,9 @@ const About = ({ team }: AboutProps) => {
           </div>
         )}
 
-        <div className="flex justify-center gap-8 w-full max-w-7xl mt-12">
+        <div className="flex flex-col sm:flex-row justify-center items-center sm:items-stretch gap-6 w-full max-w-7xl mt-8">
           {team[1] && (
-            <div className="w-80 h-auto min-h-96 rounded-xl p-6 pb-8 shadow text-[#6a5ca3] bg-white/90 backdrop-blur-sm flex flex-col items-center mb-6">
+            <div className="w-full max-w-sm sm:w-80 h-auto min-h-96 rounded-xl p-6 pb-8 shadow text-[#6a5ca3] bg-white/90 backdrop-blur-sm flex flex-col items-center">
               <img
                 src={team[1].image}
                 alt={team[1].name}
@@ -141,7 +141,7 @@ const About = ({ team }: AboutProps) => {
           )}
 
           {team[2] && (
-            <div className="w-80 h-auto min-h-96 rounded-xl p-6 pb-8 shadow text-[#6a5ca3] bg-white/90 backdrop-blur-sm flex flex-col items-center mb-6">
+            <div className="w-full max-w-sm sm:w-80 h-auto min-h-96 rounded-xl p-6 pb-8 shadow text-[#6a5ca3] bg-white/90 backdrop-blur-sm flex flex-col items-center">
               <img
                 src={team[2].image}
                 alt={team[2].name}
@@ -204,7 +204,7 @@ const About = ({ team }: AboutProps) => {
           )}
 
           {team[3] && (
-            <div className="w-80 h-auto min-h-96 rounded-xl p-6 pb-8 shadow text-[#6a5ca3] bg-white/90 backdrop-blur-sm flex flex-col items-center mb-6">
+            <div className="w-full max-w-sm sm:w-80 h-auto min-h-96 rounded-xl p-6 pb-8 shadow text-[#6a5ca3] bg-white/90 backdrop-blur-sm flex flex-col items-center">
               <img
                 src={team[3].image}
                 alt={team[3].name}
