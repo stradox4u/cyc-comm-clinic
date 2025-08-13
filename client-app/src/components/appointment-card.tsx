@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
-import { User, Phone, Mail, Clock, FileText, Activity } from 'lucide-react'
+import { User, Phone, Mail, Clock, FileText, Activity, Eye } from 'lucide-react'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import {
@@ -157,16 +157,10 @@ export default function AppointmentCard({
           <Button
             size="sm"
             variant="outline"
-            onClick={() => sendReminder(appointment.id, 'sms')}
+            onClick={() => navigate(`/provider/appointments/${appointment.id}`)}
           >
-            SMS
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => sendReminder(appointment.id, 'email')}
-          >
-            Email
+            <Eye className="size-6" />
+            View More
           </Button>
           {appointment.status === 'ATTENDING' ? (
             <>
@@ -182,7 +176,7 @@ export default function AppointmentCard({
               <VitalsFormDialog
                 appointmentId={appointment.id}
                 setAppointmentId={setAppointmentId}
-                userId={user?.id ?? ""}
+                userId={user?.id ?? ''}
                 setHasVitals={setHasVitals}
                 setAppointmentStatus={setAppointmentStatus}
               />
@@ -201,7 +195,7 @@ export default function AppointmentCard({
               <VitalsFormDialog
                 appointmentId={appointment.id}
                 setAppointmentId={setAppointmentId}
-                userId={user?.id ?? ""}
+                userId={user?.id ?? ''}
                 setHasVitals={setHasVitals}
                 setAppointmentStatus={setAppointmentStatus}
               />
@@ -220,7 +214,7 @@ export default function AppointmentCard({
               <VitalsFormDialog
                 appointmentId={appointment.id}
                 setAppointmentId={setAppointmentId}
-                userId={user?.id ?? ""}
+                userId={user?.id ?? ''}
                 setHasVitals={setHasVitals}
                 setAppointmentStatus={setAppointmentStatus}
               />
@@ -301,6 +295,14 @@ export default function AppointmentCard({
         </div>
       ) : (
         <div className="flex items-center space-x-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => navigate(`/provider/appointments/${appointment.id}`)}
+          >
+            <Eye className="size-6" />
+            View More
+          </Button>
           <Button
             size="sm"
             variant="outline"

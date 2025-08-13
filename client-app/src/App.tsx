@@ -35,6 +35,8 @@ import CreatePatient from './pages/admin/patients/create-patient'
 import ViewPatient from './pages/admin/patients/view-patient'
 import VitalsSoapPage from './pages/vitals-soap'
 import OTPVerification from './components/auth/otp-verification'
+import Appointment from './pages/admin/appointment-detail'
+import AppointmentDetail from './pages/admin/appointment-detail'
 
 const queryClient = new QueryClient()
 
@@ -106,6 +108,11 @@ function App() {
           <Route element={<ProtectedLayout />}>
             <Route path="/provider/dashboard" element={<Dashboard />} />
             <Route path="/provider/appointments" element={<Appointments />} />
+            <Route
+              path="/provider/appointments/:id"
+              element={<AppointmentDetail />}
+            />
+
             <Route
               path="/provider/insurance-check"
               element={<InsuranceCheck />}
