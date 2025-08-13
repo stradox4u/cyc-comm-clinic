@@ -91,7 +91,8 @@ export default function PatientAppointments() {
   const [patientVitals, setPatientVitals] = useState<VitalsCardProps | null>(
     null
   )
-  const [appointmentId, setAppointmentId] = useState<string | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_appointmentId, setAppointmentId] = useState<string | null>(null)
   const [vitalsLoading, setVitalsLoading] = useState<boolean>(false)
 
   // Handler for cancel button in vitals view

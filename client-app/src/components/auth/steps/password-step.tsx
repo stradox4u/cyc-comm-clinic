@@ -27,7 +27,8 @@ const PasswordStep = ({ onPrev, isSubmitting }: PasswordStepProps) => {
   const [agreeToPrivacy, setAgreeToPrivacy] = useState(false);
   const [allowCommunications, setAllowCommunications] = useState(false);
 
-  const [checkErrors, setCheckErrors] = useState<{
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [checkErrors, _setCheckErrors] = useState<{
     agreeToTerms?: string;
     agreeToPrivacy?: string;
   }>({});

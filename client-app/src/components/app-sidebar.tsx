@@ -12,7 +12,6 @@ import {
   User2,
   ReceiptText,
   FileArchive,
-  AlignVerticalSpaceAround,
   Activity,
 } from "lucide-react";
 import {

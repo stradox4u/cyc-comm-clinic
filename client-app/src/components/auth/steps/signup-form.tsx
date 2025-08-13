@@ -73,13 +73,15 @@ const SignUpForm = ({ onSignupComplete }: SignUpFormProps) => {
       // Destructure and exclude confirmPassword
       const { confirmPassword: _, ...payload } = data
 
-      // Normalize allergies to always be an array
-      payload.allergies = Array.isArray(payload.allergies)
-        ? payload.allergies
-        : [payload.allergies]
-
       // Format date_of_birth to ISO string
       payload.date_of_birth = new Date(payload.date_of_birth).toISOString()
+     
+      const allergiesNormalizedPayload = {
+        ...payload,
+        allergies: Array.isArray(payload.allergies)
+          ? payload.allergies
+          : [payload.allergies]
+      }
 
       console.log('Submitting registration data:', payload)
 
@@ -88,7 +90,7 @@ const SignUpForm = ({ onSignupComplete }: SignUpFormProps) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(allergiesNormalizedPayload),
       })
 
       if (!response.ok) {

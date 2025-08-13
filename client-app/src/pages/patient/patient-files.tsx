@@ -18,7 +18,6 @@ import { Badge } from '../../components/ui/badge'
 import type { SoapNote, Vitals } from '../../lib/type'
 import { useEffect, useState } from 'react'
 import API from '../../lib/api'
-import { formatDate } from 'date-fns'
 
 const labResults = [
   {
@@ -41,7 +40,8 @@ const labResults = [
   },
 ]
 const PatientFiles = () => {
-  const [isLoading, setIsLoading] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_isLoading, setIsLoading] = useState(false)
   const [stats, setStats] = useState<{
     lastVitals: Vitals
     lastSoapNote: SoapNote

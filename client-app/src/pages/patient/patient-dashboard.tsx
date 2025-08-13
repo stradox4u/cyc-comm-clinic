@@ -171,7 +171,7 @@ function PatientDashboard() {
               <p className="text-xs">
                 Last reading:{' '}
                 {stats?.lastVitals?.created_at
-                  ? formatDate(stats.lastVitals.created_at)
+                  ? formatDate(stats.lastVitals.created_at.toISOString())
                   : 'N/A'}
               </p>
             </CardContent>
@@ -197,7 +197,7 @@ function PatientDashboard() {
               <p className="text-xs">
                 Last reading:{' '}
                 {stats?.lastVitals?.created_at
-                  ? formatDate(stats.lastVitals.created_at)
+                  ? formatDate(stats.lastVitals.created_at.toISOString())
                   : 'N/A'}
               </p>
             </CardContent>
