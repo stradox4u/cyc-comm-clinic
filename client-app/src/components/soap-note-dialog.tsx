@@ -100,7 +100,8 @@ export default function SoapNoteDialog({
       };
 
       console.log("SoapNote:", formattedSoapNote);
-      const res = await fetch(`/api/provider/soapnotes/record`, {
+      const url = `${import.meta.env.VITE_SERVER_URL}/api/provider/soapnotes/record`;
+      const res = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

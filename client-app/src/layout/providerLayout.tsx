@@ -19,7 +19,7 @@ export const ProviderLayout: React.FC<ProviderLayoutProps> = ({ children }) => {
 
   const handleLogout = async () => {
     try {
-      const res = await fetch("/api/auth/logout", {
+      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/auth/logout`, {
         method: "POST",
         credentials: "include",
       });

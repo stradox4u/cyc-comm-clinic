@@ -18,7 +18,8 @@ export const useCheckPatientProfile = () => {
       }
 
       try {
-        const res = await fetch("/api/auth/patient/profile", {
+        const url = `${import.meta.env.VITE_SERVER_URL}/api/auth/patient/profile`;
+        const res = await fetch(url, {
           method: "GET",
           credentials: "include",
         });

@@ -36,7 +36,7 @@ const SignInPage = () => {
 
   const onSubmit = async (data: LoginData) => {
     setIsSubmitting(true)
-    const endpoint = `/api/auth/${resolvedUserType}/login`
+    const endpoint = `${import.meta.env.VITE_SERVER_URL}/api/auth/${resolvedUserType}/login`
 
     try {
       const response = await fetch(endpoint, {

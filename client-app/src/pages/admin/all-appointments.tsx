@@ -95,7 +95,7 @@ export default function Appointments() {
 
   const fetchAppointments = async () => {
     setIsLoading(true)
-    const res = await fetch(`/api/appointment/appointments`)
+    const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/appointment/appointments`)
     const result = await res.json()
     if (!result?.success) {
       toast.error(result?.message || 'Failed to fetch appointments')
@@ -113,7 +113,7 @@ export default function Appointments() {
   useEffect(() => {
     const fetchProviders = async () => {
       setLoadingProviders(true)
-      const res = await fetch(`/api/providers`)
+      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/providers`)
       const result = await res.json()
       if (!result?.success) {
         toast.error(result?.message || 'Failed to fetch appointments')
@@ -131,7 +131,7 @@ export default function Appointments() {
     appointmentId: string
   ) => {
     try {
-      const res = await fetch('/api/provider/appointment/assign-provider', {
+      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/provider/appointment/assign-provider`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

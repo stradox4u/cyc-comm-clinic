@@ -27,7 +27,8 @@ const SignUpPage = () => {
   const handleOTPVerificationSuccess = async () => {
     setCurrentStep("complete");
 
-    const response = await fetch("/api/auth/patient/login", {
+    const url = `${import.meta.env.VITE_SERVER_URL}/api/auth/patient/login`;
+    const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
