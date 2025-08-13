@@ -401,10 +401,11 @@ const assignAppointmentProvider = catchAsync(async (req, res) => {
   })
   if (isAlreadyAssigned) throw new ValidationError('Provider already assigned')
 
-  const appointment = await appointmentService.assignProvider({
-    appointment_id: appointment_id,
-    provider_id: provider_id,
-  })
+  const [appointment, alreadyScheduled] =
+    await appointmentService.assignProvider({
+      appointment_id: appointment_id,
+      provider_id: provider_id,
+    })
   if (!appointment) throw new NotFoundError('Appointment not found')
 
   await emailService.sendAppointmentScheduledMail(
@@ -412,29 +413,33 @@ const assignAppointmentProvider = catchAsync(async (req, res) => {
     appointment.schedule as AppointmentSchedule
   )
 
-  const token = await googleAuthService.findCalendarToken({
-    patient_id: appointment.patient_id,
-  })
-  if (token) {
-    const addMinutesToDate = (iso: string | Date) => {
-      const date = new Date(iso)
-      date.setMinutes(date.getMinutes() + 30)
-      return date.toISOString()
-    }
-    await calendarService.createCalendarEvent(token.tokens as Credentials, {
-      summary: `${config.APP_NAME} Medical Appointment Schedule`,
-      description: `Appointment is scheduled for ${appointment.purposes.join(
-        ', '
-      )}. \nVisit ${config.ORIGIN_URL}/appointments for more details.`,
-      start: (
-        appointment.schedule as AppointmentSchedule
-      ).appointment_date.toString(),
-      end: addMinutesToDate(
-        (
-          appointment.schedule as AppointmentSchedule
-        ).appointment_date.toString()
-      ),
+  if (!alreadyScheduled) {
+    const token = await googleAuthService.findCalendarToken({
+      patient_id: appointment.patient_id,
     })
+    if (token) {
+      const addMinutesToDate = (iso: string | Date) => {
+        const date = new Date(iso)
+        date.setMinutes(date.getMinutes() + 30)
+        return date.toISOString()
+      }
+      await calendarService.createCalendarEvent(token.tokens as Credentials, {
+        summary: `${config.APP_NAME} Medical Appointment Schedule`,
+        description: `Appointment is scheduled for ${appointment.purposes
+          .join(', ')
+          .replace('_', ' ')}. \nVisit ${
+          config.ORIGIN_URL
+        }/appointments for more details.`,
+        start: (
+          appointment.schedule as AppointmentSchedule
+        ).appointment_date.toString(),
+        end: addMinutesToDate(
+          (
+            appointment.schedule as AppointmentSchedule
+          ).appointment_date.toString()
+        ),
+      })
+    }
   }
 
   return res.status(200).json({
@@ -570,27 +575,27 @@ const getPatientAppointmentsForProvider = catchAsync(async (req, res) => {
   if (user.type !== UserType.PROVIDER) {
     return res.status(403).json({
       success: false,
-      message: 'Access denied'
+      message: 'Access denied',
     })
   }
 
   let appointments
 
   if (user.role_title === 'ADMIN' || user.role_title === 'RECEPTIONIST') {
-    appointments = await appointmentService.searchAppointments({patient_id})
+    appointments = await appointmentService.searchAppointments({ patient_id })
   } else {
     appointments = await appointmentService.searchAppointments({
       patient_id,
       appointment_providers: {
-        some: {provider_id}
-      }
+        some: { provider_id },
+      },
     })
   }
 
   res.status(200).json({
     success: true,
     message: 'Patient appointments fetched successfully',
-    data: appointments
+    data: appointments,
   })
 })
 
@@ -604,5 +609,5 @@ export default {
   waitTimeTracking,
   patchAppointment,
   getNoShowRates,
-  getPatientAppointmentsForProvider
+  getPatientAppointmentsForProvider,
 }

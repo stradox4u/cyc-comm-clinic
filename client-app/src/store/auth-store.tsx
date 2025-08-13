@@ -11,8 +11,9 @@ interface User {
   image_url: string
   allergies: string[]
   blood_group: string
+  insurance_coverage: string
   insurance_provider_id: string
-  gender: string
+  gender: 'MALE' | 'FEMALE'
   date_of_birth: string | number | Date
   emergency_contact_name: string
   emergency_contact_phone: string

@@ -1,68 +1,54 @@
-import { useState, useEffect } from "react";
-import { Mode } from "../components/ui/mode";
-import { Button } from "../components/ui/button";
-import { toast } from "sonner";
-import { useAuthStore } from "../store/auth-store";
-import { Link, useNavigate } from "react-router-dom";
-import { ProviderSidebar } from "../components/provider-sidebar";
-import { SidebarTrigger } from "../components/ui/sidebar";
-import { LogOut } from "lucide-react";
+import { useState, useEffect } from 'react'
+import { Mode } from '../components/ui/mode'
+import { Button } from '../components/ui/button'
+import { Link } from 'react-router-dom'
+import { ProviderSidebar } from '../components/provider-sidebar'
+import { SidebarTrigger } from '../components/ui/sidebar'
+import { LogOut } from 'lucide-react'
+import { useProviderProfile } from '../hooks/fetch-provider'
 
 interface ProviderLayoutProps {
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 export const ProviderLayout: React.FC<ProviderLayoutProps> = ({ children }) => {
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
-  const navigate = useNavigate();
-  const logout = useAuthStore((state) => state.logout);
-
-  const handleLogout = async () => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
-
-      if (!res.ok) throw new Error("Logout failed");
-
-      logout();
-      toast.success("Logged out successfully");
-      navigate("/auth/patient/login");
-    } catch (error) {
-      console.error("Logout error:", error);
-      toast.error("Failed to logout. Please try again.");
-    }
-  };
-
-  const toggleTheme = () =>
-    setTheme((prev) => (prev === "light" ? "dark" : "light"));
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark')
+  const { loading, user, logOut } = useProviderProfile()
 
   useEffect(() => {
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
+    if (!loading && user) {
+      if (!user.role_title) logOut()
     }
-  }, [theme]);
+  }, [user])
+
+  const toggleTheme = () =>
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [theme])
 
   return (
     <div className="bg-background text-foreground min-h-screen overflow-y-auto">
       <header className="w-full border-b bg-background/95 border-muted-foreground/20 fixed backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex justify-between h-20 px-4 sm:px-8 md:px-16 lg:px-24 items-center max-w-7xl mx-auto">
-          <Link to={"/dashboard"}>
+          <Link to={'/dashboard'}>
             <h2 className="text-2xl font-semibold">
               C<span className="text-pink-400">H</span>C
             </h2>
           </Link>
 
           <div className="">
-            <h1 className="text-lg font-semibold">AdminDashboard</h1>
+            <h1 className="text-lg font-semibold">Provider Dashboard</h1>
           </div>
 
           <div className="flex gap-4 items-center">
             <Mode theme={theme} toggleTheme={toggleTheme} />
-            <Button size={"sm"} variant={"destructive"} onClick={handleLogout}>
+            <Button size={'sm'} variant={'destructive'} onClick={logOut}>
               <LogOut />
               Logout
             </Button>
@@ -77,5 +63,5 @@ export const ProviderLayout: React.FC<ProviderLayoutProps> = ({ children }) => {
         </main>
       </ProviderSidebar>
     </div>
-  );
-};
+  )
+}

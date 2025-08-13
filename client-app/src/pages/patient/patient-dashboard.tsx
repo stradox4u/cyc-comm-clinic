@@ -144,7 +144,7 @@ function PatientDashboard() {
                 </>
               ) : (
                 <>
-                  <div className="text-2xl font-bold">--</div>
+                  <div className="text-2xl font-bold">N/A</div>
                   <p className="text-xs">No record yet</p>
                 </>
               )}

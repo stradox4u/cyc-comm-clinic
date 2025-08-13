@@ -5,8 +5,9 @@ import {
   getPatients,
   getPatientsStats,
   searchPatientsByName,
+  updatePatient,
 } from './api'
-import type { CreatePatientSchema } from './schema'
+import type { CreatePatientSchema, UpdatePatientSchema } from './schema'
 import { useNavigate } from 'react-router'
 import type { AxiosError } from 'axios'
 import type { APIResponse, IPagination } from './types'
@@ -58,10 +59,30 @@ const useCreatePatient = () => {
     },
   })
 }
+
+const useUpdatePatient = () => {
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  type UpdatePatientMutation = { id: string; payload: UpdatePatientSchema }
+
+  return useMutation({
+    mutationFn: ({ id, payload }: UpdatePatientMutation) =>
+      updatePatient(id, payload),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['patient', data.data.id] })
+      toast.success(data.message)
+      navigate(`/provider/patients/${data.data.id}`)
+    },
+    onError: (data: AxiosError<APIResponse>) => {
+      toast.error(data.response?.data?.message)
+    },
+  })
+}
 export {
   usePatients,
   usePatientsStats,
   useSearchPatientsByName,
   usePatient,
   useCreatePatient,
+  useUpdatePatient,
 }

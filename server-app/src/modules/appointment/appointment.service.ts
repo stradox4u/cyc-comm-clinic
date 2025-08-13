@@ -95,7 +95,7 @@ async function findAppointment(filter: AppointmentWhereUniqueInput): Promise<
           last_name: true,
           insurance_provider_id: true,
         },
-      }
+      },
     },
   })
 
@@ -127,6 +127,8 @@ async function searchAppointments(
         select: {
           first_name: true,
           last_name: true,
+          email: true,
+          phone: true,
           insurance_provider_id: true,
         },
       },
@@ -197,6 +199,8 @@ async function findAppointmentsByProvider(
             select: {
               first_name: true,
               last_name: true,
+              email: true,
+              phone: true,
               insurance_provider_id: true,
             },
           },
@@ -439,27 +443,39 @@ async function deleteAppointment(
 async function assignProvider(
   payload: AppointmentProvidersUncheckedCreateInput
 ): Promise<
-  (Appointment & { patient: { first_name: string; email: string } }) | null
+  [
+    (Appointment & { patient: { first_name: string; email: string } }) | null,
+    boolean
+  ]
 > {
-  await prisma.$transaction([
-    prisma.appointment.update({
-      where: { id: payload.appointment_id },
-      data: { status: AppointmentStatus.SCHEDULED },
-    }),
-    prisma.appointmentProviders.create({ data: payload }),
-  ])
-
-  return await prisma.appointment.findUnique({
-    where: { id: payload.appointment_id },
-    include: {
-      appointment_providers: {
-        include: {
-          provider: { select: { first_name: true, last_name: true } },
-        },
-      },
-      patient: { select: { first_name: true, email: true } },
-    },
+  const alreadyScheduled = await prisma.appointmentProviders.findFirst({
+    where: { appointment_id: payload.appointment_id },
   })
+
+  if (!alreadyScheduled) {
+    await prisma.$transaction([
+      prisma.appointment.update({
+        where: { id: payload.appointment_id },
+        data: { status: AppointmentStatus.SCHEDULED },
+      }),
+      prisma.appointmentProviders.create({ data: payload }),
+    ])
+  }
+
+  return [
+    await prisma.appointment.findUnique({
+      where: { id: payload.appointment_id },
+      include: {
+        appointment_providers: {
+          include: {
+            provider: { select: { first_name: true, last_name: true } },
+          },
+        },
+        patient: { select: { first_name: true, email: true } },
+      },
+    }),
+    !!alreadyScheduled,
+  ]
 }
 
 function isProviderArray(arr: any): arr is { provider_id: string }[] {
