@@ -26,6 +26,7 @@ RUN npm run build
 RUN test -d dist || (echo "dist directory was not created during build" && exit 1)
 
 RUN npx prisma migrate deploy
+RUN npm run prod:db:seed
 
 FROM node:22.17 AS production
 ARG DATABASE_URL
