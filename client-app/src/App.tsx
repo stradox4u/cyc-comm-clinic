@@ -35,6 +35,8 @@ import CreatePatient from './pages/admin/patients/create-patient'
 import ViewPatient from './pages/admin/patients/view-patient'
 import VitalsSoapPage from './pages/vitals-soap'
 import OTPVerification from './components/auth/otp-verification'
+import About from './pages/About'
+import { teamArray } from './pages/about/about-data'
 
 const queryClient = new QueryClient()
 
@@ -79,6 +81,7 @@ function App() {
         <Routes>
           {/* ✅ Public Routes */}
           <Route index path="/" element={<Home />} />
+          <Route index path="/about" element={<About team={teamArray} />} />
 
           {/* Patient Auth */}
           <Route path="/login" element={<PatientSignIn />} />
