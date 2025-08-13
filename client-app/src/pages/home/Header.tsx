@@ -21,7 +21,7 @@ const Header = () => {
                 {" "}
                 <Hospital className="h-8 w-8 text-pink-400" />
                 <span className="text-xl font-bold text-white/90">
-                  C <span className="text-pink-400">H</span> C
+                  Care <span className="text-pink-400">Hub</span> Central
                 </span>
               </>
             )}
@@ -51,10 +51,10 @@ const Header = () => {
                   Services
                 </a>
                 <a
-                  href="/#contact"
+                  href="/about"
                   className=" hover:text-purple-300 transition-colors"
                 >
-                  Contact
+                  About Us
                 </a>
                 <div className="flex items-center space-x-2">
                   <Button asChild variant="secondary">
