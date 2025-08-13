@@ -9,7 +9,7 @@ type ProfilePhotoProps = {
   patientId?: string
 }
 
-const ProfilePhoto: React.FC<ProfilePhotoProps> = ({ photo }) => {
+const ProfilePhoto: React.FC<ProfilePhotoProps> = ({ photo, patientId }) => {
   const [userPhoto, setUserPhoto] = useState<string>()
   const { user, setUser } = useAuthStore()
   const [isLoading, setIsLoading] = useState<boolean>(false)

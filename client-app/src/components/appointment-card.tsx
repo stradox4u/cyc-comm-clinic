@@ -51,7 +51,8 @@ export default function AppointmentCard({
 }: AppointmentCardProps) {
   const [appointmentStatus, setAppointmentStatus] =
     useState<AppointmentStatus>('SCHEDULED')
-  const [hasVitals, setHasVitals] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_hasVitals, setHasVitals] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {

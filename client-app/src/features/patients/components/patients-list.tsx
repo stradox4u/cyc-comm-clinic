@@ -53,7 +53,7 @@ const PatientsList = ({ searchValue, pagination, setPagination }: Props) => {
 
   useEffect(() => {
     const page = Number(searchParams.get('page')) || 1
-    setPagination((prevPagination) => ({ ...prevPagination, page }))
+    setPagination({ ...pagination, page })
   }, [searchParams.get('page')])
 
   useDebounce(
@@ -82,7 +82,7 @@ const PatientsList = ({ searchValue, pagination, setPagination }: Props) => {
         </TableHeader>
         <TableBody>
           {isLoading
-            ? [...Array(20)].map((i, index) => (
+            ? [...Array(20)].map((_i, index) => (
                 <TableRow key={index}>
                   <TableCell>
                     <Skeleton className="h-3 w-full" />

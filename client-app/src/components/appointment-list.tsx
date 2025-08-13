@@ -32,7 +32,8 @@ export default function AppointmentList({
   handleAssignProvider: (providerId: string, appointmentId: string) => void;
   sendReminder: (appointmentId: string, method: "sms" | "email") => void;
 }) {
-  const [appointmentId, setAppointmentId] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_appointmentId, setAppointmentId] = useState<string | null>(null);
   return (
     <Card>
       <CardHeader>
