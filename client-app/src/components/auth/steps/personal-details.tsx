@@ -81,7 +81,7 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
     const fetchInsuranceProvider = async () => {
       setLoading(true)
       try {
-        const response = await fetch('/api/insurance-providers')
+        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/insurance-providers`)
 
         // Ensure response is ok and content-type is JSON
         const contentType = response.headers.get('content-type')

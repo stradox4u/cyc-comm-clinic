@@ -38,11 +38,10 @@ import {
   Printer,
   Stethoscope,
   Activity,
-  History,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { format, formatDistanceToNowStrict } from 'date-fns'
+import { format } from 'date-fns'
 
 // Mock appointment data - in real app, this would come from API
 
@@ -120,7 +119,7 @@ const AppointmentDetail = () => {
     return data.data
   }
 
-  const { data: provider, isLoading: isProviderLoading } = useQuery({
+  const { data: provider } = useQuery({
     queryKey: ['provider', providerId],
     queryFn: () => fetchProvider(providerId!),
     enabled: !!providerId, // prevents firing if ID is undefined

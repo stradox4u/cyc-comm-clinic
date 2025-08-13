@@ -57,7 +57,8 @@ export default function SoapNoteDialog({
     });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [saved, setSaved] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_saved, setSaved] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +100,8 @@ export default function SoapNoteDialog({
       };
 
       console.log("SoapNote:", formattedSoapNote);
-      const res = await fetch(`/api/provider/soapnotes/record`, {
+      const url = `${import.meta.env.VITE_SERVER_URL}/api/provider/soapnotes/record`;
+      const res = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

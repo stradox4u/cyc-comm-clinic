@@ -16,6 +16,13 @@ router.get(
 )
 
 router.get(
+  '/stats',
+  authenticate(UserType.PROVIDER),
+  authorize([ProviderRoleTitle.ADMIN, ProviderRoleTitle.RECEPTIONIST]),
+  providerController.getProvidersStats
+)
+
+router.get(
   '/role-title/:role_title',
   authenticate(UserType.PROVIDER),
   authorize([ProviderRoleTitle.ADMIN, ProviderRoleTitle.RECEPTIONIST]),

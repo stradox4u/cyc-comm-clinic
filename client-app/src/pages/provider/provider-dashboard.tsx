@@ -115,7 +115,8 @@ const providerRoleData = {
 
 export default function ProviderDashboard() {
   const user = useAuthStore((state) => state.user);
-  const [selectedRole, setSelectedRole] = useState<
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [selectedRole, _setSelectedRole] = useState<
     keyof typeof providerRoleData
   >((user?.role_title as keyof typeof providerRoleData) || "NURSE");
   const currentStaff = providerRoleData[selectedRole];

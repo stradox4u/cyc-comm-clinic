@@ -64,7 +64,8 @@ export default function VitalsFormDialog({
 
   const checkVitals = async (id: string) => {
     try {
-      const res = await fetch(`/api/provider/vitals/${id}`, {
+      const vitalsUrl = `${import.meta.env.VITE_SERVER_URL}/api/provider/vitals/${id}`
+      const res = await fetch(vitalsUrl, {
         method: "GET",
         credentials: "include",
       });
@@ -77,7 +78,8 @@ export default function VitalsFormDialog({
         
         if (vitalsData.created_by_id && !vitalsData.created_by) {
           try {
-            const providerRes = await fetch(`/api/provider/${vitalsData.created_by_id}`, {
+            const providerUrl = `${import.meta.env.VITE_SERVER_URL}/api/provider/${vitalsData.created_by_id}`;
+            const providerRes = await fetch(providerUrl, {
               credentials: "include",
             });
             const providerData = await providerRes.json();
@@ -153,7 +155,7 @@ export default function VitalsFormDialog({
       
       console.log("Sending vitals payload:", JSON.stringify(vitalsPayload, null, 2));
       
-      const response = await fetch("/api/provider/vitals/record", {
+      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/provider/vitals/record`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -169,7 +171,7 @@ export default function VitalsFormDialog({
         return;
       }
 
-      const updateStatusRes = await fetch(`/api/appointment/${appointmentId}`, {
+      const updateStatusRes = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/appointment/${appointmentId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "ATTENDING" }),

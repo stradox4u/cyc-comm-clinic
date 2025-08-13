@@ -27,45 +27,6 @@ import VitalsFormDialog from '../components/vitals-form'
 import { useAuthStore } from '../store/auth-store'
 import { SoapNoteCard } from '../components/soap-note-card'
 
-const vitalsHistory = [
-  {
-    id: 'V001',
-    patientName: 'Sarah Johnson',
-    patientId: 'P001',
-    date: '2024-01-15',
-    time: '10:30 AM',
-    temperature: '98.6°C',
-    blood_pressure: '120/80',
-    heart_rate: '72',
-    respiratory_rate: '16',
-    oxygen_saturation: '98%',
-    weight: '75 kg',
-    height: '5\'6"',
-    bmi: '23.4',
-    recordedBy: 'Nurse Johnson',
-    notes: 'Patient feeling well, no complaints',
-  },
-  {
-    id: 'V002',
-    patientName: 'Michael Chen',
-    patientId: 'P002',
-    date: '2024-01-20',
-    time: '2:15 PM',
-    temperature: '99.2°C',
-    blood_pressure: '135/85',
-    heart_rate: '78',
-    respiratory_rate: '18',
-    oxygen_saturation: '97%',
-    weight: '180 lbs',
-    height: '5\'10"',
-    bmi: '25.8',
-    recordedBy: 'Nurse Smith',
-    notes: 'Slightly elevated BP, patient reports stress at work',
-  },
-]
-
-// This will be replaced by fetched data from the API
-
 interface VitalsSoapNoteProps {
   appointment?: Appointment
   setAppointmentId?: React.Dispatch<React.SetStateAction<string | null>>
@@ -81,9 +42,11 @@ export default function VitalsSoapPage({
   const [selectedPatient, setSelectedPatient] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const user = useAuthStore((state) => state.user)
-  const [appointmentStatus, setAppointmentStatus] =
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_appointmentStatus, setAppointmentStatus] =
     useState<AppointmentStatus>('SCHEDULED')
-  const [hasVitals, setHasVitals] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_hasVitals, setHasVitals] = useState(false)
   const [appointment, setAppointment] = useState<Appointment | null>(
     propAppointment || null
   )
@@ -120,7 +83,7 @@ export default function VitalsSoapPage({
     setSoapNotesLoading(true)
     try {
       const response = await fetch(
-        `/api/provider/soapnotes?appointmentId=${appointmentId}`
+        `${import.meta.env.VITE_SERVER_URL}/api/provider/soapnotes?appointmentId=${appointmentId}`
       )
       const result = await response.json()
       if (result.success && result.data) {
@@ -141,7 +104,7 @@ export default function VitalsSoapPage({
     const fetchAppointment = async (appointmentId: string) => {
       setIsLoading(true)
       try {
-        const response = await fetch(`/api/appointment/${appointmentId}`)
+        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/appointment/${appointmentId}`)
         const result = await response.json()
         if (result.success) {
           setAppointment(result.data)
@@ -316,12 +279,12 @@ export default function VitalsSoapPage({
             </CardHeader>
             <CardContent>
               <SoapNoteDialog
-                appointmentId={appointment?.id}
-                vitals={appointment?.vitals}
-                purposes={appointment?.purposes || appointment?.other_purpose}
+                appointmentId={(appointment as Appointment).id}
+                vitals={(appointment as Appointment).vitals}
+                purposes={(appointment as Appointment).purposes || (appointment as Appointment).other_purpose}
                 setAppointmentId={setAppointmentId || (() => {})}
                 showAsDialog={false}
-                onSoapNoteSaved={() => fetchSoapNotes(appointment.id)}
+                onSoapNoteSaved={() => fetchSoapNotes((appointment as Appointment).id)}
               />
             </CardContent>
           </Card>

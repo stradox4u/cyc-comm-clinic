@@ -9,9 +9,9 @@ import {
 } from '../ui/dialog'
 import { Button } from '../ui/button'
 import { Calendar } from 'lucide-react'
-import axios from 'axios'
 import { toast } from 'sonner'
 import { useAuthStore } from '../../store/auth-store'
+import API from '../../lib/api'
 
 const GoogleModal = ({ open = false }: { open?: boolean }) => {
   const [searchParams] = useSearchParams()
@@ -22,7 +22,7 @@ const GoogleModal = ({ open = false }: { open?: boolean }) => {
   if (user?.has_calendar_access) return
 
   const handleClick = async () => {
-    const res = await axios.get('/api/auth/google', { withCredentials: true })
+    const res = await API.get('/api/auth/google', { withCredentials: true })
     if (!res || !res.data || !res.data.success) {
       toast.error('Error connecting to google')
     }

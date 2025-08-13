@@ -27,7 +27,6 @@ import InsuranceCheck from './pages/admin/insurance-check'
 import AllPatients from './pages/admin/patients/all-patients'
 import MobileOutreach from './pages/admin/mobile-outreach'
 import Reminders from './pages/admin/reminders'
-import ProvidersDashboard from './pages/admin/providers-dashboard'
 import Billings from './pages/patient/billings'
 import Settings from './pages/Settings'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -35,8 +34,12 @@ import CreatePatient from './pages/admin/patients/create-patient'
 import ViewPatient from './pages/admin/patients/view-patient'
 import VitalsSoapPage from './pages/vitals-soap'
 import OTPVerification from './components/auth/otp-verification'
-import Appointment from './pages/admin/appointment-detail'
 import AppointmentDetail from './pages/admin/appointment-detail'
+import PatientEditProfile from './pages/patient/patient-edit-profile'
+import AllProviders from './pages/admin/providers/all-providers'
+import CreateProvider from './pages/admin/providers/create-provider'
+import EditProvider from './pages/admin/providers/edit-provider'
+import EditPatient from './pages/admin/patients/edit-patient'
 
 const queryClient = new QueryClient()
 
@@ -99,6 +102,7 @@ function App() {
           <Route element={<ProtectedLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile" element={<PatientProfile />} />
+            <Route path="/profile/edit" element={<PatientEditProfile />} />
             <Route path="/files" element={<PatientFiles />} />
             <Route path="/billings" element={<Billings />} />
             <Route path="/appointments" element={<PatientAppointments />} />
@@ -118,22 +122,24 @@ function App() {
               element={<InsuranceCheck />}
             />
             <Route path="/provider/insurance" element={<InsuranceCheck />} />
-            <Route path="/provider/intake" element={<CreatePatient />} />
+            <Route
+              path="/provider/patient-intake"
+              element={<CreatePatient />}
+            />
             <Route path="/provider/vitals" element={<VitalsSoapPage />} />
             <Route
               path="/provider/vitals/:appointmentId"
               element={<VitalsSoapPage />}
             />
-            <Route
-              path="/provider/providers-dashboard"
-              element={<ProvidersDashboard />}
-            />
+            <Route path="/provider/list" element={<AllProviders />} />
+            <Route path="/provider/new" element={<CreateProvider />} />
+            <Route path="/provider/:id/edit" element={<EditProvider />} />
             <Route path="/provider/patients" element={<AllPatients />} />
-            {/* <Route
-              path="/provider/patients/register"
-              element={<CreatePatient />}
-            /> */}
             <Route path="/provider/patients/:id" element={<ViewPatient />} />
+            <Route
+              path="/provider/patients/:id/edit"
+              element={<EditPatient />}
+            />
             <Route path="/provider/outreach" element={<MobileOutreach />} />
             <Route path="/provider/reminders" element={<Reminders />} />
           </Route>

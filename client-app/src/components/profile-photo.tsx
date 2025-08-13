@@ -1,15 +1,15 @@
-import axios from 'axios'
 import { Camera } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useAuthStore } from '../store/auth-store'
+import API from '../lib/api'
 
 type ProfilePhotoProps = {
   photo: string | undefined
   patientId?: string
 }
 
-const ProfilePhoto: React.FC<ProfilePhotoProps> = ({ photo }) => {
+const ProfilePhoto: React.FC<ProfilePhotoProps> = ({ photo, patientId }) => {
   const [userPhoto, setUserPhoto] = useState<string>()
   const { user, setUser } = useAuthStore()
   const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -32,12 +32,12 @@ const ProfilePhoto: React.FC<ProfilePhotoProps> = ({ photo }) => {
     try {
       setUserPhoto(URL.createObjectURL(file))
 
-      const { data } = await axios.get(
+      const { data } = await API.get(
         `/api/auth/generate-url?fileType=${file.type}&fileName=${file.name}`
       )
       if (!data.success) toast.error('Error uploading photo')
 
-      await axios.put(data.data.signedUrl, file, {
+      await API.put(data.data.signedUrl, file, {
         headers: {
           'Content-Type': file.type,
           'Content-Length': file.size.toString(),
@@ -48,7 +48,7 @@ const ProfilePhoto: React.FC<ProfilePhotoProps> = ({ photo }) => {
         ? `/api/patients/${patientId}`
         : `/api/auth/patient/profile`
 
-      const savedRes = await axios.put(url, {
+      const savedRes = await API.put(url, {
         image_url: data.data.key,
       })
       if (!savedRes.data?.success) toast.error('Error uploading photo')

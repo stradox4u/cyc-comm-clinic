@@ -8,99 +8,112 @@ import {
   CardTitle,
 } from '../../components/ui/card'
 
-import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
-import { Label } from '../../components/ui/label'
-import { Badge } from '../../components/ui/badge'
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from '../../components/ui/tabs'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../components/ui/select'
 
-import { Textarea } from '../../components/ui/textarea'
 import { toast } from 'sonner'
-import { type Provider, type Appointment } from '../../lib/type'
+import { type Appointment } from '../../lib/type'
 import { Skeleton } from '../../components/ui/skeleton'
-import { useAuthStore } from '../../store/auth-store'
 
 import AppointmentList from '../../components/appointment-list'
 import { Search } from 'lucide-react'
+import { isToday } from 'date-fns'
+import AppointmentForm from '../../features/appointments/components/appointment-form'
+import API from '../../lib/api'
+import { useNavigate } from 'react-router-dom'
 
 export default function Appointments() {
+  const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [loadingProviders, setLoadingProviders] = useState(false)
 
   const [appointments, setAppointments] = useState<Appointment[]>()
+  const [filteredAppointments, setFilteredAppointments] =
+    useState<Appointment[]>()
 
-  const [toggle, setToggle] = useState(false)
-  const user = useAuthStore((state) => state.user)
-  const [providers, setProviders] = useState<Provider[]>()
-  const [selectedProviderId, setSelectedProviderId] = useState<string | null>(
-    null
-  )
-  const adminRole = user?.role_title === 'ADMIN'
-  const [newAppointment, setNewAppointment] = useState({
-    patientName: '',
-    phone: '',
-    email: '',
-    date: '',
-    time: '',
-    type: '',
-    provider: '',
-    notes: '',
+  const [formData, setFormData] = useState({
+    patient_id: '',
+    appointment_date: '',
+    appointment_time: '',
+    purposes: '',
+    other_purpose: '',
+    has_insurance: false,
   })
 
-  const handleScheduleAppointment = (e: React.FormEvent) => {
+  const handleScheduleAppointment = async (e: React.FormEvent) => {
     e.preventDefault()
-    toast.success(
-      `Appointment for ${newAppointment.patientName} has been scheduled successfully.`
-    )
-    setNewAppointment({
-      patientName: '',
-      phone: '',
-      email: '',
-      date: '',
-      time: '',
-      type: '',
-      provider: '',
-      notes: '',
-    })
+    toast.success(`Appointment has been scheduled successfully.`)
+
+    const payload = {
+      patient_id: {
+        id: formData.patient_id.split(' - ')[1],
+        first_name: formData.patient_id.split(' ')[0],
+        last_name: formData.patient_id.split(' ')[1],
+        insurance_provider_id: 'Leads corp',
+      },
+      schedule: {
+        appointment_date: formData.appointment_date,
+        appointment_time: formData.appointment_time,
+        schedule_count: 0,
+      },
+      purposes:
+        typeof formData.purposes === 'string'
+          ? [formData.purposes]
+          : formData.purposes,
+      other_purpose: formData.other_purpose,
+      has_insurance: formData.has_insurance,
+    }
+
+    const { data } = await API.post('/api/appointment/create', payload)
+    if (!data?.success) return toast.error(data.message)
+
+    navigate(`/provider/appointments/${data.data.id}`)
   }
 
-  const sendReminder = (appointmentId: string, method: 'sms' | 'email') => {
-    const appointment = appointments?.find((apt) => apt.id === appointmentId)
-    toast(`${method.toUpperCase()} reminder sent to ${appointment?.patient}`)
+  const filterAppointments = (filter: string) => {
+    if (filter === 'all') {
+      setFilteredAppointments(appointments)
+    }
+    if (filter === 'today') {
+      const filteredResults = appointments?.filter((appointment) =>
+        isToday(appointment?.schedule?.appointment_date)
+      )
+      setFilteredAppointments(filteredResults)
+    }
+    if (filter === 'completed') {
+      const filteredResults = appointments?.filter(
+        (appointment) => appointment.status === 'COMPLETED'
+      )
+      setFilteredAppointments(filteredResults)
+    }
+    if (filter === 'search') {
+      if (searchTerm === '') {
+        setFilteredAppointments(appointments)
+        return
+      }
+      const filteredResults = filteredAppointments?.filter((appointment) => {
+        const patientName =
+          `${appointment.patient.first_name} ${appointment.patient.last_name}`.toLowerCase()
+        return patientName.includes(searchTerm.toLowerCase())
+      })
+      setFilteredAppointments(filteredResults)
+    }
   }
-
-  const filteredAppointments = appointments?.filter((apt) => {
-    const patientName =
-      `${apt.patient.first_name} ${apt.patient.last_name}`.toLowerCase()
-
-    return (
-      apt.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patientName.includes(searchTerm.toLowerCase()) ||
-      apt.id.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  })
 
   const fetchAppointments = async () => {
     setIsLoading(true)
-    const res = await fetch(`/api/appointment/appointments`)
+    const res = await fetch(
+      `${import.meta.env.VITE_SERVER_URL}/api/appointment/appointments`
+    )
     const result = await res.json()
     if (!result?.success) {
       toast.error(result?.message || 'Failed to fetch appointments')
     }
-    console.log(result?.data)
 
     setAppointments(result?.data ?? [])
     setIsLoading(false)
@@ -108,54 +121,7 @@ export default function Appointments() {
 
   useEffect(() => {
     fetchAppointments()
-  }, [user])
-
-  useEffect(() => {
-    const fetchProviders = async () => {
-      setLoadingProviders(true)
-      const res = await fetch(`/api/providers`)
-      const result = await res.json()
-      if (!result?.success) {
-        toast.error(result?.message || 'Failed to fetch appointments')
-      }
-      setProviders(result?.data ?? [])
-      setLoadingProviders(false)
-    }
-    if (user?.role_title === 'ADMIN') {
-      fetchProviders()
-    }
-  }, [toggle, user?.role_title])
-
-  const handleAssignProvider = async (
-    providerId: string,
-    appointmentId: string
-  ) => {
-    try {
-      const res = await fetch('/api/provider/appointment/assign-provider', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          appointment_id: appointmentId,
-          provider_id: providerId,
-        }),
-      })
-
-      const result = await res.json()
-
-      if (!result.success) {
-        toast.error(result.message || 'Failed to assign provider')
-      } else {
-        toast.success('Provider assigned successfully')
-        setToggle(false)
-        await fetchAppointments()
-      }
-    } catch (error) {
-      toast.error('Something went wrong')
-      console.log(error)
-    }
-  }
+  }, [])
 
   if (isLoading) {
     return (
@@ -206,32 +172,54 @@ export default function Appointments() {
               <Input
                 placeholder="Search appointments..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value)
+                  filterAppointments('search')
+                }}
                 className="pl-8 w-64"
               />
             </div>
           </div>
         </div>
 
-        <Tabs defaultValue="today" className="space-y-4">
+        <Tabs defaultValue="all" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="today">Today's Schedule</TabsTrigger>
-            <TabsTrigger value="schedule">Schedule New</TabsTrigger>
-            <TabsTrigger value="reminders">Reminders</TabsTrigger>
+            <TabsTrigger onClick={() => filterAppointments('all')} value="all">
+              All Schedule
+            </TabsTrigger>
+            <TabsTrigger
+              onClick={() => filterAppointments('today')}
+              value="today"
+            >
+              Today's Schedule
+            </TabsTrigger>
+            <TabsTrigger
+              onClick={() => filterAppointments('completed')}
+              value="completed"
+            >
+              Completed Schedules
+            </TabsTrigger>
+            <TabsTrigger value="schedule">Add New Schedule</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="all" className="space-y-4">
+            <AppointmentList
+              appointments={filteredAppointments || appointments}
+              title={'All Appointments'}
+            />
+          </TabsContent>
 
           <TabsContent value="today" className="space-y-4">
             <AppointmentList
-              filteredAppointments={filteredAppointments}
-              providers={providers}
-              adminRole={adminRole}
-              handleAssignProvider={handleAssignProvider}
-              loadingProviders={loadingProviders}
-              selectedProviderId={selectedProviderId}
-              sendReminder={sendReminder}
-              setSelectedProviderId={setSelectedProviderId}
-              setToggle={setToggle}
-              toggle={toggle}
+              appointments={filteredAppointments}
+              title={"Today's Appointments"}
+            />
+          </TabsContent>
+
+          <TabsContent value="completed" className="space-y-4">
+            <AppointmentList
+              appointments={filteredAppointments}
+              title={'Completed Appointments'}
             />
           </TabsContent>
 
@@ -244,261 +232,14 @@ export default function Appointments() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form
+                <AppointmentForm
+                  formData={formData}
+                  setFormData={setFormData}
                   onSubmit={handleScheduleAppointment}
-                  className="space-y-4"
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="patientName">Patient Name *</Label>
-                      <Input
-                        id="patientName"
-                        value={newAppointment.patientName}
-                        onChange={(e) =>
-                          setNewAppointment((prev) => ({
-                            ...prev,
-                            patientName: e.target.value,
-                          }))
-                        }
-                        placeholder="Enter patient name"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number *</Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        value={newAppointment.phone}
-                        onChange={(e) =>
-                          setNewAppointment((prev) => ({
-                            ...prev,
-                            phone: e.target.value,
-                          }))
-                        }
-                        placeholder="(555) 123-4567"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email Address</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={newAppointment.email}
-                        onChange={(e) =>
-                          setNewAppointment((prev) => ({
-                            ...prev,
-                            email: e.target.value,
-                          }))
-                        }
-                        placeholder="patient@email.com"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="appointmentType">
-                        Appointment Type *
-                      </Label>
-                      <Select
-                        value={newAppointment.type}
-                        onValueChange={(value) =>
-                          setNewAppointment((prev) => ({
-                            ...prev,
-                            type: value,
-                          }))
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select appointment type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="check-up">
-                            Annual Check-up
-                          </SelectItem>
-                          <SelectItem value="follow-up">Follow-up</SelectItem>
-                          <SelectItem value="consultation">
-                            Consultation
-                          </SelectItem>
-                          <SelectItem value="vaccination">
-                            Vaccination
-                          </SelectItem>
-                          <SelectItem value="screening">Screening</SelectItem>
-                          <SelectItem value="urgent">Urgent Care</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="date">Date *</Label>
-                      <Input
-                        id="date"
-                        type="date"
-                        value={newAppointment.date}
-                        onChange={(e) =>
-                          setNewAppointment((prev) => ({
-                            ...prev,
-                            date: e.target.value,
-                          }))
-                        }
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="time">Time *</Label>
-                      <Select
-                        value={newAppointment.time}
-                        onValueChange={(value) =>
-                          setNewAppointment((prev) => ({
-                            ...prev,
-                            time: value,
-                          }))
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select time" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="9:00 AM">9:00 AM</SelectItem>
-                          <SelectItem value="9:30 AM">9:30 AM</SelectItem>
-                          <SelectItem value="10:00 AM">10:00 AM</SelectItem>
-                          <SelectItem value="10:30 AM">10:30 AM</SelectItem>
-                          <SelectItem value="11:00 AM">11:00 AM</SelectItem>
-                          <SelectItem value="11:30 AM">11:30 AM</SelectItem>
-                          <SelectItem value="1:00 PM">1:00 PM</SelectItem>
-                          <SelectItem value="1:30 PM">1:30 PM</SelectItem>
-                          <SelectItem value="2:00 PM">2:00 PM</SelectItem>
-                          <SelectItem value="2:30 PM">2:30 PM</SelectItem>
-                          <SelectItem value="3:00 PM">3:00 PM</SelectItem>
-                          <SelectItem value="3:30 PM">3:30 PM</SelectItem>
-                          <SelectItem value="4:00 PM">4:00 PM</SelectItem>
-                          <SelectItem value="4:30 PM">4:30 PM</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="provider">Provider *</Label>
-                      <Select
-                        value={newAppointment.provider}
-                        onValueChange={(value) =>
-                          setNewAppointment((prev) => ({
-                            ...prev,
-                            provider: value,
-                          }))
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select provider" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Dr. Smith">Dr. Smith</SelectItem>
-                          <SelectItem value="Dr. Davis">Dr. Davis</SelectItem>
-                          <SelectItem value="Dr. Wilson">Dr. Wilson</SelectItem>
-                          <SelectItem value="Nurse Johnson">
-                            Nurse Johnson
-                          </SelectItem>
-                          <SelectItem value="Nurse Brown">
-                            Nurse Brown
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="notes">Notes</Label>
-                    <Textarea
-                      id="notes"
-                      value={newAppointment.notes}
-                      onChange={(e) =>
-                        setNewAppointment((prev) => ({
-                          ...prev,
-                          notes: e.target.value,
-                        }))
-                      }
-                      placeholder="Any special notes or requirements for this appointment"
-                    />
-                  </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button type="button" variant="outline">
-                      Save Draft
-                    </Button>
-                    <Button type="submit">Schedule Appointment</Button>
-                  </div>
-                </form>
+                  isLoading={false}
+                />
               </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="reminders" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Reminder Settings</CardTitle>
-                  <CardDescription>
-                    Configure automatic appointment reminders
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>SMS Reminders</Label>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between p-2 border rounded">
-                        <span className="text-sm">24 hours before</span>
-                        <Badge variant="default">Active</Badge>
-                      </div>
-                      <div className="flex items-center justify-between p-2 border rounded">
-                        <span className="text-sm">2 hours before</span>
-                        <Badge variant="default">Active</Badge>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Email Reminders</Label>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between p-2 border rounded">
-                        <span className="text-sm">48 hours before</span>
-                        <Badge variant="default">Active</Badge>
-                      </div>
-                      <div className="flex items-center justify-between p-2 border rounded">
-                        <span className="text-sm">24 hours before</span>
-                        <Badge variant="secondary">Inactive</Badge>
-                      </div>
-                    </div>
-                  </div>
-                  <Button className="w-full">Update Settings</Button>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Reminder Statistics</CardTitle>
-                  <CardDescription>
-                    Performance metrics for appointment reminders
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">SMS Delivery Rate</span>
-                      <span className="font-medium">94.2%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Email Open Rate</span>
-                      <span className="font-medium">76.8%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">No-Show Reduction</span>
-                      <span className="font-medium text-green-600">-23%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Reminders Sent Today</span>
-                      <span className="font-medium">47</span>
-                    </div>
-                  </div>
-                  <Button variant="outline" className="w-full bg-transparent">
-                    View Detailed Report
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
           </TabsContent>
         </Tabs>
       </div>

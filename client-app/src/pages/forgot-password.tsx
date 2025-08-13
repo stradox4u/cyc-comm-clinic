@@ -43,8 +43,9 @@ const ForgotPasswordPage = () => {
     setIsSubmitting(true);
 
     try {
+      const url = `${import.meta.env.VITE_SERVER_URL}/api/auth/${resolvedUserType}/forgot-password`;
       const response = await fetch(
-        `/api/auth/${resolvedUserType}/forgot-password`,
+        url,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -80,7 +81,8 @@ const ForgotPasswordPage = () => {
   const handleResendEmail = async () => {
     setIsSubmitting(true);
     try {
-      await fetch(`/api/auth/${resolvedUserType}/forgot-password`, {
+      const url = `${import.meta.env.VITE_SERVER_URL}/api/auth/${resolvedUserType}/forgot-password`;
+      await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: submittedEmail }),

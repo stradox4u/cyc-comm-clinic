@@ -62,7 +62,7 @@ export default function AdminDashboard() {
           <h2 className="text-3xl font-bold tracking-tight">Welcome back</h2>
           <div className="flex items-center space-x-2">
             <Button asChild>
-              <Link to="/intake">New Patient</Link>
+              <Link to="/provider/patient-intake">New Patient</Link>
             </Button>
           </div>
         </div>
@@ -179,7 +179,7 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent className="space-y-3">
               <Button asChild className="w-full justify-start">
-                <Link to="/intake">
+                <Link to="/provider/patient-intake">
                   <Users className="mr-2 h-4 w-4" />
                   New Patient Intake
                 </Link>
@@ -189,7 +189,7 @@ export default function AdminDashboard() {
                 variant="outline"
                 className="w-full justify-start bg-transparent"
               >
-                <Link to="/appointments">
+                <Link to="/provider/appointments">
                   <Calendar className="mr-2 h-4 w-4" />
                   Schedule Appointment
                 </Link>

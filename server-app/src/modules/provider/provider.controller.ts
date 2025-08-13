@@ -14,11 +14,41 @@ const getProviders = catchAsync(async (req, res) => {
   const { page, limit } = req.query
   const options = { page: Number(page), limit: Number(limit) }
 
-  const providers = await providerService.findProviders({}, options)
+  const [providers, total] = await providerService.findProviders({}, options)
+
+  const data = await Promise.all(
+    providers.map(async (provider) => {
+      const [lastAppointment, nextAppointment] =
+        await providerService.findProviderStats({
+          provider_id: provider.id,
+        })
+      return { ...provider, lastAppointment, nextAppointment }
+    })
+  )
 
   res.status(200).json({
     success: true,
-    data: providers,
+    data: data,
+    total: total,
+  })
+})
+
+const getProvidersStats = catchAsync(async (req, res) => {
+  const [
+    totalProviders,
+    totalActiveProvidersInLastMonth,
+    totalRegistrationsInLastMonth,
+  ] = await providerService.findProvidersStats()
+
+  const data = {
+    totalProviders,
+    totalActiveProvidersInLastMonth,
+    totalRegistrationsInLastMonth,
+  }
+
+  res.status(200).json({
+    success: true,
+    data: data,
   })
 })
 
@@ -40,17 +70,31 @@ const searchProvidersByName = catchAsync(async (req, res) => {
 
   const filter: ProviderWhereInput = {
     OR: [
-      { first_name: { contains: query.search } },
-      { last_name: { contains: query.search } },
+      { first_name: { contains: query.search, mode: 'insensitive' } },
+      { last_name: { contains: query.search, mode: 'insensitive' } },
     ],
   }
   const options = { page: Number(query.page), limit: Number(query.limit) }
 
-  const providers = await providerService.findProviders(filter, options)
+  const [providers, total] = await providerService.findProviders(
+    filter,
+    options
+  )
+
+  const data = await Promise.all(
+    providers.map(async (provider) => {
+      const [lastAppointment, nextAppointment] =
+        await providerService.findProviderStats({
+          provider_id: provider.id,
+        })
+      return { ...provider, lastAppointment, nextAppointment }
+    })
+  )
 
   res.status(200).json({
     success: true,
-    data: providers,
+    data: data,
+    total: total,
   })
 })
 
@@ -132,6 +176,7 @@ const deleteProvider = catchAsync(async (req, res) => {
 
 export default {
   getProviders,
+  getProvidersStats,
   getProvidersByRoleTitle,
   searchProvidersByName,
   getProvider,

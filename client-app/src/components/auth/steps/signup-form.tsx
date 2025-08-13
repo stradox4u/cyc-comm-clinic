@@ -71,24 +71,27 @@ const SignUpForm = ({ onSignupComplete }: SignUpFormProps) => {
 
     try {
       // Destructure and exclude confirmPassword
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { confirmPassword: _, ...payload } = data
-
-      // Normalize allergies to always be an array
-      payload.allergies = Array.isArray(payload.allergies)
-        ? payload.allergies
-        : [payload.allergies]
 
       // Format date_of_birth to ISO string
       payload.date_of_birth = new Date(payload.date_of_birth).toISOString()
+     
+      const allergiesNormalizedPayload = {
+        ...payload,
+        allergies: Array.isArray(payload.allergies)
+          ? payload.allergies
+          : [payload.allergies]
+      }
 
       console.log('Submitting registration data:', payload)
 
-      const response = await fetch('/api/auth/patient/register', {
+      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/auth/patient/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(allergiesNormalizedPayload),
       })
 
       if (!response.ok) {

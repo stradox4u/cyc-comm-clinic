@@ -50,8 +50,6 @@ export function AppSidebar() {
   const pathname = window.location.href
   const active = (url: string) => pathname.includes(url)
 
-  const basePath = userType ? '/provider' : ''
-
   const providerMenuItems: MenuItem[] = [
     { title: 'Dashboard', url: '/dashboard', icon: Home },
     { title: 'Patient Intake', url: '/intake', icon: FileText },
@@ -93,6 +91,8 @@ export function AppSidebar() {
   } else {
     menuItems = patientMenuItems
   }
+
+  const basePath = userType ? '/provider' : ''
 
   return (
     <Sidebar className="bg-blue-950 border-muted">

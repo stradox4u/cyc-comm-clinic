@@ -1,4 +1,4 @@
-import { Heart, Hospital, Mail, MapPin, Phone } from "lucide-react";
+import { Hospital, Mail, MapPin, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Footer = () => {

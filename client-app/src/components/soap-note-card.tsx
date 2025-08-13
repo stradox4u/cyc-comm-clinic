@@ -56,7 +56,8 @@ export const SoapNoteCard = ({
 
     setIsDeleting(true);
     try {
-      const response = await fetch(`/api/provider/soapnotes/${soapNote.id}`, {
+      const url = `${import.meta.env.VITE_SERVER_URL}/api/provider/soapnotes/${soapNote.id}`;
+      const response = await fetch(url, {
         method: "DELETE",
       });
 
@@ -120,7 +121,8 @@ export const SoapNoteCard = ({
         }
       };
 
-      const response = await fetch(`/api/provider/soapnotes/update/${soapNote.id}`, {
+      const url = `${import.meta.env.VITE_SERVER_URL}/api/provider/soapnotes/update/${soapNote.id}`;
+      const response = await fetch(url, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

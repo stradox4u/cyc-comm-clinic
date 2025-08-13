@@ -26,8 +26,6 @@ export const VitalsCard = ({
   temperature,
   height,
   weight,
-  respiratory_rate,
-  oxygen_saturation,
   others,
   created_at,
   created_by,

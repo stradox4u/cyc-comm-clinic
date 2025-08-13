@@ -3,7 +3,7 @@ import { Input } from '../../../components/ui/input'
 import { Button } from '../../../components/ui/button'
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import PatientsList from '../../../features/patients/components/patients-list'
+import ProvidersList from '../../../features/providers/components/providers-list'
 import Pagination from '../../../components/ui/pagination'
 import {
   Card,
@@ -18,11 +18,11 @@ import {
   TabsList,
   TabsTrigger,
 } from '../../../components/ui/tabs'
-import { usePatientsStats } from '../../../features/patients/hook'
+import { useProvidersStats } from '../../../features/providers/hook'
 
-const AllPatients = () => {
+const AllProviders = () => {
   const navigate = useNavigate()
-  const { data: patientsStats } = usePatientsStats()
+  const { data: providersStats } = useProvidersStats()
   const [searchParams] = useSearchParams()
   const [searchValue, setSearchValue] = useState('')
   const [pagination, setPagination] = useState({
@@ -33,20 +33,20 @@ const AllPatients = () => {
 
   const stats = [
     {
-      title: 'Total Patients',
-      value: patientsStats?.data?.totalPatients,
+      title: 'Total Providers',
+      value: providersStats?.data?.totalProviders,
       change: 'Overall',
       icon: '👥',
     },
     {
-      title: 'Active Patients',
-      value: patientsStats?.data?.totalActivePatientsInLastMonth,
+      title: 'Active Providers',
+      value: providersStats?.data?.totalActiveProvidersInLastMonth,
       change: 'This month',
       icon: '✅',
     },
     {
-      title: 'New Registrations',
-      value: patientsStats?.data?.totalRegistrationsInLastMonth,
+      title: 'New Providers',
+      value: providersStats?.data?.totalRegistrationsInLastMonth,
       change: 'This month',
       icon: '🆕',
     },
@@ -56,20 +56,15 @@ const AllPatients = () => {
     <div className="flex-1 space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Patients Management
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight">Providers Management</h1>
           <p className="text-muted-foreground">
-            Comprehensive patient management and records
+            Comprehensive provider management and records
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <Button
-            size="sm"
-            onClick={() => navigate('/provider/patient-intake')}
-          >
+          <Button size="sm" onClick={() => navigate('/provider/new')}>
             <Plus className="mr-2 h-4 w-4" />
-            Add Patient
+            Add Provider
           </Button>
         </div>
       </div>
@@ -95,14 +90,14 @@ const AllPatients = () => {
       <Tabs defaultValue="all" className="space-y-4">
         <div className="flex items-center justify-between">
           <TabsList>
-            <TabsTrigger value="all">All Patients</TabsTrigger>
+            <TabsTrigger value="all">All Providers</TabsTrigger>
           </TabsList>
 
           <div className="flex items-center space-x-2">
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search patients..."
+                placeholder="Search providers..."
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
                 className="pl-8 w-[300px]"
@@ -114,14 +109,14 @@ const AllPatients = () => {
         <TabsContent value="all" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Patient Directory</CardTitle>
+              <CardTitle>Provider Directory</CardTitle>
               <CardDescription>
-                Complete list of all registered patients with their details and
+                Complete list of all registered providers with their details and
                 status
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <PatientsList
+              <ProvidersList
                 searchValue={searchValue}
                 pagination={pagination}
                 setPagination={setPagination}
@@ -143,4 +138,4 @@ const AllPatients = () => {
   )
 }
 
-export default AllPatients
+export default AllProviders
