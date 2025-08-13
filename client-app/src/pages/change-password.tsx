@@ -1,26 +1,28 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Input } from "../components/ui/input";
-import { Button } from "../components/ui/button";
-import { Label } from "../components/ui/label";
-import { useState } from "react";
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { Input } from '../components/ui/input'
+import { Button } from '../components/ui/button'
+import { Label } from '../components/ui/label'
+import { useState } from 'react'
+import API from '../lib/api'
+import { toast } from 'sonner'
 
 const changePasswordSchema = z
   .object({
-    currentPassword: z.string().min(1, "Enter your current password"),
-    newPassword: z.string().min(6, "Password must be at least 6 characters"),
+    currentPassword: z.string().min(1, 'Enter your current password'),
+    newPassword: z.string().min(6, 'Password must be at least 6 characters'),
     confirmNewPassword: z.string(),
   })
   .refine((data) => data.newPassword === data.confirmNewPassword, {
-    message: "Passwords do not match",
-    path: ["confirmNewPassword"],
-  });
+    message: 'Passwords do not match',
+    path: ['confirmNewPassword'],
+  })
 
-type ChangePasswordData = z.infer<typeof changePasswordSchema>;
+type ChangePasswordData = z.infer<typeof changePasswordSchema>
 
 const ChangePassword = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const {
     register,
@@ -28,31 +30,29 @@ const ChangePassword = () => {
     formState: { errors },
   } = useForm<ChangePasswordData>({
     resolver: zodResolver(changePasswordSchema),
-  });
+  })
 
   const onSubmit = async (data: ChangePasswordData) => {
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
-      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/auth/change-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // Include token if needed:
-          // Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
+      const { data: resData } = await API.post(
+        `${import.meta.env.VITE_SERVER_URL}/api/auth/change-password`,
+        data
+      )
 
-      if (!response.ok) throw new Error("Failed to change password");
+      if (!resData?.success) {
+        toast.error('Failed to change password')
+        return
+      }
 
-      alert("Password changed successfully.");
+      toast.success('Password changed successfully.')
     } catch (err) {
-      console.error(err);
-      alert("Failed to change password.");
+      console.error(err)
+      toast.error('Failed to change password.')
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <form
@@ -63,7 +63,7 @@ const ChangePassword = () => {
 
       <div className="space-y-2">
         <Label>Current Password</Label>
-        <Input type="password" {...register("currentPassword")} />
+        <Input type="password" {...register('currentPassword')} />
         {errors.currentPassword && (
           <p className="text-red-500">{errors.currentPassword.message}</p>
         )}
@@ -71,7 +71,7 @@ const ChangePassword = () => {
 
       <div className="space-y-2">
         <Label>New Password</Label>
-        <Input type="password" {...register("newPassword")} />
+        <Input type="password" {...register('newPassword')} />
         {errors.newPassword && (
           <p className="text-red-500">{errors.newPassword.message}</p>
         )}
@@ -79,7 +79,7 @@ const ChangePassword = () => {
 
       <div className="space-y-2">
         <Label>Confirm New Password</Label>
-        <Input type="password" {...register("confirmNewPassword")} />
+        <Input type="password" {...register('confirmNewPassword')} />
         {errors.confirmNewPassword && (
           <p className="text-red-500">{errors.confirmNewPassword.message}</p>
         )}
@@ -90,10 +90,10 @@ const ChangePassword = () => {
         disabled={isSubmitting}
         className="bg-black text-white"
       >
-        {isSubmitting ? "Updating..." : "Change Password"}
+        {isSubmitting ? 'Updating...' : 'Change Password'}
       </Button>
     </form>
-  );
-};
+  )
+}
 
-export default ChangePassword;
+export default ChangePassword

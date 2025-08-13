@@ -10,6 +10,7 @@ import AuthLayout from '../layout/AuthLayout'
 import { Label } from '../components/ui/label'
 import { Input } from '../components/ui/input'
 import { Button } from '../components/ui/button'
+import API from '../lib/api'
 
 const SignInPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -36,22 +37,19 @@ const SignInPage = () => {
 
   const onSubmit = async (data: LoginData) => {
     setIsSubmitting(true)
-    const endpoint = `${import.meta.env.VITE_SERVER_URL}/api/auth/${resolvedUserType}/login`
+    const endpoint = `${
+      import.meta.env.VITE_SERVER_URL
+    }/api/auth/${resolvedUserType}/login`
 
     try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      })
+      const { data: resData } = await API.post(endpoint, data)
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Login failed')
+      if (!resData?.success) {
+        toast.error(resData.message || 'Login failed')
+        return
       }
 
-      const result = await response.json()
-      setUser(result.data)
+      setUser(resData.data)
       toast.success('Logged in successfully!')
       navigate('/dashboard')
     } catch (error) {

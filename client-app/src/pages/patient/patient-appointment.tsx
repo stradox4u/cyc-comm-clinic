@@ -59,6 +59,7 @@ import {
   type Appointment,
 } from '../../lib/type'
 import { VitalsCard, type VitalsCardProps } from '../../components/vitals-card'
+import API from '../../lib/api'
 
 const recentVisits = [
   {
@@ -137,18 +138,14 @@ export default function PatientAppointments() {
     }
 
     try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
+      const { data } = await API.post(endpoint, payload)
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to create appointment')
+      if (!data?.success) {
+        toast.error(data?.message || 'Failed to create appointment')
+        return
       }
-      const result = await response.json()
-      toast.success(result?.message)
+
+      toast.success(data?.message)
       reset() // Optional: reset form after submit
     } catch (error) {
       console.error('Sign in error:', error)
@@ -165,17 +162,16 @@ export default function PatientAppointments() {
   const fetchPatientVitals = async (appointmentId: string) => {
     try {
       setVitalsLoading(true)
-      const response = await fetch(
+      const { data } = await API.get(
         `${import.meta.env.VITE_SERVER_URL}/api/vitals/${appointmentId}`
       )
-      const result = await response.json()
 
-      if (!response.ok || !result.success) {
-        toast.error(result?.message || 'Failed to fetch vitals')
+      if (!data || !data.success) {
+        toast.error(data?.message || 'Failed to fetch vitals')
         return
       }
 
-      setPatientVitals(result?.data?.[0] ?? null)
+      setPatientVitals(data?.data?.[0] ?? null)
       setViewVitalsAppointmentId(appointmentId)
     } catch (error) {
       console.error(error)
@@ -188,14 +184,14 @@ export default function PatientAppointments() {
   useEffect(() => {
     const fetchAppointments = async () => {
       setLoading(true)
-      const res = await fetch(
+      const { data } = await API.get(
         `${import.meta.env.VITE_SERVER_URL}/api/appointment/appointments`
       )
-      const result = await res.json()
-      if (!result?.success) {
-        toast.error(result?.message || 'Failed to fetch appointments')
+
+      if (!data?.success) {
+        toast.error(data?.message || 'Failed to fetch appointments')
       }
-      setAppointments(result?.data ?? [])
+      setAppointments(data?.data ?? [])
       setLoading(false)
     }
     fetchAppointments()

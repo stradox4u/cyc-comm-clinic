@@ -1,30 +1,31 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { toast } from 'sonner'
+import { useNavigate } from 'react-router-dom'
 
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Label } from '../components/ui/label'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../components/ui/card";
-import { AlertCircle } from "lucide-react";
+} from '../components/ui/card'
+import { AlertCircle } from 'lucide-react'
 
-import AuthLayout from "../layout/AuthLayout";
-import { resetPasswordSchema, type ResetPasswordData } from "../lib/schema";
+import AuthLayout from '../layout/AuthLayout'
+import { resetPasswordSchema, type ResetPasswordData } from '../lib/schema'
+import API from '../lib/api'
 
 type ResetPasswordFormProps = {
-  userType?: string; // made optional
-  submittedEmail: string;
-  onResend?: () => void;
-  isResending?: boolean;
-};
+  userType?: string // made optional
+  submittedEmail: string
+  onResend?: () => void
+  isResending?: boolean
+}
 
 const ResetPasswordForm = ({
   userType,
@@ -32,11 +33,11 @@ const ResetPasswordForm = ({
   onResend,
   isResending,
 }: ResetPasswordFormProps) => {
-  const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate()
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Normalize userType to "patient" or "provider"
-  const resolvedUserType = userType === "patient" ? "patient" : "provider";
+  const resolvedUserType = userType === 'patient' ? 'patient' : 'provider'
 
   const {
     register,
@@ -45,42 +46,40 @@ const ResetPasswordForm = ({
   } = useForm<ResetPasswordData>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
-      otp: "",
-      password: "",
+      otp: '',
+      password: '',
       email: submittedEmail,
     },
-  });
+  })
 
   const onSubmit = async (data: ResetPasswordData) => {
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { confirmPassword: _, ...payload } = data;
+    const { confirmPassword: _, ...payload } = data
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SERVER_URL}/api/auth/${resolvedUserType}/reset-password`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
+      const { data } = await API.post(
+        `${
+          import.meta.env.VITE_SERVER_URL
+        }/api/auth/${resolvedUserType}/reset-password`,
+        payload
+      )
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to reset password");
+      if (!data?.success) {
+        toast.error(data.message || 'Failed to reset password')
+        return
       }
 
-      toast.success("Password reset successfully! You can now sign in.");
-      navigate("/login");
+      toast.success('Password reset successfully! You can now sign in.')
+      navigate('/login')
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Failed to reset password";
-      toast.error(message);
+        error instanceof Error ? error.message : 'Failed to reset password'
+      toast.error(message)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <AuthLayout>
@@ -89,7 +88,7 @@ const ResetPasswordForm = ({
           <CardHeader className="text-center space-y-4">
             <CardTitle className="text-2xl font-bold">Reset Password</CardTitle>
             <CardDescription>
-              Enter the OTP sent to{" "}
+              Enter the OTP sent to{' '}
               <span className="font-semibold">{submittedEmail}</span> and your
               new password.
             </CardDescription>
@@ -100,7 +99,7 @@ const ResetPasswordForm = ({
               {/* Hidden email input */}
               <input
                 type="hidden"
-                {...register("email")}
+                {...register('email')}
                 defaultValue={submittedEmail}
               />
 
@@ -112,8 +111,8 @@ const ResetPasswordForm = ({
                 <Input
                   id="otp"
                   placeholder="Enter OTP"
-                  {...register("otp")}
-                  className={`h-12 ${errors.otp ? "border-red-500" : ""}`}
+                  {...register('otp')}
+                  className={`h-12 ${errors.otp ? 'border-red-500' : ''}`}
                 />
                 {errors.otp && <ErrorMessage message={errors.otp.message} />}
               </div>
@@ -127,8 +126,8 @@ const ResetPasswordForm = ({
                   id="password"
                   type="password"
                   placeholder="Enter new password"
-                  {...register("password")}
-                  className={`h-12 ${errors.password ? "border-red-500" : ""}`}
+                  {...register('password')}
+                  className={`h-12 ${errors.password ? 'border-red-500' : ''}`}
                 />
                 {errors.password && (
                   <ErrorMessage message={errors.password.message} />
@@ -147,9 +146,9 @@ const ResetPasswordForm = ({
                   id="confirmPassword"
                   type="password"
                   placeholder="Confirm new password"
-                  {...register("confirmPassword")}
+                  {...register('confirmPassword')}
                   className={`h-12 ${
-                    errors.confirmPassword ? "border-red-500" : ""
+                    errors.confirmPassword ? 'border-red-500' : ''
                   }`}
                 />
                 {errors.confirmPassword && (
@@ -162,7 +161,7 @@ const ResetPasswordForm = ({
                 disabled={isSubmitting}
                 className="w-full h-12 bg-[#6A5CA3] hover:bg-[#6A5CA3]/90"
               >
-                {isSubmitting ? "Resetting..." : "Reset Password"}
+                {isSubmitting ? 'Resetting...' : 'Reset Password'}
               </Button>
             </form>
 
@@ -174,7 +173,7 @@ const ResetPasswordForm = ({
                   disabled={isResending || isSubmitting}
                   className="text-sm text-purple-600 hover:underline disabled:text-gray-400"
                 >
-                  {isResending ? "Resending OTP..." : "Resend OTP"}
+                  {isResending ? 'Resending OTP...' : 'Resend OTP'}
                 </button>
               </div>
             )}
@@ -182,10 +181,10 @@ const ResetPasswordForm = ({
         </Card>
       </div>
     </AuthLayout>
-  );
-};
+  )
+}
 
-export default ResetPasswordForm;
+export default ResetPasswordForm
 
 // 🔹 Optional helper component for cleaner error handling
 const ErrorMessage = ({ message }: { message?: string }) => (
@@ -193,4 +192,4 @@ const ErrorMessage = ({ message }: { message?: string }) => (
     <AlertCircle className="h-4 w-4" />
     <span>{message}</span>
   </div>
-);
+)

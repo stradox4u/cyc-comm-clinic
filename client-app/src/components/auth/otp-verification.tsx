@@ -15,6 +15,7 @@ import { Mail, RefreshCw } from 'lucide-react'
 import AuthLayout from '../../layout/AuthLayout'
 import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
+import API from '../../lib/api'
 
 interface OTPVerificationProps {
   email?: string
@@ -45,15 +46,13 @@ const OTPVerification = ({
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/auth/patient/request-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      })
+      const { data } = await API.post(
+        `${import.meta.env.VITE_SERVER_URL}/api/auth/patient/request-otp`,
+        { email }
+      )
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to send OTP')
+      if (!data?.success) {
+        return toast.error(data.message || 'Failed to send OTP')
       }
 
       toast.success('Verification code sent to your email')
@@ -127,20 +126,17 @@ const OTPVerification = ({
     setIsVerifying(true)
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/auth/patient/verify-email`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data } = await API.post(
+        `${import.meta.env.VITE_SERVER_URL}/api/auth/patient/verify-email`,
+        {
           email,
           otp: otpString,
-        }),
-      })
+        }
+      )
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'OTP verification failed')
+      if (!data?.success) {
+        toast.error(data?.message || 'OTP verification failed')
+        return
       }
 
       toast.success('Your account has been verified')
@@ -166,17 +162,14 @@ const OTPVerification = ({
     setIsResending(true)
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/auth/patient/request-otp`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }), // make sure `email` is available
-      })
+      const { data } = await API.post(
+        `${import.meta.env.VITE_SERVER_URL}/api/auth/patient/request-otp`,
+        { email }
+      )
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to resend OTP')
+      if (!data?.success) {
+        toast.error(data?.message || 'Failed to resend OTP')
+        return
       }
 
       onResendOTP?.()

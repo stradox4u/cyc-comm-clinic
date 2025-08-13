@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect } from 'react'
 import {
   Dialog,
   DialogTrigger,
@@ -6,11 +6,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "../components/ui/dialog";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Textarea } from "../components/ui/textarea";
+} from '../components/ui/dialog'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Label } from '../components/ui/label'
+import { Textarea } from '../components/ui/textarea'
 import {
   Activity,
   Loader2,
@@ -19,13 +19,14 @@ import {
   Heart,
   Ruler,
   Scale,
-} from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
-import { type Vitals } from '../lib/schema';
-import { VitalsCard } from "./vitals-card";
-import type { Dispatch, SetStateAction } from "react";
-import type { AppointmentStatus } from "../lib/type";
+} from 'lucide-react'
+import { useState } from 'react'
+import { toast } from 'sonner'
+import { type Vitals } from '../lib/schema'
+import { VitalsCard } from './vitals-card'
+import type { Dispatch, SetStateAction } from 'react'
+import type { AppointmentStatus } from '../lib/type'
+import API from '../lib/api'
 
 export default function VitalsFormDialog({
   appointmentId,
@@ -33,79 +34,78 @@ export default function VitalsFormDialog({
   userId,
   setHasVitals,
   setAppointmentStatus,
-  showAsDialog = true
+  showAsDialog = true,
 }: {
-  appointmentId: string;
-  setAppointmentId: React.Dispatch<React.SetStateAction<string | null>>;
-  userId?: string;
-  setHasVitals: (value: boolean) => void;
-  setAppointmentStatus: Dispatch<SetStateAction<AppointmentStatus>>;
-  showAsDialog?: boolean;
+  appointmentId: string
+  setAppointmentId: React.Dispatch<React.SetStateAction<string | null>>
+  userId?: string
+  setHasVitals: (value: boolean) => void
+  setAppointmentStatus: Dispatch<SetStateAction<AppointmentStatus>>
+  showAsDialog?: boolean
 }) {
-  const [localHasVitals, setLocalHasVitals] = useState(false);
+  const [localHasVitals, setLocalHasVitals] = useState(false)
   if (!userId) {
-    throw new Error("userId is required");
+    throw new Error('userId is required')
   }
   const [vitals, setVitals] = useState<Vitals & { appointment_id?: string }>({
-    temperature: "",
-    blood_pressure: "",
-    heart_rate: "",
-    respiratory_rate: "",
-    oxygen_saturation: "",
-    weight: "",
-    height: "",
-    others: "",
+    temperature: '',
+    blood_pressure: '',
+    heart_rate: '',
+    respiratory_rate: '',
+    oxygen_saturation: '',
+    weight: '',
+    height: '',
+    others: '',
     created_by_id: userId,
     appointment_id: appointmentId,
     created_by: undefined,
     created_at: undefined,
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const checkVitals = async (id: string) => {
     try {
-      const vitalsUrl = `${import.meta.env.VITE_SERVER_URL}/api/provider/vitals/${id}`
-      const res = await fetch(vitalsUrl, {
-        method: "GET",
-        credentials: "include",
-      });
-      const data = await res.json();
-      const exists = data.success && data.data && data.data.length > 0;
-      setHasVitals(exists);
-      setLocalHasVitals(exists);
+      const vitalsUrl = `${
+        import.meta.env.VITE_SERVER_URL
+      }/api/provider/vitals/${id}`
+      const { data } = await API.get(vitalsUrl)
+
+      const exists = data.success && data.data && data.data.length > 0
+      setHasVitals(exists)
+      setLocalHasVitals(exists)
       if (exists && data.data.length > 0) {
-        const vitalsData = data.data[0];
-        
+        const vitalsData = data.data[0]
+
         if (vitalsData.created_by_id && !vitalsData.created_by) {
           try {
-            const providerUrl = `${import.meta.env.VITE_SERVER_URL}/api/provider/${vitalsData.created_by_id}`;
-            const providerRes = await fetch(providerUrl, {
-              credentials: "include",
-            });
-            const providerData = await providerRes.json();
-            if (providerData.success && providerData.data) {
+            const providerUrl = `${
+              import.meta.env.VITE_SERVER_URL
+            }/api/provider/${vitalsData.created_by_id}`
+            const { data } = await API.get(providerUrl)
+
+            if (data.success && data.data) {
               vitalsData.created_by = {
-                id: providerData.data.id,
-                first_name: providerData.data.first_name,
-                last_name: providerData.data.last_name,
-                role_title: providerData.data.role_title,
-              };
+                id: data.data.id,
+                first_name: data.data.first_name,
+                last_name: data.data.last_name,
+                role_title: data.data.role_title,
+              }
             }
           } catch (error) {
-            console.error("Failed to fetch provider details:", error);
+            console.error('Failed to fetch provider details:', error)
           }
         }
-        
-        setVitals(vitalsData);
+
+        setVitals(vitalsData)
       }
-      return exists;
+      return exists
     } catch (err) {
-      console.error("Failed to check vitals:", err);
-      setHasVitals(false);
-      setLocalHasVitals(false);
-      return false;
+      console.error('Failed to check vitals:', err)
+      setHasVitals(false)
+      setLocalHasVitals(false)
+      return false
     }
-  };
+  }
 
   useEffect(() => {
     const updateVitals = async () => {
@@ -113,93 +113,91 @@ export default function VitalsFormDialog({
         setVitals((prev) => ({
           ...prev,
           appointment_id: appointmentId,
-        }));
-        await checkVitals(appointmentId);
+        }))
+        await checkVitals(appointmentId)
       }
-    };
-    updateVitals();
-  }, [appointmentId]);
+    }
+    updateVitals()
+  }, [appointmentId])
 
   useEffect(() => {
-    setVitals((prev) => ({ ...prev, created_by_id: userId }));
-  }, [userId]);
+    setVitals((prev) => ({ ...prev, created_by_id: userId }))
+  }, [userId])
 
   const calculateBMI = (weight: string, height: string) => {
-    const weightNum = Number.parseFloat(weight);
-    const heightNum = Number.parseFloat(height);
+    const weightNum = Number.parseFloat(weight)
+    const heightNum = Number.parseFloat(height)
     if (weightNum && heightNum) {
-      const heightInMeters = heightNum * 0.0254;
-      const bmi = weightNum / (heightInMeters * heightInMeters);
-      return bmi.toFixed(1);
+      const heightInMeters = heightNum * 0.0254
+      const bmi = weightNum / (heightInMeters * heightInMeters)
+      return bmi.toFixed(1)
     }
-    return "";
-  };
+    return ''
+  }
 
   const handleVitalsSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Form submitted");
-    setIsSubmitting(true);
-    
+    e.preventDefault()
+    console.log('Form submitted')
+    setIsSubmitting(true)
+
     try {
-      const vitalsExist = await checkVitals(appointmentId);
+      const vitalsExist = await checkVitals(appointmentId)
       if (vitalsExist) {
-        toast.error("Vitals already exist for this appointment. Please update them instead of creating new ones.");
-        return;
+        toast.error(
+          'Vitals already exist for this appointment. Please update them instead of creating new ones.'
+        )
+        return
       }
 
-      const calculatedBMI = calculateBMI(vitals.weight ?? "", vitals.height ?? "");
+      const calculatedBMI = calculateBMI(
+        vitals.weight ?? '',
+        vitals.height ?? ''
+      )
       const vitalsPayload = {
         ...vitals,
         bmi: calculatedBMI || undefined,
-      };
-      
-      console.log("Sending vitals payload:", JSON.stringify(vitalsPayload, null, 2));
-      
-      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/provider/vitals/record`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(vitalsPayload),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        toast.error(result?.message || "Failed to update vitals");
-        console.error("Server error:", result?.error);
-        console.error("Response status:", response.status);
-        return;
       }
 
-      const updateStatusRes = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/appointment/${appointmentId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "ATTENDING" }),
-      });
+      console.log(
+        'Sending vitals payload:',
+        JSON.stringify(vitalsPayload, null, 2)
+      )
 
-      const updateStatusResult = await updateStatusRes.json();
-      console.log("Update status response:", updateStatusResult);
-      console.log("Update status HTTP code:", updateStatusRes.status);
+      const { data } = await API.post(
+        `${import.meta.env.VITE_SERVER_URL}/api/provider/vitals/record`,
+        vitalsPayload
+      )
 
-      if (!updateStatusRes.ok || !updateStatusResult.success) {
-        toast.error("Vitals saved, but failed to update appointment status.");
-        return;
+      if (!data || !data.success) {
+        toast.error(data?.message || 'Failed to update vitals')
+        console.error('Server error:', data?.error)
+        return
+      }
+
+      const { data: resData } = await API.patch(
+        `${import.meta.env.VITE_SERVER_URL}/api/appointment/${appointmentId}`,
+        { status: 'ATTENDING' }
+      )
+
+      if (!resData || !resData.success) {
+        toast.error('Vitals saved, but failed to update appointment status.')
+        return
       }
 
       if (setAppointmentStatus) {
-        setAppointmentStatus("ATTENDING");
+        setAppointmentStatus('ATTENDING')
       }
 
-      toast.success("Patient vitals updated, status set to ATTENDING");
-      setHasVitals(true);
-      setLocalHasVitals(true);
+      toast.success('Patient vitals updated, status set to ATTENDING')
+      setHasVitals(true)
+      setLocalHasVitals(true)
     } catch (error) {
-      console.error("Error updating patient appointment:", error);
-      toast.error("An unexpected error occurred");
+      console.error('Error updating patient appointment:', error)
+      toast.error('An unexpected error occurred')
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const vitalsContent = (
     <>
@@ -338,7 +336,7 @@ export default function VitalsFormDialog({
             <div className="p-3 bg-muted rounded-lg">
               <Label className="text-sm font-medium">Calculated BMI:</Label>
               <div className="text-lg font-bold">
-                {calculateBMI(vitals.weight ?? "", vitals.height ?? "")}
+                {calculateBMI(vitals.weight ?? '', vitals.height ?? '')}
               </div>
             </div>
           )}
@@ -366,7 +364,7 @@ export default function VitalsFormDialog({
               </>
             ) : (
               <>
-                {" "}
+                {' '}
                 <Save className="mr-2 h-4 w-4" />
                 Save Vitals
               </>
@@ -375,17 +373,17 @@ export default function VitalsFormDialog({
         </form>
       )}
     </>
-  );
+  )
 
   if (!showAsDialog) {
-    return vitalsContent;
+    return vitalsContent
   }
 
   return (
     <Dialog>
       <DialogTrigger asChild>
         <Button onClick={() => setAppointmentId(appointmentId)}>
-          {localHasVitals ? "View Vitals" : "Take Vitals"}
+          {localHasVitals ? 'View Vitals' : 'Take Vitals'}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl mx-auto">
@@ -396,12 +394,12 @@ export default function VitalsFormDialog({
           </DialogTitle>
           <DialogDescription>
             {localHasVitals
-              ? "Here are the recorded vital signs."
-              : "Enter patient vital signs and measurements"}
+              ? 'Here are the recorded vital signs.'
+              : 'Enter patient vital signs and measurements'}
           </DialogDescription>
         </DialogHeader>
         {vitalsContent}
       </DialogContent>
     </Dialog>
-  );
+  )
 }

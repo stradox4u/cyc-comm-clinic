@@ -19,20 +19,16 @@ export const useCheckPatientProfile = () => {
       }
 
       try {
-        const res = await fetch('/api/auth/patient/profile', {
-          method: 'GET',
-          credentials: 'include',
-        })
+        const { data, status } = await API.get('/api/auth/patient/profile')
 
-        if (!res.ok) {
-          if (res.status === 401 && !firstLoad.current) {
+        if (!data?.success) {
+          if (status === 401 && !firstLoad.current) {
             toast.error('Session expired. Please sign in.')
             navigate('/login')
           }
           return
         }
 
-        const data = await res.json()
         setUser(data.data)
       } catch (error) {
         if (!firstLoad.current) {
@@ -90,12 +86,9 @@ export const usePatientProfile = () => {
 
   const logOut = async () => {
     try {
-      const res = await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      })
+      const { data } = await API.post('/api/auth/logout')
 
-      if (!res.ok) throw new Error('Logout failed')
+      if (!data?.success) throw new Error('Logout failed')
 
       logout()
       toast.success('Logged out successfully')

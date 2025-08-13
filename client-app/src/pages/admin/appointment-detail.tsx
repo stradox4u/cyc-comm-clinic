@@ -42,6 +42,7 @@ import {
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
+import API from '../../lib/api'
 
 // Mock appointment data - in real app, this would come from API
 
@@ -61,10 +62,12 @@ const AppointmentDetail = () => {
   const { id } = useParams()
 
   const fetchAppointment = async (id: string) => {
-    const res = await fetch(`/api/appointment/${id}`)
-    const data = await res.json()
-    if (!res.ok || !data.success)
-      throw new Error(data.message || 'Failed to fetch appointment')
+    const { data } = await API.get(`/api/appointment/${id}`)
+
+    if (!data || !data.success) {
+      toast.error(data.message || 'Failed to fetch appointment')
+      return
+    }
     setStatus(data.data.status)
     setProviderId(data.data.appointment_providers[0]?.provider_id)
     return data.data
@@ -110,12 +113,12 @@ const AppointmentDetail = () => {
   }
 
   const fetchProvider = async (providerId: string) => {
-    const res = await fetch(`/api/providers/${providerId}`)
+    const { data } = await API.get(`/api/providers/${providerId}`)
 
-    if (!res.ok) {
+    if (!data?.success) {
       throw new Error('Failed to fetch provider')
     }
-    const data = await res.json()
+
     return data.data
   }
 
@@ -128,14 +131,14 @@ const AppointmentDetail = () => {
   const handleStatusChange = async (newStatus: string) => {
     try {
       // Optionally, update in d
-      const res = await fetch(`/api/appointment/${appointment.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
+      const { data } = await API.patch(`/api/appointment/${appointment.id}`, {
+        status: newStatus,
       })
 
-      const result = await res.json()
-      if (!res.ok || !result.success) throw new Error(result.message)
+      if (!data || !data.success) {
+        toast.error(data.message)
+        return
+      }
 
       setStatus(newStatus)
       toast.success('Appointment status updated')
@@ -153,16 +156,13 @@ const AppointmentDetail = () => {
 
   const handleCheckIn = async (appointmentId: string) => {
     try {
-      const res = await fetch(`/api/appointment/${appointmentId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'CHECKED_IN' }),
+      const { data } = await API.patch(`/api/appointment/${appointmentId}`, {
+        status: 'CHECKED_IN',
       })
 
-      const result = await res.json()
-
-      if (!res.ok || !result.success) {
-        throw new Error(result.message || 'Failed to check in appointment.')
+      if (!data || !data.success) {
+        toast.error(data?.message || 'Failed to check in appointment.')
+        return
       }
 
       toast.success('Patient successfully checked in.')
