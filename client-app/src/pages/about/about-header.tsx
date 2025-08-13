@@ -5,14 +5,14 @@ import { Button } from "../../components/ui/button";
 import { useState } from "react";
 import useGoBack from "../../hooks/useGoback";
 
-const Header = () => {
+const AboutHeader = () => {
   const pathname = window.location.pathname;
   const goBack = useGoBack();
   const authRoutes = ["/login", "/signup", "/forgot-password"];
   const active = authRoutes.includes(pathname);
   const [showMobileNav, setShowMobileNav] = useState(false);
   return (
-    <nav className="shadow-md bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-[#6A5CA3] sticky top-0 z-50">
+    <nav className="shadow-md bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-gradient-to-r to-[#ece9f1] from-[#6a5ca3] sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-8 md:px-16 lg:px-24 xl:px-32">
         <div className="flex justify-between items-center h-16">
           <Link to={"/"} className="flex items-center space-x-2">
@@ -20,7 +20,7 @@ const Header = () => {
               <>
                 {" "}
                 <Hospital className="h-8 w-8 text-pink-400" />
-                <span className="text-xl font-bold text-white/90">
+                <span className="text-xl font-bold text-[#0B0E35]/90">
                   Care <span className="text-pink-400">Hub</span> Central
                 </span>
               </>
@@ -37,7 +37,7 @@ const Header = () => {
             </Button>
           ) : (
             <div className="relative">
-              <div className="hidden md:flex items-center space-x-8 text-white">
+              <div className="hidden md:flex items-center space-x-8 text-black">
                 <Link
                   to="/"
                   className=" hover:text-purple-300 transition-colors"
@@ -95,7 +95,7 @@ const Header = () => {
         </div>
       </div>
       <div
-        className={`top-16 right-0 h-[100vh] w-3/4 max-w-sm bg-[#6A5CA3] text-white shadow-lg transform transition-transform duration-300 ease-in-out md:hidden fixed border border-gray-900/20 ${
+        className={`top-16 right-0 h-[100vh] w-3/4 max-w-sm bg-gradient-to-r from-[#efeef1] to-[#6a5ca3] text-white shadow-lg transform transition-transform duration-300 ease-in-out md:hidden fixed border border-gray-900/20 ${
           !showMobileNav ? "translate-x-[-200%]" : "-translate-x-0"
         }`}
       >
@@ -130,4 +130,4 @@ const Header = () => {
     </nav>
   );
 };
-export default Header;
+export default AboutHeader;

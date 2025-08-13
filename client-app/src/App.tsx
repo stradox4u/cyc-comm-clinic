@@ -39,6 +39,8 @@ import PatientEditProfile from './pages/patient/patient-edit-profile'
 import AllProviders from './pages/admin/providers/all-providers'
 import CreateProvider from './pages/admin/providers/create-provider'
 import EditProvider from './pages/admin/providers/edit-provider'
+import About from './pages/About'
+import { teamArray } from './pages/about/about-data'
 import EditPatient from './pages/admin/patients/edit-patient'
 
 const queryClient = new QueryClient()
@@ -84,6 +86,7 @@ function App() {
         <Routes>
           {/* ✅ Public Routes */}
           <Route index path="/" element={<Home />} />
+          <Route index path="/about" element={<About team={teamArray} />} />
 
           {/* Patient Auth */}
           <Route path="/login" element={<PatientSignIn />} />
