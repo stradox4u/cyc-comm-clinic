@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import API from '../../lib/api'
 import type { CreateProviderSchema, UpdateProviderSchema } from './schema'
 import type { IPagination } from './types'
@@ -53,22 +54,26 @@ export {
 }
 
 export const getAppointments = async () => {
-  const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/appointment/appointments`)
-  const data = await res.json()
+  const { data } = await API.get(
+    `${import.meta.env.VITE_SERVER_URL}/api/appointment/appointments`
+  )
 
   if (!data?.success) {
-    throw new Error(data?.message || 'Failed to fetch appointments')
+    toast.error(data?.message || 'Failed to fetch appointments')
+    return
   }
 
   return data.data
 }
 
 export const getProviders = async () => {
-  const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/providers`)
-  const data = await res.json()
+  const { data } = await API.get(
+    `${import.meta.env.VITE_SERVER_URL}/api/providers`
+  )
 
   if (!data?.success) {
-    throw new Error(data?.message || 'Failed to fetch providers')
+    toast.error(data?.message || 'Failed to fetch providers')
+    return
   }
 
   return data.data

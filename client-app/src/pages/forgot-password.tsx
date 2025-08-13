@@ -1,34 +1,35 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { toast } from 'sonner'
 
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Label } from '../components/ui/label'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../components/ui/card";
-import { Mail, AlertCircle } from "lucide-react";
+} from '../components/ui/card'
+import { Mail, AlertCircle } from 'lucide-react'
 
-import AuthLayout from "../layout/AuthLayout";
-import { forgotPasswordSchema, type ForgotPasswordData } from "../lib/schema";
-import ResetPasswordForm from "./reset-password";
-import { useSearchParams } from "react-router-dom";
+import AuthLayout from '../layout/AuthLayout'
+import { forgotPasswordSchema, type ForgotPasswordData } from '../lib/schema'
+import ResetPasswordForm from './reset-password'
+import { useSearchParams } from 'react-router-dom'
+import API from '../lib/api'
 
 const ForgotPasswordPage = () => {
   // Default to "patient", fallback to "provider"
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isEmailSent, setIsEmailSent] = useState(false);
-  const [submittedEmail, setSubmittedEmail] = useState("");
-  const [searchParams] = useSearchParams();
-  const userTypeParam = searchParams.get("type");
-  const resolvedUserType = userTypeParam === "patient" ? "patient" : "provider";
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isEmailSent, setIsEmailSent] = useState(false)
+  const [submittedEmail, setSubmittedEmail] = useState('')
+  const [searchParams] = useSearchParams()
+  const userTypeParam = searchParams.get('type')
+  const resolvedUserType = userTypeParam === 'patient' ? 'patient' : 'provider'
 
   const {
     register,
@@ -37,66 +38,59 @@ const ForgotPasswordPage = () => {
     setError,
   } = useForm<ForgotPasswordData>({
     resolver: zodResolver(forgotPasswordSchema),
-  });
+  })
 
   const onSubmit = async (data: ForgotPasswordData) => {
-    setIsSubmitting(true);
+    setIsSubmitting(true)
 
     try {
-      const url = `${import.meta.env.VITE_SERVER_URL}/api/auth/${resolvedUserType}/forgot-password`;
-      const response = await fetch(
-        url,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        }
-      );
+      const url = `${
+        import.meta.env.VITE_SERVER_URL
+      }/api/auth/${resolvedUserType}/forgot-password`
+      const { data: resData } = await API.post(url, data)
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to send reset email");
+      if (!resData?.success) {
+        toast.error(resData?.message || 'Failed to send reset email')
+        return
       }
 
-      setSubmittedEmail(data.email);
-      setIsEmailSent(true);
-      toast.success("Please check your email for password reset instructions.");
+      setSubmittedEmail(data.email)
+      setIsEmailSent(true)
+      toast.success('Please check your email for password reset instructions.')
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Forgot password error:";
+        error instanceof Error ? error.message : 'Forgot password error:'
 
-      if (message?.toLowerCase().includes("not found")) {
-        setError("email", {
-          type: "manual",
-          message: "No account found with this email address",
-        });
+      if (message?.toLowerCase().includes('not found')) {
+        setError('email', {
+          type: 'manual',
+          message: 'No account found with this email address',
+        })
       } else {
-        toast.error(message || "Failed to send reset email.");
+        toast.error(message || 'Failed to send reset email.')
       }
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const handleResendEmail = async () => {
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
-      const url = `${import.meta.env.VITE_SERVER_URL}/api/auth/${resolvedUserType}/forgot-password`;
-      await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: submittedEmail }),
-      });
+      const url = `${
+        import.meta.env.VITE_SERVER_URL
+      }/api/auth/${resolvedUserType}/forgot-password`
+      await API.post(url, { email: submittedEmail })
 
-      toast.success("Password reset email sent again.");
+      toast.success('Password reset email sent again.')
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Failed to resend email";
-      toast.error(message);
+        error instanceof Error ? error.message : 'Failed to resend email'
+      toast.error(message)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   if (isEmailSent) {
     return (
@@ -106,10 +100,10 @@ const ForgotPasswordPage = () => {
         onResend={handleResendEmail}
         isResending={isSubmitting}
       />
-    );
+    )
   }
 
-  console.log(resolvedUserType);
+  console.log(resolvedUserType)
 
   return (
     <AuthLayout>
@@ -140,8 +134,8 @@ const ForgotPasswordPage = () => {
                   id="email"
                   type="email"
                   placeholder="Enter your email address"
-                  {...register("email")}
-                  className={`${errors.email ? "border-red-500" : ""}`}
+                  {...register('email')}
+                  className={`${errors.email ? 'border-red-500' : ''}`}
                 />
                 {errors.email && (
                   <div className="flex items-center gap-2 text-red-600 text-sm">
@@ -156,14 +150,14 @@ const ForgotPasswordPage = () => {
                 disabled={isSubmitting}
                 className="w-full  bg-[#6A5CA3] hover:bg-[#6A5CA3]/90"
               >
-                {isSubmitting ? "Sending..." : "Send Reset Email"}
+                {isSubmitting ? 'Sending...' : 'Send Reset Email'}
               </Button>
             </form>
           </CardContent>
         </Card>
       </div>
     </AuthLayout>
-  );
-};
+  )
+}
 
-export default ForgotPasswordPage;
+export default ForgotPasswordPage

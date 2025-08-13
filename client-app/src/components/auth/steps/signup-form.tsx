@@ -8,6 +8,8 @@ import WelcomeStep from './welcome-step'
 import PersonalDetailsStep from './personal-details'
 import PasswordStep from './password-step'
 import RegistrationCompleteStep from './registration-complete'
+import API from '../../../lib/api'
+import { toast } from 'sonner'
 
 const getProgressPercentage = (step: number) => {
   switch (step) {
@@ -76,35 +78,26 @@ const SignUpForm = ({ onSignupComplete }: SignUpFormProps) => {
 
       // Format date_of_birth to ISO string
       payload.date_of_birth = new Date(payload.date_of_birth).toISOString()
-     
+
       const allergiesNormalizedPayload = {
         ...payload,
         allergies: Array.isArray(payload.allergies)
           ? payload.allergies
-          : [payload.allergies]
+          : [payload.allergies],
       }
 
       console.log('Submitting registration data:', payload)
 
-      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/auth/patient/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(allergiesNormalizedPayload),
-      })
+      const { data: resData } = await API.post(
+        `${import.meta.env.VITE_SERVER_URL}/api/auth/patient/register`,
+        allergiesNormalizedPayload
+      )
 
-      if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(
-          `Registration failed: ${response.status} - ${errorText}`
-        )
+      if (!resData?.success) {
+        toast.error(`Registration failed: ${resData?.message}`)
+        return
       }
 
-      const result = await response.json()
-      if (!result.success) {
-        throw new Error(`Registration failed: ${result.message}`)
-      }
       // Notify parent
       onSignupComplete?.(data)
       setStep(4)

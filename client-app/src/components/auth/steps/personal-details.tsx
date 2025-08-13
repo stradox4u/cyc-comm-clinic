@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../ui/select'
+import API from '../../../lib/api'
 
 interface PersonalDetailsStepProps {
   onNext: () => void
@@ -81,20 +82,14 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
     const fetchInsuranceProvider = async () => {
       setLoading(true)
       try {
-        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/insurance-providers`)
+        const { data } = await API.get(
+          `${import.meta.env.VITE_SERVER_URL}/api/insurance-providers`
+        )
 
-        // Ensure response is ok and content-type is JSON
-        const contentType = response.headers.get('content-type')
-        if (!response.ok || !contentType?.includes('application/json')) {
-          throw new Error('Invalid response')
-        }
-
-        const result = await response.json()
-
-        if (!result.success) {
+        if (!data?.success) {
           toast.error('Error fetching providers')
         } else {
-          setInsuranceProviders(result.data)
+          setInsuranceProviders(data.data)
         }
       } catch (err) {
         console.error('Fetch failed:', err)

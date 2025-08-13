@@ -26,6 +26,8 @@ import SoapNoteDialog from '../components/soap-note-dialog'
 import VitalsFormDialog from '../components/vitals-form'
 import { useAuthStore } from '../store/auth-store'
 import { SoapNoteCard } from '../components/soap-note-card'
+import API from '../lib/api'
+import { toast } from 'sonner'
 
 interface VitalsSoapNoteProps {
   appointment?: Appointment
@@ -82,15 +84,17 @@ export default function VitalsSoapPage({
   const fetchSoapNotes = async (appointmentId: string) => {
     setSoapNotesLoading(true)
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SERVER_URL}/api/provider/soapnotes?appointmentId=${appointmentId}`
+      const { data } = await API.get(
+        `${
+          import.meta.env.VITE_SERVER_URL
+        }/api/provider/soapnotes?appointmentId=${appointmentId}`
       )
-      const result = await response.json()
-      if (result.success && result.data) {
-        setSoapNotes(result.data)
+
+      if (data.success && data.data) {
+        setSoapNotes(data.data)
       } else {
         setSoapNotes([])
-        console.error('Failed to fetch soap notes:', result.message)
+        toast.error('Failed to fetch soap notes:', data?.message)
       }
     } catch (error) {
       console.error('Error fetching soap notes:', error)
@@ -104,14 +108,16 @@ export default function VitalsSoapPage({
     const fetchAppointment = async (appointmentId: string) => {
       setIsLoading(true)
       try {
-        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/appointment/${appointmentId}`)
-        const result = await response.json()
-        if (result.success) {
-          setAppointment(result.data)
+        const { data } = await API.get(
+          `${import.meta.env.VITE_SERVER_URL}/api/appointment/${appointmentId}`
+        )
+
+        if (data?.success) {
+          setAppointment(data.data)
 
           fetchSoapNotes(appointmentId)
         } else {
-          console.error('Failed to fetch appointment:', result.message)
+          console.error('Failed to fetch appointment:', data.message)
         }
       } catch (error) {
         console.error('Error fetching appointment:', error)
@@ -281,10 +287,15 @@ export default function VitalsSoapPage({
               <SoapNoteDialog
                 appointmentId={(appointment as Appointment).id}
                 vitals={(appointment as Appointment).vitals}
-                purposes={(appointment as Appointment).purposes || (appointment as Appointment).other_purpose}
+                purposes={
+                  (appointment as Appointment).purposes ||
+                  (appointment as Appointment).other_purpose
+                }
                 setAppointmentId={setAppointmentId || (() => {})}
                 showAsDialog={false}
-                onSoapNoteSaved={() => fetchSoapNotes((appointment as Appointment).id)}
+                onSoapNoteSaved={() =>
+                  fetchSoapNotes((appointment as Appointment).id)
+                }
               />
             </CardContent>
           </Card>
