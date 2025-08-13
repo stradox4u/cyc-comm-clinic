@@ -52,12 +52,12 @@ export function AppSidebar() {
 
   const providerMenuItems: MenuItem[] = [
     { title: 'Dashboard', url: '/dashboard', icon: Home },
-    { title: 'Patient Intake', url: '/intake', icon: FileText },
+    { title: 'Patient Intake', url: '/patient-intake', icon: FileText },
     { title: 'Appointments', url: '/appointments', icon: Calendar },
     { title: 'Patients', url: '/patients', icon: Users },
     {
       title: 'Provider Dashboard',
-      url: '/providers-dashboard',
+      url: '/list',
       icon: BarChart3,
     },
     { title: 'Vitals & SOAP', url: '/vitals', icon: Activity },
