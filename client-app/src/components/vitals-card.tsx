@@ -26,14 +26,12 @@ export const VitalsCard = ({
   temperature,
   height,
   weight,
-  respiratory_rate,
-  oxygen_saturation,
   others,
   created_at,
   created_by,
 }: VitalsCardProps) => {
   return (
-    <Card className="my-4 w-full">
+    <Card className="my-4 w-full flex-1">
       <CardHeader>
         <CardTitle>Vitals Summary</CardTitle>
         <div className="text-xs text-gray-400 mt-2">
@@ -43,50 +41,52 @@ export const VitalsCard = ({
         <div className="text-xs text-gray-400 mt-2">
           Recorded by:{' '}
           {created_by
-            ? `${created_by.role_title} ${created_by.first_name} ${created_by.last_name}`
+            ? `${created_by.first_name} ${created_by.last_name}`
             : 'N/A'}
         </div>
       </CardHeader>
-      <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-6 w-full text-sm">
-        <div className="flex flex-col items-center">
+      <CardContent className="grid grid-cols-3 gap-2 w-full text-sm">
+        <div className="flex  items-center gap-2">
           <span className="font-medium">Blood Pressure</span>{' '}
-          <Badge variant="outline">{blood_pressure || 'N/A'}</Badge>
+          <Badge variant="secondary">{blood_pressure || 'N/A'}</Badge>
         </div>
-        <div className="flex flex-col items-center">
+        <div className="flex  items-center gap-4">
           <span className="font-medium">Heart Rate</span>{' '}
-          <Badge variant="outline">
+          <Badge variant="secondary">
             {heart_rate ? `${heart_rate} bpm` : 'N/A'}
           </Badge>
         </div>
-        <div className="flex flex-col items-center">
+        <div className="flex  items-center gap-4">
           <span className="font-medium">Temperature:</span>{' '}
-          <Badge variant="outline">
+          <Badge variant="secondary">
             {temperature ? `${temperature} °F` : 'N/A'}
           </Badge>
         </div>
-        <div className="flex flex-col items-center">
+        <div className="flex  items-center gap-4">
           <span className="font-medium">Height</span>{' '}
-          <Badge variant="outline">{height ? `${height} inches` : 'N/A'}</Badge>
+          <Badge variant="secondary">
+            {height ? `${height} inches` : 'N/A'}
+          </Badge>
         </div>
-        <div className="flex flex-col  items-center">
+        <div className="flex  items-center gap-4">
           <span className="font-medium">Weight</span>{' '}
-          <Badge variant="outline">{weight ? `${weight} kg` : 'N/A'}</Badge>
+          <Badge variant="secondary">{weight ? `${weight} kg` : 'N/A'}</Badge>
         </div>
-        <div className="flex flex-col  items-center">
+        {/* <div className="flex  items-center gap-4">
           <span className="font-medium line-clamp-1">Respiratory Rate</span>{' '}
-          <Badge variant="outline">
+          <Badge variant="secondary">
             {respiratory_rate ? `${respiratory_rate}` : 'N/A'}
           </Badge>
-        </div>
-        <div className="flex flex-col  items-center">
+        </div> */}
+        {/* <div className="flex  items-center gap-4">
           <span className="font-medium">O2 Saturation</span>{' '}
-          <Badge variant="outline">
+          <Badge variant="secondary">
             {oxygen_saturation ? `${oxygen_saturation}%` : 'N/A'}
           </Badge>
-        </div>
-        <div className="flex flex-col  items-center">
+        </div> */}
+        <div className="flex  items-center gap-4">
           <span className="font-medium">Notes</span>{' '}
-          <Badge variant="outline">{others ? `${others}%` : 'N/A'}</Badge>
+          <Badge variant="secondary">{others ? `${others}%` : 'N/A'}</Badge>
         </div>
       </CardContent>
     </Card>

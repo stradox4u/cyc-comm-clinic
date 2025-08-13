@@ -36,18 +36,6 @@ type MenuItem = {
   icon: React.ElementType
 }
 
-const providerMenuItems: MenuItem[] = [
-  { title: 'Dashboard', url: '/dashboard', icon: Home },
-  { title: 'Patient Intake', url: '/patient-intake', icon: FileText },
-  { title: 'Appointments', url: '/appointments', icon: Calendar },
-  { title: 'Patients', url: '/patients', icon: Users },
-  { title: 'Providers', url: '/list', icon: BarChart3 },
-  { title: 'Vitals & SOAP', url: '/vitals', icon: Activity },
-  { title: 'Mobile Outreach', url: '/outreach', icon: Smartphone },
-  { title: 'Insurance Check', url: '/insurance', icon: CreditCard },
-  { title: 'Reminders', url: '/reminders', icon: Bell },
-]
-
 const patientMenuItems: MenuItem[] = [
   { title: 'Dashboard', url: '/dashboard', icon: Home },
   { title: 'Appointments', url: '/appointments', icon: CalendarDays },
@@ -62,7 +50,48 @@ export function AppSidebar() {
   const pathname = window.location.href
   const active = (url: string) => pathname.includes(url)
 
-  const menuItems = userType ? providerMenuItems : patientMenuItems
+  const providerMenuItems: MenuItem[] = [
+    { title: 'Dashboard', url: '/dashboard', icon: Home },
+    { title: 'Patient Intake', url: '/patient-intake', icon: FileText },
+    { title: 'Appointments', url: '/appointments', icon: Calendar },
+    { title: 'Patients', url: '/patients', icon: Users },
+    {
+      title: 'Provider Dashboard',
+      url: '/list',
+      icon: BarChart3,
+    },
+    { title: 'Vitals & SOAP', url: '/vitals', icon: Activity },
+    { title: 'Mobile Outreach', url: '/outreach', icon: Smartphone },
+    { title: 'Insurance Check', url: '/insurance', icon: CreditCard },
+    { title: 'Reminders', url: '/reminders', icon: Bell },
+  ]
+
+  const fullAccessRoles = ['ADMIN', 'RECEPTIONIST']
+  const limitedAccessRoles = [
+    'LAB TECHNICIAN',
+    'PHARMACIST',
+    'NURSE',
+    'GYNEACOLOGIST',
+    'PAEDIATRICIAN',
+  ]
+
+  let menuItems
+
+  if (fullAccessRoles.includes(user?.role_title || '')) {
+    menuItems = providerMenuItems
+  } else if (limitedAccessRoles.includes(user?.role_title || '')) {
+    menuItems = providerMenuItems.filter((item) =>
+      [
+        'Dashboard',
+        'Appointments',
+        'Insurance Check',
+        'Vitals & SOAP',
+      ].includes(item.title)
+    )
+  } else {
+    menuItems = patientMenuItems
+  }
+
   const basePath = userType ? '/provider' : ''
 
   return (

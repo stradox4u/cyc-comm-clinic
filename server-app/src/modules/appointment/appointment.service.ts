@@ -89,7 +89,7 @@ async function findAppointment(filter: AppointmentWhereUniqueInput): Promise<
       appointment_providers: true,
       vitals: true,
       soap_note: true,
-      patient: true
+      patient: true,
     },
   })
 
