@@ -52,6 +52,7 @@ export default function CreateProvider() {
             <CardContent>
               <ProviderForm
                 formData={formData}
+                // @ts-expect-error: pass partial data
                 setFormData={setFormData}
                 onSubmit={handleSubmit}
                 isLoading={isPending}

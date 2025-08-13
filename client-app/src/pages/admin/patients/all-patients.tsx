@@ -1,4 +1,4 @@
-import { Download, Plus, Search } from 'lucide-react'
+import { Plus, Search } from 'lucide-react'
 import { Input } from '../../../components/ui/input'
 import { Button } from '../../../components/ui/button'
 import { useState } from 'react'
@@ -56,7 +56,9 @@ const AllPatients = () => {
     <div className="flex-1 space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Patients Management</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Patients Management
+          </h1>
           <p className="text-muted-foreground">
             Comprehensive patient management and records
           </p>

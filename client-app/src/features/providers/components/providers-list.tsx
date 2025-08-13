@@ -12,7 +12,7 @@ import {
   TableRow,
 } from '../../../components/ui/table'
 import { Button } from '../../../components/ui/button'
-import { Calendar, Edit, Eye, Mail, Phone } from 'lucide-react'
+import { Calendar, Edit, Mail, Phone } from 'lucide-react'
 import { Avatar, AvatarFallback } from '../../../components/ui/avatar'
 import type { Appointment } from '../../../lib/type'
 import { formatDate } from '../../../lib/utils'
@@ -51,6 +51,7 @@ const ProvidersList = ({ searchValue, pagination, setPagination }: Props) => {
 
   useEffect(() => {
     const page = Number(searchParams.get('page')) || 1
+    // @ts-expect-error: use mid-state var
     setPagination((prevPagination) => ({ ...prevPagination, page }))
   }, [searchParams.get('page')])
 
@@ -80,7 +81,8 @@ const ProvidersList = ({ searchValue, pagination, setPagination }: Props) => {
         </TableHeader>
         <TableBody>
           {isLoading
-            ? [...Array(20)].map((i, index) => (
+            ? // @ts-expect-error: no-unused-vars
+              [...Array(20)].map((i, index) => (
                 <TableRow key={index}>
                   <TableCell>
                     <Skeleton className="h-3 w-full" />

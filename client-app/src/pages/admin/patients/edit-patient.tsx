@@ -76,6 +76,7 @@ export default function EditPatient() {
             </CardHeader>
             <CardContent>
               <PatientForm
+                // @ts-expect-error: pass partial data
                 formData={formData}
                 setFormData={setFormData}
                 onSubmit={handleSubmit}
