@@ -38,6 +38,7 @@ import EditPatient from './pages/admin/patients/edit-patient'
 import AllProviders from './pages/admin/providers/all-providers'
 import CreateProvider from './pages/admin/providers/create-provider'
 import EditProvider from './pages/admin/providers/edit-provider'
+import PatientEditProfile from './pages/patient/patient-edit-profile'
 
 const queryClient = new QueryClient()
 
@@ -100,6 +101,7 @@ function App() {
           <Route element={<ProtectedLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile" element={<PatientProfile />} />
+            <Route path="/profile/edit" element={<PatientEditProfile />} />
             <Route path="/files" element={<PatientFiles />} />
             <Route path="/billings" element={<Billings />} />
             <Route path="/appointments" element={<PatientAppointments />} />

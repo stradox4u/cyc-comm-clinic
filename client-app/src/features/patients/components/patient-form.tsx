@@ -17,10 +17,8 @@ import { Textarea } from '../../../components/ui/textarea'
 import { format } from 'date-fns'
 
 interface Props {
-  formData: Partial<CreatePatientSchema> | CreatePatientSchema
-  setFormData: (
-    formData: Partial<CreatePatientSchema> | CreatePatientSchema
-  ) => void
+  formData: CreatePatientSchema
+  setFormData: (formData: CreatePatientSchema) => void
   onSubmit: (e: FormEvent) => void
   isLoading: boolean
 }

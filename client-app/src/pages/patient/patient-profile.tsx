@@ -10,8 +10,10 @@ import { Badge } from '../../components/ui/badge'
 import { useCheckPatientProfile } from '../../hooks/fetch-patient'
 import { Skeleton } from '../../components/ui/skeleton'
 import ProfilePhoto from '../../components/profile-photo'
+import { useNavigate } from 'react-router-dom'
 
 const PatientProfile = () => {
+  const navigate = useNavigate()
   const { user: patientData, loading } = useCheckPatientProfile()
 
   if (loading) {
@@ -67,7 +69,7 @@ const PatientProfile = () => {
     <>
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-2xl font-bold">Profile Information</h2>
-        <Button>
+        <Button onClick={() => navigate('/profile/edit')}>
           <Settings className="h-4 w-4 mr-2" />
           Edit Profile
         </Button>
