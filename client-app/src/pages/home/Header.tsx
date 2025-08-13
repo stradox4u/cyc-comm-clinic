@@ -111,8 +111,8 @@ const Header = () => {
             </a>
           </li>
           <li>
-            <a href="/contact" className="hover:text-pink-300">
-              Contact
+            <a href="/about" className="hover:text-pink-300">
+              About Us
             </a>
           </li>
           <li>
