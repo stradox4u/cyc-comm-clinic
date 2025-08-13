@@ -89,13 +89,7 @@ async function findAppointment(filter: AppointmentWhereUniqueInput): Promise<
       appointment_providers: true,
       vitals: true,
       soap_note: true,
-      patient: {
-        select: {
-          first_name: true,
-          last_name: true,
-          insurance_provider_id: true,
-        },
-      },
+      patient: true
     },
   })
 
@@ -123,15 +117,7 @@ async function searchAppointments(
           },
         },
       },
-      patient: {
-        select: {
-          first_name: true,
-          last_name: true,
-          email: true,
-          phone: true,
-          insurance_provider_id: true,
-        },
-      },
+      patient: true
     },
   })
   return sortAppointmentsByEarliestDate(appointments)
@@ -159,13 +145,7 @@ async function findAppointmentsByPatient(
           },
         },
       },
-      patient: {
-        select: {
-          first_name: true,
-          last_name: true,
-          insurance_provider_id: true,
-        },
-      },
+      patient: true
     },
   })
   return sortAppointmentsByEarliestDate(appointments)
@@ -195,15 +175,7 @@ async function findAppointmentsByProvider(
               },
             },
           },
-          patient: {
-            select: {
-              first_name: true,
-              last_name: true,
-              email: true,
-              phone: true,
-              insurance_provider_id: true,
-            },
-          },
+          patient: true
         },
       },
     },
