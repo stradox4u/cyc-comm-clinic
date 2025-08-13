@@ -1,5 +1,5 @@
 export const getAppointments = async () => {
-  const res = await fetch(`/api/appointment/appointments`)
+  const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/appointment/appointments`)
   const data = await res.json()
 
   if (!data?.success) {
@@ -10,7 +10,7 @@ export const getAppointments = async () => {
 }
 
 export const getProviders = async () => {
-  const res = await fetch(`/api/providers`)
+  const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/providers`)
   const data = await res.json()
 
   if (!data?.success) {

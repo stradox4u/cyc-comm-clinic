@@ -83,7 +83,7 @@ export default function VitalsSoapPage({
     setSoapNotesLoading(true)
     try {
       const response = await fetch(
-        `/api/provider/soapnotes?appointmentId=${appointmentId}`
+        `${import.meta.env.VITE_SERVER_URL}/api/provider/soapnotes?appointmentId=${appointmentId}`
       )
       const result = await response.json()
       if (result.success && result.data) {
@@ -104,7 +104,7 @@ export default function VitalsSoapPage({
     const fetchAppointment = async (appointmentId: string) => {
       setIsLoading(true)
       try {
-        const response = await fetch(`/api/appointment/${appointmentId}`)
+        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/appointment/${appointmentId}`)
         const result = await response.json()
         if (result.success) {
           setAppointment(result.data)

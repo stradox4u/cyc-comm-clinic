@@ -53,11 +53,12 @@ const ResetPasswordForm = ({
 
   const onSubmit = async (data: ResetPasswordData) => {
     setIsSubmitting(true);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { confirmPassword: _, ...payload } = data;
 
     try {
       const response = await fetch(
-        `/api/auth/${resolvedUserType}/reset-password`,
+        `${import.meta.env.VITE_SERVER_URL}/api/auth/${resolvedUserType}/reset-password`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -71,6 +71,7 @@ const SignUpForm = ({ onSignupComplete }: SignUpFormProps) => {
 
     try {
       // Destructure and exclude confirmPassword
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { confirmPassword: _, ...payload } = data
 
       // Format date_of_birth to ISO string
@@ -85,7 +86,7 @@ const SignUpForm = ({ onSignupComplete }: SignUpFormProps) => {
 
       console.log('Submitting registration data:', payload)
 
-      const response = await fetch('/api/auth/patient/register', {
+      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/auth/patient/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

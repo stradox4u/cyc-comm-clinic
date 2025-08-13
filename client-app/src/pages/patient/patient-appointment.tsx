@@ -131,7 +131,7 @@ export default function PatientAppointments() {
 
   const onSubmit = async (data: AppointmentFormData) => {
     setIsSubmitting(true)
-    const endpoint = `/api/appointment/create`
+    const endpoint = `${import.meta.env.VITE_SERVER_URL}/api/appointment/create`
     const payload = {
       ...data,
       purposes: [watch('purposes')], // <-- array, not a string
@@ -168,7 +168,7 @@ export default function PatientAppointments() {
   const fetchPatientVitals = async (appointmentId: string) => {
     try {
       setVitalsLoading(true)
-      const response = await fetch(`/api/vitals/${appointmentId}`)
+      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/vitals/${appointmentId}`)
       const result = await response.json()
 
       if (!response.ok || !result.success) {
@@ -189,7 +189,7 @@ export default function PatientAppointments() {
   useEffect(() => {
     const fetchAppointments = async () => {
       setLoading(true)
-      const res = await fetch(`/api/appointment/appointments`)
+      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/appointment/appointments`)
       const result = await res.json()
       if (!result?.success) {
         toast.error(result?.message || 'Failed to fetch appointments')

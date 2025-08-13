@@ -45,7 +45,7 @@ const OTPVerification = ({
     }
 
     try {
-      const response = await fetch('/api/auth/patient/request-otp', {
+      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/auth/patient/request-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -127,7 +127,7 @@ const OTPVerification = ({
     setIsVerifying(true)
 
     try {
-      const response = await fetch('/api/auth/patient/verify-email', {
+      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/auth/patient/verify-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -166,7 +166,7 @@ const OTPVerification = ({
     setIsResending(true)
 
     try {
-      const response = await fetch('/api/auth/patient/request-otp', {
+      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/auth/patient/request-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
