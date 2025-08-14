@@ -14,7 +14,7 @@ export function authorizeUserForViewingAppointment(appointment: any, user: any) 
       throw new Error('Access denied: Not your appointment');
     }
   } else if (user.type === UserType.PROVIDER) {
-    if (user.role === 'ADMIN' || user.role === 'RECEPTIONIST') {
+    if (user.roleTitle === 'ADMIN' || user.roleTitle === 'RECEPTIONIST') {
       return;
     } else {
       const isAssignedProvider = appointment.appointment_providers?.some(
