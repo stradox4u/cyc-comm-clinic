@@ -107,7 +107,6 @@ export default function PatientAppointments() {
     setValue,
     watch,
     formState: { errors },
-    reset,
   } = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
