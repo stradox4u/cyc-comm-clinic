@@ -107,7 +107,6 @@ export default function PatientAppointments() {
     setValue,
     watch,
     formState: { errors },
-    reset,
   } = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
@@ -146,7 +145,9 @@ export default function PatientAppointments() {
       }
 
       toast.success(data?.message)
-      reset() // Optional: reset form after submit
+      setTimeout(() => {
+        location.assign('/dashboard')
+      }, 1000)
     } catch (error) {
       console.error('Sign in error:', error)
       const message =

@@ -102,7 +102,7 @@ const PatientFiles = () => {
             <CardTitle>Vital Signs</CardTitle>
             <CardDescription>Latest measurements</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          {stats?.lastVitals && <CardContent className="space-y-4">
             <div className="flex justify-between items-center p-3 border rounded-lg border-muted">
               <div className="flex items-center space-x-3">
                 <Heart className="h-5 w-5 text-red-500" />
@@ -152,7 +152,7 @@ const PatientFiles = () => {
                 <div className="text-sm text-muted-foreground">kg</div>
               </div>
             </div>
-          </CardContent>
+          </CardContent>}
         </Card>
 
         <Card>
