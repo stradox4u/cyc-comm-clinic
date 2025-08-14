@@ -60,18 +60,19 @@ const statusOptions = [
 
 const AppointmentDetail = () => {
   const { id } = useParams()
+  const [status, setStatus] = useState<string>()
+  const [providerId, setProviderId] = useState<string>()
 
   const fetchAppointment = async (id: string) => {
     const { data } = await API.get(`/api/appointment/${id}`)
 
     if (!data || !data.success) {
-      toast.error(data.message || 'Failed to fetch appointment')
-      return
+      throw new Error(data?.message || 'Failed to fetch appointment')
     }
-    setStatus(data.data.status)
-    setProviderId(data.data.appointment_providers[0]?.provider_id)
+    
     return data.data
   }
+  
   const {
     data: appointment,
     isLoading,
@@ -82,8 +83,12 @@ const AppointmentDetail = () => {
     enabled: !!id,
   })
 
-  const [status, setStatus] = useState(appointment?.status)
-  const [providerId, setProviderId] = useState()
+  useEffect(() => {
+    if (appointment) {
+      setStatus(appointment.status)
+      setProviderId(appointment.appointment_providers?.[0]?.provider_id)
+    }
+  }, [appointment])
 
   console.log(status)
 
@@ -178,8 +183,47 @@ const AppointmentDetail = () => {
     }
   }
 
-  if (isLoading) return <div>Loading...</div>
-  if (error) return <div>{(error as Error).message}</div>
+  if (isLoading) {
+    return (
+      <div className="flex-1 space-y-6 p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading appointment details...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+  
+  if (error) {
+    return (
+      <div className="flex-1 space-y-6 p-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">
+              <p className="text-destructive font-medium">Error loading appointment</p>
+              <p className="text-muted-foreground mt-2">{(error as Error).message}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (!appointment) {
+    return (
+      <div className="flex-1 space-y-6 p-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">
+              <p className="text-muted-foreground">Appointment not found</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -217,7 +261,7 @@ const AppointmentDetail = () => {
       {/* Status and Quick Actions */}
       <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
         <div className="flex items-center space-x-4">
-          <Badge variant={getStatusColor(status)} className="text-sm">
+          <Badge variant={getStatusColor(status ?? '')} className="text-sm">
             {status}
           </Badge>
           {appointment.checkedIn && (
