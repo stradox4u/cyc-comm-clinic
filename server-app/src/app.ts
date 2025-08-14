@@ -25,8 +25,17 @@ app.use(
   cors({
     origin: config.ORIGIN_URL,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders:
-      'Accept, Accept-Language, X-Requested-With, Content-Language, Content-Type, Origin, Authorization',
+    allowedHeaders: [
+      'Accept',
+      'Accept-Language',
+      'X-Requested-With',
+      'Content-Language',
+      'Content-Type',
+      'Origin',
+      'Authorization',
+      'X-Forwarded-For',
+      'X-Real-IP',
+    ],
     optionsSuccessStatus: 200,
     credentials: true,
   })
@@ -52,7 +61,7 @@ app.use(
       httpOnly: true,
       sameSite: sameSite,
       maxAge: config.SESSION_EXPIRATION_HOURS * 60 * 60 * 1000,
-      domain: cookieDomain,
+      // domain: cookieDomain,
     },
     store: new PgSession({
       conString: config.DATABASE_URL,
