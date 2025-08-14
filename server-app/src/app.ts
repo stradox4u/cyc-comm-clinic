@@ -34,6 +34,8 @@ app.use(
 app.use(helmet())
 
 app.use(express.json())
+const originUrl = new URL(config.ORIGIN_URL)
+const cookieDomain = originUrl.hostname
 
 const PgSession = connectPgSimple(session)
 app.use(
@@ -46,6 +48,7 @@ app.use(
       httpOnly: true,
       sameSite: 'lax',
       maxAge: config.SESSION_EXPIRATION_HOURS * 60 * 60 * 1000,
+      domain: cookieDomain,
     },
     store: new PgSession({
       conString: config.DATABASE_URL,
