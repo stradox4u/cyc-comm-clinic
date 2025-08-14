@@ -18,6 +18,8 @@ import { userRoute } from './modules/user/index.js'
 
 const app = express()
 
+app.set('trust proxy', 1)
+
 app.use(appLogger)
 
 app.use(
@@ -38,6 +40,7 @@ const originUrl = new URL(config.ORIGIN_URL)
 const cookieDomain = originUrl.hostname
 
 const PgSession = connectPgSimple(session)
+
 app.use(
   session({
     secret: config.SESSION_SECRET,
@@ -46,7 +49,7 @@ app.use(
     cookie: {
       secure: config.NODE_ENV === 'production',
       httpOnly: true,
-      sameSite: 'lax',
+      sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: config.SESSION_EXPIRATION_HOURS * 60 * 60 * 1000,
       domain: cookieDomain,
     },
