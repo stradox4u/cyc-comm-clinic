@@ -12,7 +12,7 @@ export type AboutProp = {
 export const teamArray: AboutProp[] = [
   {
     image: '/images/odeh.png',
-    name: 'Umar Odeh',
+    name: 'Umar Adejoh',
     skills: ['Full Stack Developer'],
     location: 'Abuja, Nigeria',
     bio: '',
@@ -20,6 +20,10 @@ export const teamArray: AboutProp[] = [
       {
         platform: 'linkedIn',
         url: 'https://www.linkedin.com/in/umar-adejoh-b8595a59',
+      },
+      {
+        platform: 'X',
+        url: 'https://twitter.com/stradox4u',
       },
     ],
     role: 'Team Lead & Project Manager',
