@@ -44,7 +44,7 @@ app.use(
     cookie: {
       secure: config.NODE_ENV === 'production',
       httpOnly: true,
-      sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
+      sameSite: 'lax',
       maxAge: config.SESSION_EXPIRATION_HOURS * 60 * 60 * 1000,
     },
     store: new PgSession({
