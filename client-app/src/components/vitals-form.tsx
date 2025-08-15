@@ -164,7 +164,7 @@ export default function VitalsFormDialog({
       )
 
       const { data } = await API.post(
-        `${import.meta.env.VITE_SERVER_URL}/api/provider/vitals/record`,
+        `/api/provider/vitals/record`,
         vitalsPayload
       )
 
@@ -175,7 +175,7 @@ export default function VitalsFormDialog({
       }
 
       const { data: resData } = await API.patch(
-        `${import.meta.env.VITE_SERVER_URL}/api/appointment/${appointmentId}`,
+        `/api/appointment/${appointmentId}`,
         { status: 'ATTENDING' }
       )
 

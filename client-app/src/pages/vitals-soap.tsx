@@ -108,9 +108,7 @@ export default function VitalsSoapPage({
     const fetchAppointment = async (appointmentId: string) => {
       setIsLoading(true)
       try {
-        const { data } = await API.get(
-          `${import.meta.env.VITE_SERVER_URL}/api/appointment/${appointmentId}`
-        )
+        const { data } = await API.get(`/api/appointment/${appointmentId}`)
 
         if (data?.success) {
           setAppointment(data.data)

@@ -61,9 +61,7 @@ export const SoapNoteCard = ({
 
     setIsDeleting(true)
     try {
-      const url = `${import.meta.env.VITE_SERVER_URL}/api/provider/soapnotes/${
-        soapNote.id
-      }`
+      const url = `/api/provider/soapnotes/${soapNote.id}`
       const { data } = await API.delete(url)
 
       if (data?.success) {
