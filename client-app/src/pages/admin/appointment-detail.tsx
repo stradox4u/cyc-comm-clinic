@@ -44,6 +44,8 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import API from '../../lib/api'
+import type { Provider } from '../../features/providers/types'
+import { useProviders } from '../../features/providers/hook'
 
 // Mock appointment data - in real app, this would come from API
 
@@ -62,6 +64,8 @@ const statusOptions = [
 const AppointmentDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [assignedProvider, setAssignedProvider] = useState('')
+  const { data: providersData } = useProviders({ page: 1, limit: 200 })
 
   const fetchAppointment = async (id: string) => {
     const { data } = await API.get(`/api/appointment/${id}`)
@@ -205,6 +209,27 @@ const AppointmentDetail = () => {
     toast.success(data.message)
   }
 
+  const handleAssignProvider = async () => {
+    if (!assignedProvider) {
+      toast.error('Please select a provider')
+      return
+    }
+
+    const formData = {
+      appointment_id: appointment?.id,
+      provider_id: assignedProvider,
+    }
+
+    const { data } = await API.patch(
+      '/api/provider/appointment/assign-provider',
+      formData
+    )
+    if (!data?.success) {
+      toast.error('Provider not assigned: ' + data?.message)
+    }
+    toast.success(data.message)
+  }
+
   if (isLoading) return <div>Loading...</div>
   if (error) return <div>{(error as Error).message}</div>
 
@@ -242,38 +267,68 @@ const AppointmentDetail = () => {
       </div>
 
       {/* Status and Quick Actions */}
-      <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-        <div className="flex items-center space-x-4">
-          <Badge variant={getStatusColor(status)} className="text-sm">
-            {status}
-          </Badge>
-          {appointment?.checkedIn && (
-            <div className="flex items-center text-sm text-green-600">
-              <CheckCircle className="h-4 w-4 mr-1" />
-              Checked in at {appointment?.checkedInTime}
-            </div>
-          )}
+      <div className="p-4 bg-muted/50 rounded-lg">
+        <div className="flex items-center justify-between py-2">
+          <div className="flex items-center space-x-4">
+            <Badge variant={getStatusColor(status)} className="text-sm">
+              {status}
+            </Badge>
+            {appointment?.checkedIn && (
+              <div className="flex items-center text-sm text-green-600">
+                <CheckCircle className="h-4 w-4 mr-1" />
+                Checked in at {appointment?.checkedInTime}
+              </div>
+            )}
+          </div>
+          <div className="flex items-center space-x-2">
+            {!appointment?.checkedIn && appointment?.status !== 'Completed' && (
+              <Button onClick={() => handleCheckIn(appointment?.id)}>
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Check In Patient
+              </Button>
+            )}
+            <Select value={status} onValueChange={handleStatusChange}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Select Status" />
+              </SelectTrigger>
+              <SelectContent>
+                {statusOptions.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {status}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <div className="flex items-center space-x-2">
-          {!appointment?.checkedIn && appointment?.status !== 'Completed' && (
-            <Button onClick={() => handleCheckIn(appointment?.id)}>
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Check In Patient
-            </Button>
-          )}
-          <Select value={status} onValueChange={handleStatusChange}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Select Status" />
-            </SelectTrigger>
-            <SelectContent>
-              {statusOptions.map((status) => (
-                <SelectItem key={status} value={status}>
-                  {status}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <form
+          onSubmit={handleAssignProvider}
+          className="flex items-center justify-between space-y-4 py-2"
+        >
+          <div className="block">
+            <Label htmlFor="assignProvider">Assign Provider</Label>
+            <Select
+              value={assignedProvider}
+              onValueChange={(e) => setAssignedProvider(e)}
+            >
+              <SelectTrigger className="w-[250px]">
+                <SelectValue placeholder="Select Provider" />
+              </SelectTrigger>
+              <SelectContent>
+                {providersData?.data?.map((provider: Provider) => (
+                  <SelectItem key={provider?.id} value={provider?.id}>
+                    {provider?.first_name} {provider?.last_name} -{' '}
+                    {provider?.role_title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Button type="submit">Assign Provider</Button>
+          </div>
+        </form>
       </div>
 
       <Tabs defaultValue="details" className="space-y-4">
@@ -360,6 +415,89 @@ const AppointmentDetail = () => {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="patient" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <User className="h-5 w-5 mr-2" />
+                Patient Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Patient ID:</span>
+                    <span>{appointment?.patient_id}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Full Name:</span>
+                    <span>
+                      {appointment?.patient?.first_name}{' '}
+                      {appointment?.patient?.last_name}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Date of Birth:</span>
+                    <span>
+                      {new Date(
+                        appointment?.patient?.date_of_birth
+                      ).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Phone:</span>
+                    <span className="flex items-center">
+                      <Phone className="h-4 w-4 mr-1" />
+                      {appointment?.patient?.phone}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Email:</span>
+                    <span className="flex items-center">
+                      <Mail className="h-4 w-4 mr-1" />
+                      {appointment?.patient?.email}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Address:</span>
+                    <p className="text-sm text-muted-foreground flex ">
+                      <MapPin className="h-4 w-4 mr-1 mt-0.5" />
+                      {appointment?.patient?.address}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between space-y-2">
+                    <span className="text-sm font-medium">Insurance:</span>
+                    <span>{appointment?.patient?.insurance_coverage}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">
+                      Emergency Contact:
+                    </span>
+                    <p className="text-sm text-muted-foreground">
+                      {appointment?.patient?.emergency_contact_name}
+                    </p>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Gender:</span>
+                    <p className="text-sm text-muted-foreground">
+                      {appointment?.patient?.gender}
+                    </p>
+                  </div>
+                  <div className="flex justify-between items-center space-y-2">
+                    <span className="text-sm font-medium">Blood Group:</span>
+                    <p className="text-sm text-muted-foreground">
+                      {appointment?.patient?.blood_group}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="patient" className="space-y-4">
