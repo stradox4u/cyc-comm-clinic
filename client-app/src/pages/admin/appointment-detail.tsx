@@ -220,15 +220,15 @@ const AppointmentDetail = () => {
           <Badge variant={getStatusColor(status)} className="text-sm">
             {status}
           </Badge>
-          {appointment.checkedIn && (
+          {appointment?.checkedIn && (
             <div className="flex items-center text-sm text-green-600">
               <CheckCircle className="h-4 w-4 mr-1" />
-              Checked in at {appointment.checkedInTime}
+              Checked in at {appointment?.checkedInTime}
             </div>
           )}
         </div>
         <div className="flex items-center space-x-2">
-          {!appointment.checkedIn && appointment.status !== 'Completed' && (
+          {!appointment?.checkedIn && appointment?.status !== 'Completed' && (
             <Button onClick={() => handleCheckIn(appointment?.id)}>
               <CheckCircle className="h-4 w-4 mr-2" />
               Check In Patient
@@ -296,7 +296,7 @@ const AppointmentDetail = () => {
                 <div className="space-y-2">
                   <span className="text-sm font-medium">Reason for Visit:</span>
                   <p className="text-sm text-muted-foreground">
-                    {appointment.reason}
+                    {appointment?.reason}
                   </p>
                 </div>
               </CardContent>
@@ -327,7 +327,7 @@ const AppointmentDetail = () => {
                   <span className="text-sm font-medium">Clinical Notes:</span>
 
                   <p className="text-sm text-muted-foreground">
-                    {appointment.soap_note}
+                    {appointment?.soap_note}
                   </p>
                 </div>
               </CardContent>
@@ -348,20 +348,20 @@ const AppointmentDetail = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Patient ID:</span>
-                    <span>{appointment.patient_id}</span>
+                    <span>{appointment?.patient_id}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Full Name:</span>
                     <span>
-                      {appointment.patient.first_name}{' '}
-                      {appointment.patient.last_name}
+                      {appointment?.patient?.first_name}{' '}
+                      {appointment?.patient?.last_name}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Date of Birth:</span>
                     <span>
                       {new Date(
-                        appointment.patient.date_of_birth
+                        appointment?.patient?.date_of_birth
                       ).toLocaleDateString()}
                     </span>
                   </div>
@@ -369,14 +369,14 @@ const AppointmentDetail = () => {
                     <span className="text-sm font-medium">Phone:</span>
                     <span className="flex items-center">
                       <Phone className="h-4 w-4 mr-1" />
-                      {appointment.patient.phone}
+                      {appointment?.patient?.phone}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Email:</span>
                     <span className="flex items-center">
                       <Mail className="h-4 w-4 mr-1" />
-                      {appointment.patient.email}
+                      {appointment?.patient?.email}
                     </span>
                   </div>
                 </div>
@@ -385,31 +385,31 @@ const AppointmentDetail = () => {
                     <span className="text-sm font-medium">Address:</span>
                     <p className="text-sm text-muted-foreground flex ">
                       <MapPin className="h-4 w-4 mr-1 mt-0.5" />
-                      {appointment.patient.address}
+                      {appointment?.patient?.address}
                     </p>
                   </div>
                   <div className="flex items-center justify-between space-y-2">
                     <span className="text-sm font-medium">Insurance:</span>
-                    <span>{appointment.patient.insurance_coverage}</span>
+                    <span>{appointment?.patient?.insurance_coverage}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">
                       Emergency Contact:
                     </span>
                     <p className="text-sm text-muted-foreground">
-                      {appointment.patient.emergency_contact_name}
+                      {appointment?.patient?.emergency_contact_name}
                     </p>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">Gender:</span>
                     <p className="text-sm text-muted-foreground">
-                      {appointment.patient.gender}
+                      {appointment?.patient?.gender}
                     </p>
                   </div>
                   <div className="flex justify-between items-center space-y-2">
                     <span className="text-sm font-medium">Blood Group:</span>
                     <p className="text-sm text-muted-foreground">
-                      {appointment.patient.blood_group}
+                      {appointment?.patient?.blood_group}
                     </p>
                   </div>
                 </div>
@@ -427,7 +427,7 @@ const AppointmentDetail = () => {
                   Vital Signs
                 </CardTitle>
                 <CardDescription>
-                  {appointment.vitals.created_at
+                  {appointment?.vitals?.created_at
                     ? `Recorded at ${new Date(
                         appointment.vitals.created_at
                       ).toLocaleDateString()}`
@@ -440,7 +440,7 @@ const AppointmentDetail = () => {
                     <Label htmlFor="bp">Blood Pressure</Label>
                     <Input
                       id="bp"
-                      value={appointment.vitals.blood_pressure}
+                      value={appointment?.vitals?.blood_pressure}
                       placeholder="120/80"
                     />
                   </div>
@@ -448,7 +448,7 @@ const AppointmentDetail = () => {
                     <Label htmlFor="hr">Heart Rate</Label>
                     <Input
                       id="hr"
-                      value={appointment.vitals.heart_rate}
+                      value={appointment?.vitals?.heart_rate}
                       placeholder="72 bpm"
                     />
                   </div>
@@ -456,7 +456,7 @@ const AppointmentDetail = () => {
                     <Label htmlFor="temp">Temperature</Label>
                     <Input
                       id="temp"
-                      value={appointment.vitals.temperature}
+                      value={appointment?.vitals?.temperature}
                       placeholder="98.6°C"
                     />
                   </div>
@@ -464,7 +464,7 @@ const AppointmentDetail = () => {
                     <Label htmlFor="weight">Weight</Label>
                     <Input
                       id="weight"
-                      value={appointment.vitals.weight}
+                      value={appointment?.vitals?.weight}
                       placeholder="75kg"
                     />
                   </div>
@@ -473,11 +473,11 @@ const AppointmentDetail = () => {
                   <Label htmlFor="height">Height</Label>
                   <Input
                     id="height"
-                    value={appointment.vitals.height}
+                    value={appointment?.vitals?.height}
                     placeholder="5'6 Inches"
                   />
                 </div>
-                <Button disabled={appointment.vitals} className="w-full">
+                <Button disabled={appointment?.vitals} className="w-full">
                   <Save className="h-4 w-4 mr-2" />
                   Record Vitals
                 </Button>
@@ -491,7 +491,7 @@ const AppointmentDetail = () => {
                   Clinical Notes
                 </CardTitle>
               </CardHeader>
-              {appointment.soap_note.length === 0 ? (
+              {appointment?.soap_note?.length === 0 ? (
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="chief-complaint">Chief Complaint</Label>
