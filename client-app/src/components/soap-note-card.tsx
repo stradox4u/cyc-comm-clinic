@@ -109,6 +109,7 @@ export const SoapNoteCard = ({
           physical_exam_report: filterEmpty(
             editedNote.objective?.physical_exam_report
           ),
+          vitals_summary: editedNote.objective?.vitals_summary || {},
           labs: editedNote.objective?.labs || {},
           others: editedNote.objective?.others || '',
         },

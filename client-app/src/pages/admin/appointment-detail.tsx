@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   Card,
@@ -46,6 +46,10 @@ import { format } from 'date-fns'
 import API from '../../lib/api'
 import type { Provider } from '../../features/providers/types'
 import { useProviders } from '../../features/providers/hook'
+import SoapNoteDialog from '../../components/soap-note-dialog'
+import VitalsFormDialog from '../../components/vitals-form'
+import { useAuthStore } from '../../store/auth-store'
+//import { SoapNoteDialog } from '../../components/soap-note-dialog'
 
 // Mock appointment data - in real app, this would come from API
 
@@ -64,34 +68,50 @@ const statusOptions = [
 const AppointmentDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [assignedProvider, setAssignedProvider] = useState('')
-  const { data: providersData } = useProviders({ page: 1, limit: 200 })
+  const user = useAuthStore((state) => state.user)
+  
+  // Only fetch providers for admin users to avoid 403 error
+  const { data: providersData } = useQuery({
+    queryKey: ['providers', 1],
+    queryFn: () => API.get('/api/providers?page=1&limit=200').then(res => res.data),
+    enabled: user?.role_title === 'ADMIN',
+  })
+  
+  const [soapNoteSaved, setSoapNoteSaved] = useState(false)
 
   const fetchAppointment = async (id: string) => {
+    console.log('Fetching appointment with ID:', id)
     const { data } = await API.get(`/api/appointment/${id}`)
 
     if (!data || !data.success) {
+      console.error('Failed to fetch appointment:', data)
       toast.error(data.message || 'Failed to fetch appointment')
       return
     }
+    console.log('Appointment data fetched successfully:', data.data)
     setStatus(data.data.status)
     setProviderId(data.data.appointment_providers[0]?.provider_id)
     return data.data
   }
+  
   const {
     data: appointment,
     isLoading,
     error,
+    refetch,
   } = useQuery({
     queryKey: ['appointment', id],
     queryFn: () => fetchAppointment(id!),
     enabled: !!id,
+    staleTime: 0, // Always consider data stale
+    refetchOnMount: true, // Always refetch when component mounts
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   })
 
-  const [status, setStatus] = useState(appointment?.status)
+  const [status, setStatus] = useState(appointment?.status || '')
   const [providerId, setProviderId] = useState()
-
-  console.log(status)
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -155,10 +175,36 @@ const AppointmentDetail = () => {
   }
 
   useEffect(() => {
-    if (status) {
+    if (status && status !== '') {
       handleStatusChange(status)
     }
   }, [status])
+
+  // Refetch appointment data when component mounts or ID changes
+  useEffect(() => {
+    if (id) {
+      console.log('Component mounted/ID changed, invalidating and refetching appointment:', id)
+      // Invalidate the query to force a fresh fetch
+      queryClient.invalidateQueries({ queryKey: ['appointment', id] })
+      refetch()
+    }
+  }, [id, refetch, queryClient])
+
+  // Debug appointment data changes
+  useEffect(() => {
+    console.log('Appointment data changed:', { appointment, isLoading, error })
+  }, [appointment, isLoading, error])
+
+  // Handle when user navigates back to this page
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log('Page focused, invalidating appointment query')
+      queryClient.invalidateQueries({ queryKey: ['appointment', id] })
+    }
+
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [id, queryClient])
 
   const handleCheckIn = async (appointmentId: string) => {
     try {
@@ -230,8 +276,53 @@ const AppointmentDetail = () => {
     toast.success(data.message)
   }
 
-  if (isLoading) return <div>Loading...</div>
-  if (error) return <div>{(error as Error).message}</div>
+  const handleViewSoapNotes = () => {
+    navigate(`/provider/vitals/${appointment?.id}`, {
+      state: { appointment }
+    })
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 space-y-6 p-6">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading appointment details...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+  
+  if (error) {
+    return (
+      <div className="flex-1 space-y-6 p-6">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="text-red-500 mb-4 text-2xl">⚠️</div>
+            <p className="text-muted-foreground mb-4">
+              Error loading appointment: {(error as Error).message}
+            </p>
+            <Button onClick={() => refetch()}>Try Again</Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!appointment) {
+    return (
+      <div className="flex-1 space-y-6 p-6">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-muted-foreground mb-4">Appointment not found</p>
+            <Button onClick={() => navigate(-1)}>Go Back</Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -408,9 +499,30 @@ const AppointmentDetail = () => {
                 <div className="space-y-2">
                   <span className="text-sm font-medium">Clinical Notes:</span>
 
-                  <p className="text-sm text-muted-foreground">
-                    {appointment?.soap_note}
-                  </p>
+                  {appointment?.soap_note ? (
+                    <div className="text-sm text-muted-foreground space-y-2">
+                      {typeof appointment.soap_note === 'string' ? (
+                        <p>{appointment.soap_note}</p>
+                      ) : (
+                        <div className="space-y-2">
+                          <div>
+                            <strong>Subjective:</strong> {appointment.soap_note.subjective || 'N/A'}
+                          </div>
+                          <div>
+                            <strong>Objective:</strong> {appointment.soap_note.objective || 'N/A'}
+                          </div>
+                          <div>
+                            <strong>Assessment:</strong> {appointment.soap_note.assessment || 'N/A'}
+                          </div>
+                          <div>
+                            <strong>Plan:</strong> {appointment.soap_note.plan || 'N/A'}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No clinical notes available</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -600,88 +712,22 @@ const AppointmentDetail = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="blood_pressure">Blood Pressure</Label>
-                    <Input
-                      id="blood_pressure"
-                      value={appointment?.vitals?.blood_pressure}
-                      placeholder="120/80"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="heart_rate">Heart Rate</Label>
-                    <Input
-                      id="heart_rate"
-                      value={appointment?.vitals?.heart_rate}
-                      placeholder="72 bpm"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="temperature">Temperature</Label>
-                    <Input
-                      id="temperature"
-                      value={appointment?.vitals?.temperature}
-                      placeholder="98.6°C"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="weight">Weight</Label>
-                    <Input
-                      id="weight"
-                      value={appointment?.vitals?.weight}
-                      placeholder="75kg"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="height">Height</Label>
-                    <Input
-                      id="height"
-                      value={appointment?.vitals?.height}
-                      placeholder="5'6 Inches"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="respiratory_rate">Respiratory Rate</Label>
-                    <Input
-                      id="respiratory_rate"
-                      value={appointment?.vitals?.respiratory_rate}
-                      placeholder="Rate"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="oxygen_saturation">Oxygen Saturation</Label>
-                    <Input
-                      id="oxygen_saturation"
-                      value={appointment?.vitals?.oxygen_saturation}
-                      placeholder="O Sat"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="bmi">BMI</Label>
-                    <Input
-                      id="bmi"
-                      value={appointment?.vitals?.bmi}
-                      placeholder="BMI"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="others">Others</Label>
-                  <Input
-                    id="others"
-                    value={appointment?.vitals?.others}
-                    placeholder="Other records"
+                {user?.id && appointment?.id ? (
+                  <VitalsFormDialog
+                    appointmentId={appointment.id}
+                    setAppointmentId={() => {}}
+                    userId={user.id}
+                    setHasVitals={() => {}}
+                    setAppointmentStatus={setStatus}
+                    showAsDialog={true}
                   />
-                </div>
-                <Button
-                  onClick={handleRecordVitals}
-                  disabled={appointment?.vitals}
-                  className="w-full"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  Record Vitals
-                </Button>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-muted-foreground">
+                      {!user?.id ? "Please log in to record vitals" : "Loading appointment data..."}
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -692,40 +738,44 @@ const AppointmentDetail = () => {
                   Clinical Notes
                 </CardTitle>
               </CardHeader>
-              {appointment?.soap_note?.length === 0 ? (
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="chief-complaint">Chief Complaint</Label>
-                    <Textarea
-                      id="chief-complaint"
-                      placeholder="Patient's main concern or reason for visit..."
-                      rows={3}
-                    />
+              <CardContent className="space-y-4">
+                {!soapNoteSaved ? (
+                  <SoapNoteDialog
+                    appointmentId={appointment?.id}
+                    vitals={appointment?.vitals || {}}
+                    purposes={appointment?.purposes || []}
+                    setAppointmentId={() => {}}
+                    appointment={appointment}
+                    showAsDialog={false}
+                    onSoapNoteSaved={() => setSoapNoteSaved(true)}
+                  />
+                ) : (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-green-800 font-medium">
+                        ✅ SOAP Note saved successfully!
+                      </p>
+                    </div>
+                    <div className="flex gap-3">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setSoapNoteSaved(false)}
+                        className="flex-1"
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        Add Another SOAP Note
+                      </Button>
+                      <Button 
+                        onClick={handleViewSoapNotes}
+                        className="flex-1"
+                      >
+                        <Activity className="h-4 w-4 mr-2" />
+                        View SOAP Notes
+                      </Button>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="assessment">Assessment</Label>
-                    <Textarea
-                      id="assessment"
-                      placeholder="Clinical assessment and findings..."
-                      rows={4}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="plan">Treatment Plan</Label>
-                    <Textarea
-                      id="plan"
-                      placeholder="Treatment plan and follow-up instructions..."
-                      rows={4}
-                    />
-                  </div>
-                  <Button className="w-full">
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Notes
-                  </Button>
-                </CardContent>
-              ) : (
-                <></>
-              )}
+                )}
+              </CardContent>
             </Card>
           </div>
         </TabsContent>
