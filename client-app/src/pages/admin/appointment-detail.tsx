@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import {
   Card,
   CardContent,
@@ -38,6 +38,7 @@ import {
   Printer,
   Stethoscope,
   Activity,
+  ArrowLeft,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -60,6 +61,7 @@ const statusOptions = [
 
 const AppointmentDetail = () => {
   const { id } = useParams()
+  const navigate = useNavigate()
 
   const fetchAppointment = async (id: string) => {
     const { data } = await API.get(`/api/appointment/${id}`)
@@ -178,6 +180,31 @@ const AppointmentDetail = () => {
     }
   }
 
+  const handleRecordVitals = async () => {
+    const getValue = (id: string) => {
+      return (document.getElementById(id) as HTMLInputElement).value || ''
+    }
+
+    const formData = {
+      blood_pressure: getValue('blood_pressure'),
+      heart_rate: getValue('heart_rate'),
+      temperature: getValue('temperature'),
+      height: getValue('height'),
+      weight: getValue('weight'),
+      respiratory_rate: getValue('respiratory_rate'),
+      oxygen_saturation: getValue('oxygen_saturation'),
+      bmi: getValue('bmi'),
+      others: getValue('others'),
+      appointment_id: appointment?.id,
+    }
+
+    const { data } = await API.post('/api/vitals/record', formData)
+    if (!data?.success) {
+      toast.error('Vitals not recorded: ' + data?.message)
+    }
+    toast.success(data.message)
+  }
+
   if (isLoading) return <div>Loading...</div>
   if (error) return <div>{(error as Error).message}</div>
 
@@ -186,10 +213,10 @@ const AppointmentDetail = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          {/* <Button variant="ghost" size="sm" onClick={() => router.back()}>
+          <Button variant="ghost" size="default" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Appointments
-          </Button> */}
+            Back
+          </Button>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
               Appointment Details
@@ -437,25 +464,25 @@ const AppointmentDetail = () => {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="bp">Blood Pressure</Label>
+                    <Label htmlFor="blood_pressure">Blood Pressure</Label>
                     <Input
-                      id="bp"
+                      id="blood_pressure"
                       value={appointment?.vitals?.blood_pressure}
                       placeholder="120/80"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="hr">Heart Rate</Label>
+                    <Label htmlFor="heart_rate">Heart Rate</Label>
                     <Input
-                      id="hr"
+                      id="heart_rate"
                       value={appointment?.vitals?.heart_rate}
                       placeholder="72 bpm"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="temp">Temperature</Label>
+                    <Label htmlFor="temperature">Temperature</Label>
                     <Input
-                      id="temp"
+                      id="temperature"
                       value={appointment?.vitals?.temperature}
                       placeholder="98.6°C"
                     />
@@ -468,16 +495,52 @@ const AppointmentDetail = () => {
                       placeholder="75kg"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="height">Height</Label>
+                    <Input
+                      id="height"
+                      value={appointment?.vitals?.height}
+                      placeholder="5'6 Inches"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="respiratory_rate">Respiratory Rate</Label>
+                    <Input
+                      id="respiratory_rate"
+                      value={appointment?.vitals?.respiratory_rate}
+                      placeholder="Rate"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="oxygen_saturation">Oxygen Saturation</Label>
+                    <Input
+                      id="oxygen_saturation"
+                      value={appointment?.vitals?.oxygen_saturation}
+                      placeholder="O Sat"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bmi">BMI</Label>
+                    <Input
+                      id="bmi"
+                      value={appointment?.vitals?.bmi}
+                      placeholder="BMI"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="height">Height</Label>
+                  <Label htmlFor="others">Others</Label>
                   <Input
-                    id="height"
-                    value={appointment?.vitals?.height}
-                    placeholder="5'6 Inches"
+                    id="others"
+                    value={appointment?.vitals?.others}
+                    placeholder="Other records"
                   />
                 </div>
-                <Button disabled={appointment?.vitals} className="w-full">
+                <Button
+                  onClick={handleRecordVitals}
+                  disabled={appointment?.vitals}
+                  className="w-full"
+                >
                   <Save className="h-4 w-4 mr-2" />
                   Record Vitals
                 </Button>
